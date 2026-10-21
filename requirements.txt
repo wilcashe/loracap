@@ -1,0 +1,5 @@
+# The simulation itself (run.py check / run / capacity) uses only the Python
+# standard library. Nothing here is needed to produce the numbers.
+#
+# matplotlib is required only to draw the figure:
+matplotlib>=3.5

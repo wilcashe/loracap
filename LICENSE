@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 wilcashe
+Copyright (c) 2026 the LoRaCAP authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,47 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+================================================================================
+ATTRIBUTION
+================================================================================
+
+The collision model implemented in loracap/core.py (channel and
+spreading-factor orthogonality, the capture effect, and the preamble timing
+criterion) is a Python 3 re-implementation of the model introduced in
+LoRaSim 0.2.1:
+
+    Martin Bor, Utz Roedig, Thiemo Voigt and Juan Alonso,
+    "Do LoRa Low-Power Wide-Area Networks Scale?",
+    MSWiM '16, https://doi.org/10.1145/2988287.2989163
+    Source: https://github.com/mcbor/lorasim
+
+    LoRaSim 0.2.1 is Copyright (c) 2016 Thiemo Voigt <thiemo@sics.se> and
+    Martin Bor <m.bor@lancaster.ac.uk>, and is licensed under the Creative
+    Commons Attribution 4.0 International License (CC BY 4.0),
+    https://creativecommons.org/licenses/by/4.0/
+
+CC BY 4.0 permits derivative works under different terms provided attribution
+is given, which this notice supplies. No LoRaSim source code is copied into
+this package. The original is Python 2; the model here was reimplemented and
+extended with direct multi-channel simulation, an enforced
+simultaneous-demodulation limit, and polygon-based node placement. The
+differences are documented in README.md and in the docstring of core.py.
+
+Receiver sensitivity values in loracap/presets.py are reproduced from
+manufacturer datasheets as factual reference data. Each carries its source in
+that file.
+
+================================================================================
+DATA, OUTPUTS AND FIGURES
+================================================================================
+
+The MIT Licence above covers the software. It does not cover the data shipped
+with it: site boundaries (studies/*/site_polygon.py), and simulation outputs
+and figures (studies/*/outputs/). Those are licensed under the Creative Commons
+Attribution 4.0 International License (CC BY 4.0),
+https://creativecommons.org/licenses/by/4.0/
+
+Creative Commons licences are not recommended for software, and MIT does not
+fit data well, which is why the two are separated rather than one licence being
+stretched over both.
