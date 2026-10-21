@@ -10,8 +10,8 @@ type: software
 # (for example anonymous.4open.science) or a restricted-access deposit with a
 # reviewer token over a public repository.
 authors:
-  - given-names: Wilder Eduardo
-    family-names: Castellanos Hernández
+  - given-names: Wilder
+    family-names: Castellanos
     orcid: 'https://orcid.org/0000-0003-0311-492X'
     affiliation: 'School of Engineering, Pontificia Universidad Javeriana, Bogotá, Colombia'
 repository-code: 'https://github.com/wilcashe/loracap'
