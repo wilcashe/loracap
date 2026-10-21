@@ -1,0 +1,57 @@
+cff-version: 1.2.0
+title: 'LoRaCAP: a field-calibrated LoRaWAN uplink capacity simulator'
+message: >-
+  If LoRaCAP contributes to published work, please cite it. If you use it
+  for a specific deployment study, cite the paper reporting that study as
+  well.
+type: software
+# NOTE for double-blind review: this file identifies the authors. Remove or
+# redact it from any reviewer-facing copy, and prefer an anonymised mirror
+# (for example anonymous.4open.science) or a restricted-access deposit with a
+# reviewer token over a public repository.
+authors:
+  - given-names: Wilder Eduardo
+    family-names: Castellanos Hernández
+    orcid: 'https://orcid.org/0000-0003-0311-492X'
+    affiliation: 'School of Engineering, Pontificia Universidad Javeriana, Bogotá, Colombia'
+repository-code: 'https://github.com/REPLACE-ME/loracap'
+abstract: >-
+  LoRaCAP is a LoRaWAN uplink capacity simulator in which the engine is
+  independent of any particular deployment. A site is described in a single
+  study file and the rest is automatic. The collision model re-implements LoRaSim (Bor et al.,
+  MSWiM 2016) in Python 3 and extends it with direct multi-channel simulation
+  instead of single-channel extrapolation, an enforced chip-wide
+  simultaneous-demodulation limit, and node placement over a real site
+  boundary rather than a theoretical coverage disc. Reports the Data
+  Extraction Rate against node count with mean and standard deviation over
+  repeated runs, and derives the capacity at a chosen threshold with a
+  bootstrap confidence interval. Includes tools to convert a KML boundary and
+  to fit a log-distance propagation model from field measurements.
+keywords:
+  - LoRaWAN
+  - LPWAN
+  - network scalability
+  - discrete-event simulation
+  - path loss
+  - Internet of Things
+license: MIT
+license-url: 'https://opensource.org/licenses/MIT'
+version: 1.0.0
+date-released: '2026-10-20'
+references:
+  - type: article
+    title: 'Do LoRa Low-Power Wide-Area Networks Scale?'
+    authors:
+      - given-names: Martin
+        family-names: Bor
+      - given-names: Utz
+        family-names: Roedig
+      - given-names: Thiemo
+        family-names: Voigt
+      - given-names: Juan
+        family-names: Alonso
+    year: 2016
+    doi: 10.1145/2988287.2989163
+    notes: >-
+      Source of the collision model re-implemented in loracap/core.py.
+      LoRaSim 0.2.1 is licensed CC BY 4.0.
