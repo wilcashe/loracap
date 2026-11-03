@@ -12,7 +12,7 @@ Typical use is through the command line, `python3 run.py ...`, rather than by
 importing this package directly.
 """
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 
 from .core import SimConfig, run_batch, run_single_sim          # noqa: F401
 from .study import Study, load_study, list_studies, validate    # noqa: F401

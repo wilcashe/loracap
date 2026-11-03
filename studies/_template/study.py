@@ -83,6 +83,13 @@ STUDY = Study(
     min_valid_distance_m=30.0,
     path_loss_r_squared=None,
     path_loss_source="TODO: where this model came from",
+    # No field data? You can still run this, but check what it costs you:
+    #     python3 run.py sweep <name>
+    # It varies the exponent and reports whether the answer depends on it.
+    # While the whole site stays within range the capacity estimate barely
+    # moves, so an assumed model is defensible if you declare it as assumed.
+    # Once the site stops being covered the model decides the result, and
+    # only measurements can settle it. The sweep says which case you are in.
 
     # ------------------------------------------------------------------ #
     # Traffic

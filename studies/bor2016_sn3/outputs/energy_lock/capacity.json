@@ -1,0 +1,187 @@
+{
+  "der_threshold": 0.9,
+  "capacity": {
+    "SF12": {
+      "capacity": 72.58768734617055,
+      "ci_low": 71.6920320219272,
+      "ci_high": 73.39089019608106,
+      "n_bootstrap": 2000
+    },
+    "MULTI": {
+      "capacity": null,
+      "ci_low": null,
+      "ci_high": null,
+      "note": "DER never crosses the threshold over the simulated node range; widen node_counts."
+    },
+    "ADR": {
+      "capacity": 172.9306465380517,
+      "ci_low": 167.21975389350092,
+      "ci_high": 178.337595485769,
+      "n_bootstrap": 2000
+    }
+  },
+  "fleet_capacity": {
+    "SF12": {
+      "capacity": 72.58768734617055,
+      "ci_low": 71.6920320219272,
+      "ci_high": 73.39089019608106,
+      "n_bootstrap": 2000
+    },
+    "MULTI": {
+      "capacity": null,
+      "ci_low": null,
+      "ci_high": null,
+      "note": "DER never crosses the threshold over the simulated node range; widen node_counts."
+    },
+    "ADR": {
+      "capacity": 172.9306465380517,
+      "ci_low": 167.21975389350092,
+      "ci_high": 178.337595485769,
+      "n_bootstrap": 2000
+    }
+  },
+  "provenance": {
+    "source": "manifest",
+    "manifest": "studies/bor2016_sn3/experiments.py",
+    "experiment": "energy_lock",
+    "kind": "run",
+    "description": "The energy comparison above under the lock receiver rule (ROADMAP items 13 and 17). Energy per extracted message depends on how many packets get through, so it depends on the rule too. Same seed and grid as `energy`, so the two tables differ only by the rule.",
+    "variant": null,
+    "variant_label": null,
+    "overrides": {
+      "spreading_factors": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "sleep_current_ua": 2.0,
+      "battery_capacity_mah": 2400.0,
+      "receiver_model": "lock"
+    },
+    "n_runs": 15,
+    "sim_time_s": 200000.0,
+    "base_seed": 99,
+    "node_counts": [
+      40,
+      64,
+      100,
+      200
+    ],
+    "scenarios": [
+      "SF12",
+      "MULTI",
+      "ADR"
+    ],
+    "n_bootstrap": 2000,
+    "options": {
+      "energy_reference": "SF12",
+      "energy_nodes": [
+        40,
+        64,
+        100,
+        200
+      ]
+    },
+    "regenerate": "python3 run.py reproduce bor2016_sn3 --only energy_lock",
+    "study": {
+      "name": "bor2016_sn3",
+      "site": "Bor et al. 2016, Experiment Set 1, SN3 (default LoRaWAN)",
+      "description": "Reproduction target: N = 64 nodes at DER > 0.9. Bor, Roedig, Voigt and Alonso, MSWiM 2016, updated version.",
+      "region": "EU868",
+      "bw_khz": 125,
+      "spreading_factors": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "chip": null,
+      "sensitivity_dbm": {
+        "7": -126.5,
+        "8": -127.25,
+        "9": -131.25,
+        "10": -132.75,
+        "11": -134.5,
+        "12": -133.25
+      },
+      "n_channels": 1,
+      "max_simultaneous_demodulations": null,
+      "n_gateways": 1,
+      "tx_power_dbm": 14.0,
+      "tx_antenna_gain_db": 0.0,
+      "rx_antenna_gain_db": 0.0,
+      "cable_loss_db": 0.0,
+      "path_loss_exponent": 2.08,
+      "path_loss_ref_db": 127.41,
+      "path_loss_ref_distance_m": 40.0,
+      "min_valid_distance_m": 1.0,
+      "path_loss_r_squared": null,
+      "shadowing_sigma_db": 0.0,
+      "fading_sigma_db": 0.0,
+      "path_loss_source": "Bor et al. 2016, Section 3.2: empirical measurements in a built-up environment, d0 = 40 m, Lpl(d0) = 127.41 dB, gamma = 2.08, sigma = 3.57 dB set to zero by the authors",
+      "uplink_dwell_time_ms": null,
+      "payload_bytes": 20,
+      "coding_rate": 1,
+      "send_interval_s": 1000.0,
+      "capture_threshold_db": 6.0,
+      "receiver_model": "lock",
+      "inter_sf_rejection": null,
+      "lock_survival": null,
+      "header_recapture": false,
+      "radio": "SX1272",
+      "tx_current_ma": null,
+      "supply_voltage_v": 3.0,
+      "sleep_current_ua": 2.0,
+      "battery_capacity_mah": 2400.0,
+      "adr_margin_db": 10.0,
+      "tx_power_offsets_db": null,
+      "placement": "disc",
+      "polygons_m": null,
+      "gateway_lat": null,
+      "gateway_lon": null,
+      "scenarios": [
+        "SF12",
+        "MULTI",
+        "ADR"
+      ],
+      "adaptive_sf_options": null,
+      "node_counts": [
+        40,
+        64,
+        100,
+        200
+      ],
+      "sim_time_s": 200000.0,
+      "n_runs": 15,
+      "base_seed": 99,
+      "der_threshold": 0.9,
+      "highlight_scenario": "SF12",
+      "highlight_color": "#1f6fb2",
+      "plot_full_xlim": null,
+      "plot_zoom_xlim": null,
+      "plot_zoom_ylim": [
+        0.75,
+        1.0
+      ],
+      "figure_basename": "bor2016_sn3",
+      "resolved_sensitivity_dbm": {
+        "7": -126.5,
+        "8": -127.25,
+        "9": -131.25,
+        "10": -132.75,
+        "11": -134.5,
+        "12": -133.25
+      },
+      "net_antenna_gain_db": 0.0
+    },
+    "loracap_version": "2.0.0",
+    "code_sha256": "9c324d1a0c0070673a27dd1eb479d588ac3f9e704103d97e7aa73def8951a4b9",
+    "python": "3.13.18",
+    "generated": "2026-11-03T03:01:29+00:00"
+  }
+}

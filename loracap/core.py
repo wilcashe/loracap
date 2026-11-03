@@ -19,9 +19,12 @@ Python 2) and extended in three respects:
   - nodes can be placed inside an arbitrary polygon (a real deployment
     boundary) instead of only inside a theoretical coverage disc.
 
-Collision model, unchanged from the original:
+Collision model, unchanged from the original by default:
   - two packets can collide only if they share BOTH the same channel and the
-    same spreading factor, since LoRa spreading factors are quasi-orthogonal;
+    same spreading factor, which treats LoRa's quasi-orthogonal spreading
+    factors as orthogonal. A study that names an `inter_sf_rejection` table
+    lets packets on different spreading factors in one channel destroy each
+    other too, by the measured thresholds (`inter_sf_losses`);
   - a newly arrived packet whose critical preamble section clears an in-flight
     packet is "saved by the preamble" and no collision is registered;
   - otherwise the capture effect applies: the stronger packet survives if the
@@ -84,6 +87,121 @@ class SimConfig:
     # None, every SF present in `sensitivity_dbm` is allowed.
     adaptive_sf_options: Optional[Sequence[int]] = None
 
+    # --- energy, optional ---
+    # Current draw per transmit power [dBm -> mA], and the supply it runs on.
+    # None means no energy figure is produced at all, which is the default:
+    # the current depends on the node radio, differs by more than a factor of
+    # two between radios at the same power, and a guessed one yields a
+    # battery-life number that reads as authoritative and is fiction.
+    #
+    # Only TRANSMISSION is counted. Receive windows need downlink timing this
+    # engine does not model, and sleep draw is a property of the firmware
+    # rather than of the network, so neither belongs in the simulation.
+    #
+    # Which of the two dominates a battery is not something to assume. It
+    # depends on the reporting interval and the sleep draw, and the two cross
+    # over at an interval of hours: at a 1000 s interval with 1.3 s of SF12
+    # airtime, transmitting is 97% of the average current, while at eight
+    # hours a 2 uA sleep draw overtakes it. `analysis.service_life` reports
+    # the share rather than asserting either.
+    tx_current_ma: Optional[Dict[int, float]] = None
+    supply_voltage_v: float = 3.0
+
+    # --- log-normal variation about the mean path loss [dB] ---
+    # Two different physical claims, kept apart because they do different
+    # things and a single sigma would conflate them.
+    #
+    # shadowing_sigma_db is drawn ONCE PER NODE and never changes. It is
+    # position-dependent obstruction: terrain, vegetation, a building, a node
+    # mounted facing the wrong way. A node behind a hill stays behind it. This
+    # widens the spread of received powers permanently, which feeds the
+    # capture effect, and it can put a node below sensitivity for good.
+    #
+    # fading_sigma_db is drawn PER PACKET. It is the channel changing between
+    # transmissions: multipath, an animal moving, a door opening. It averages
+    # out across many packets, so it moves DER much less than its size
+    # suggests, but it decides individual collisions.
+    #
+    # A residual sigma fitted from field data mixes the two. Which part is
+    # which depends on whether the measurements came from static nodes or
+    # moving ones, and the fit cannot tell you. Attributing all of it to
+    # shadowing is the conservative reading for a static deployment.
+    shadowing_sigma_db: float = 0.0
+    fading_sigma_db: float = 0.0
+
+    # --- steady-state ADR, used only by the 'ADR' scenario ---
+    # Link margin the data-rate choice keeps in hand, instead of sitting on
+    # the sensitivity threshold. The real algorithm derives it from the SNR of
+    # recent uplinks against a per-data-rate requirement; 10 dB is the usual
+    # installation margin.
+    adr_margin_db: float = 10.0
+    # Power offsets [dB] the plan allows below `tx_power_dbm`, as a node may
+    # only select an index into this list. None means no power control, so
+    # every node transmits at full power.
+    tx_power_offsets_db: Optional[Sequence[float]] = None
+
+    # VALIDATION KNOB, not a physical parameter. True is the real receiver:
+    # a packet may lose part of its preamble and still be acquired, so a late
+    # enough arrival does not collide. False makes any overlap destructive,
+    # which is the assumption behind the pure-ALOHA bound. Setting it False
+    # alongside an infinite capture threshold and a single channel is how the
+    # engine is made to degenerate into the analytical case (see
+    # `loracap.validation`). It does not change airtime, so only the collision
+    # rule moves and the comparison stays clean.
+    preamble_capture: bool = True
+
+    # --- receiver rule for two overlapping packets ---
+    # 'lorasim' : LoRaSim's equation 11. Power decides, whichever packet
+    #             arrived first. The default, because every published result
+    #             here and the reproduction of Bor et al. rest on it.
+    # 'lock'    : the receiver stays on the packet it synchronised to first.
+    #             A later packet beyond the lock point is lost, and if it is
+    #             stronger by the capture threshold it takes the first one
+    #             with it. See `resolve_overlap` for the measurements behind
+    #             it and for what they do not cover.
+    receiver_model: str = "lorasim"
+
+    # --- rejection between spreading factors ---
+    # None treats spreading factors as orthogonal: packets on different SFs
+    # never interact. That is LoRaSim's assumption and the default, so every
+    # published result stands. A table [reference SF][interfering SF] -> dB
+    # is the minimum SIR a packet needs against an overlapping packet on
+    # another SF in the same channel. See `inter_sf_losses` and
+    # `presets.INTER_SF_REJECTION_DB` for the measurement and its limits.
+    inter_sf_rejection_db: Optional[Dict[int, Dict[int, float]]] = None
+
+    # --- refinements of the lock rule, ignored under 'lorasim' ---
+    # lock_survival_db: SF -> minimum SIR [dB] the locked packet needs against
+    # a later one past the lock window. None keeps `capture_threshold_db` for
+    # that decision, which is the lock rule as item 13 built it.
+    # header_recapture: a later packet stronger by the capture threshold that
+    # arrives during the locked packet's header takes the receiver over.
+    # Both are off by default. See `resolve_overlap`.
+    lock_survival_db: Optional[Dict[int, float]] = None
+    header_recapture: bool = False
+
+    def __post_init__(self):
+        # Checked here rather than only in study validation, so that a
+        # SimConfig built by `dataclasses.replace` cannot carry a misspelt
+        # model into the collision loop and silently fall through to a rule.
+        if self.receiver_model not in RECEIVER_MODELS:
+            raise ValueError(
+                f"receiver_model {self.receiver_model!r} is not one of "
+                f"{', '.join(RECEIVER_MODELS)}.")
+        if self.inter_sf_rejection_db is not None:
+            for ref, row in self.inter_sf_rejection_db.items():
+                # A same-SF entry would be a second capture threshold that
+                # silently disagreed with `capture_threshold_db`. Same-SF
+                # collisions belong to the receiver rule alone.
+                if ref in row:
+                    raise ValueError(
+                        f"inter_sf_rejection_db has an entry for SF{ref} "
+                        f"against itself. Same-SF collisions are governed by "
+                        f"capture_threshold_db and the receiver rule.")
+
+
+RECEIVER_MODELS = ("lorasim", "lock")
+
 
 # ---------------------------------------------------------------------------
 # Link-level physics
@@ -114,8 +232,20 @@ def path_loss_db(cfg: SimConfig, distance_m: float) -> float:
     )
 
 
-def rssi_dbm(cfg: SimConfig, distance_m: float) -> float:
-    return cfg.tx_power_dbm + cfg.net_antenna_gain_db - path_loss_db(cfg, distance_m)
+def rssi_dbm(cfg: SimConfig, distance_m: float,
+             tx_power_dbm: Optional[float] = None,
+             shadowing_db: float = 0.0) -> float:
+    """Received power at the median path loss, plus any offset supplied.
+
+    `tx_power_dbm` overrides the configured node power, for scenarios where
+    power is set per node. `shadowing_db` carries the node's fixed offset and,
+    when there is fading, that packet's draw as well. This function stays
+    deterministic on purpose: every random draw is made by the caller that
+    owns its lifetime, so a node's shadowing is drawn once and a packet's
+    fading once per packet, and neither can be re-drawn by accident."""
+    tx = cfg.tx_power_dbm if tx_power_dbm is None else tx_power_dbm
+    return (tx + cfg.net_antenna_gain_db - path_loss_db(cfg, distance_m)
+            + shadowing_db)
 
 
 def max_distance_m(cfg: SimConfig, min_sensitivity_dbm: float) -> float:
@@ -126,6 +256,72 @@ def max_distance_m(cfg: SimConfig, min_sensitivity_dbm: float) -> float:
     return cfg.path_loss_ref_distance_m * 10 ** (
         (lpl_max - cfg.path_loss_ref_db) / (10 * cfg.path_loss_exponent)
     )
+
+
+def ref_loss_for_range(
+    tx_power_dbm: float,
+    net_antenna_gain_db: float,
+    sensitivity_dbm: float,
+    exponent: float,
+    range_m: float,
+    ref_distance_m: float = 100.0,
+) -> float:
+    """Inverse of `max_distance_m`: the reference loss L(d0) that makes a link
+    reach exactly `range_m` before hitting `sensitivity_dbm`.
+
+    This exists for the site with no propagation campaign. The exponent can be
+    taken from published measurements for a comparable environment, but those
+    give the slope only, never the intercept, and free-space loss at d0 is not
+    a usable substitute: on the one deployment here with field data it sits
+    about 59 dB optimistic at 100 m, because a node on an animal radiates
+    through a body, close to wet ground and often through vegetation.
+
+    So the intercept is anchored instead to the one quantity a deployer can
+    state without a measurement campaign, namely how far a link is expected to
+    work, which a single walk-out test establishes. The anchor is an
+    assumption and must be reported as one. What makes it tolerable is that
+    capacity is invariant to the intercept as long as the site stays covered
+    (see sweep.verify_intercept_invariance): the intercept decides coverage,
+    and coverage is the thing the anchor states directly.
+    """
+    if range_m <= 0:
+        raise ValueError("The expected range must be positive.")
+    if exponent <= 0:
+        raise ValueError("The path-loss exponent must be positive.")
+    lpl_max = tx_power_dbm + net_antenna_gain_db - sensitivity_dbm
+    return lpl_max - 10 * exponent * math.log10(range_m / ref_distance_m)
+
+
+HEADER_SYMBOLS = 8
+
+
+def header_window_ms(cfg: SimConfig, sf: int, n_pream: int = 8):
+    """(start, end) of a packet's explicit header, in ms from its start.
+
+    The preamble is `n_pream` upchirps, two sync symbols and 2.25
+    downchirps, the same 12.25 symbols `airtime_ms` counts, and the header
+    is the first `HEADER_SYMBOLS` symbols after it, which Eigner (2021,
+    section 5.2) takes as the header's extent."""
+    t_sym = (2.0 ** sf) / cfg.bw_khz
+    start = (n_pream + 4.25) * t_sym
+    return start, start + HEADER_SYMBOLS * t_sym
+
+
+def in_header(cfg: SimConfig, sf: int, offset_ms: float) -> bool:
+    """True when an arrival `offset_ms` after a packet's start falls in that
+    packet's header: from the end of its preamble, inclusive, to the end of
+    the header, exclusive."""
+    start, end = header_window_ms(cfg, sf)
+    return start <= offset_ms < end
+
+
+def lock_survival_threshold_db(cfg: SimConfig, sf: int) -> float:
+    try:
+        return cfg.lock_survival_db[sf]
+    except KeyError:
+        raise ValueError(
+            f"lock_survival_db has no entry for SF{sf}. A table must cover "
+            f"every spreading factor the study can put on the air.") from None
 
 
 def preamble_critical_ms(cfg: SimConfig, sf: int, n_pream: int = 8) -> float:
@@ -139,16 +335,180 @@ def preamble_critical_ms(cfg: SimConfig, sf: int, n_pream: int = 8) -> float:
 def timing_collision(cfg: SimConfig, new_pkt, other) -> bool:
     """True when the new packet's critical preamble section overlaps an in-flight
     packet. False means it arrived late enough to be saved by the preamble, and
-    no collision is registered for either packet."""
+    no collision is registered for either packet.
+
+    With `cfg.preamble_capture` False the allowance is removed and every
+    overlap is destructive, which is the pure-ALOHA assumption. Callers only
+    reach this function for packets still in the air, so that case is True
+    without further arithmetic."""
+    if not cfg.preamble_capture:
+        return True
     return new_pkt.start + preamble_critical_ms(cfg, new_pkt.sf) < other.start + other.dur
 
 
+def resolve_overlap(cfg: SimConfig, earlier, later) -> Tuple[bool, bool]:
+    """Which of two overlapping packets on the same channel and spreading
+    factor the receiver loses, as (earlier_lost, later_lost).
+
+    `earlier` is the packet already in the air when `later` began. The
+    decision depends only on the pair, as in LoRaSim's equation 11, so the
+    caller applies it to every packet still in flight.
+
+    Both rules share two parts. If the earlier packet ends before the later
+    one's critical preamble section, neither is affected (`timing_collision`,
+    Bor et al. eq. 10). And power decides between two packets that start
+    within the lock window of each other: within `capture_threshold_db` both
+    are lost, beyond it the stronger survives.
+
+    'lorasim' applies that power rule at any offset, which is LoRaSim's
+    equation 11. A stronger packet arriving in the middle of a weaker one
+    therefore survives.
+
+    'lock' applies it only inside the lock window, the first
+    `preamble_critical_ms` of the earlier packet. Past that point the receiver
+    has synchronised to the earlier packet and stays on it, so the later
+    packet is lost whatever its power, and if it is stronger by the capture
+    threshold it corrupts the earlier one too. Two measurements on two chips
+    show this and LoRaSim's own code does not:
+
+    - Bor, Roedig, Voigt and Alonso, MSWiM 2016, Figure 3 (SX1272): a strong
+      packet is decoded arriving early or up to 3 symbols late, and with a
+      larger offset no transmission gets through.
+    - Haxhibeqiri et al., Sensors 17(6):1193, 2017, Tables 2 to 5 (SX1301):
+      at equal power the second packet is lost and the first is received
+      "mostly correctly, ~90%" (their Table 6), and a packet 12 dB stronger
+      arriving after the header is lost while the first is received with a
+      bad CRC.
+
+    What the measurements do not cover is stated rather than filled in. Both
+    used two transmitters, so with three or more packets the rule is applied
+    pair by pair, as both papers' own models do: every packet already in the
+    air counts as one the receiver may be on, including a packet dropped for
+    want of a demodulator. Haxhibeqiri et al. saw the SX1301 resynchronise to
+    a stronger packet arriving during the header, in too narrow a window to
+    place its edge, so that recapture is left out, which can only understate
+    DER. The first packet of an equal-power pair is counted as received
+    every time, where the measurement gives about 90%, which overstates
+    DER. And nothing was measured between about 0 and 6 dB, so the boundary
+    between equal and stronger is `capture_threshold_db`, an assumption.
+
+    With `preamble_capture` off the window has zero length, so the receiver
+    locks on arrival. That, an infinite threshold and one channel make
+    'lock' exactly the first-come receiver whose success probability is
+    exp(-G), the check in `validation`.
+
+    Two refinements of the lock rule, both off by default and both ignored
+    under 'lorasim' (ROADMAP item 18):
+
+    - `lock_survival_db` replaces the capture threshold in the one decision
+      made past the lock window: the locked packet survives only if its SIR
+      against the later one reaches the table's entry for its spreading
+      factor. Eigner (2021, Table 5.1, SX1301) puts that at 0 dB for SF7 and
+      SF8, so a later packet of equal power no longer harms them, and at 2 dB
+      for SF11 and SF12, so it does. The values are 99% points used as a
+      step, pessimistic where the measured transition is wide.
+    - `header_recapture` covers what both Haxhibeqiri et al. and Eigner saw:
+      a later packet stronger by the capture threshold that arrives during
+      the locked packet's header corrupts it, the receiver drops it on the
+      header CRC and receives the newcomer. The header is taken as the eight
+      symbols after the preamble. Haxhibeqiri et al. saw recapture at SF7 up
+      to 20 ms, inside those eight symbols, but none at SF12 at 600 ms,
+      which is also inside them, so no window measured in symbols fits both,
+      and the eight-symbol one is the header's own length.
+    """
+    if not timing_collision(cfg, later, earlier):
+        return False, False
+    stronger_by = later.rssi - earlier.rssi
+    if cfg.receiver_model == "lock":
+        window = (preamble_critical_ms(cfg, earlier.sf)
+                  if cfg.preamble_capture else 0.0)
+        # Bor et al. decoded the strong packet "up to at most 3 symbols
+        # late", so an arrival exactly at the window's edge is still inside.
+        offset = later.start - earlier.start
+        if offset > window:
+            if (cfg.header_recapture and in_header(cfg, earlier.sf, offset)
+                    and stronger_by >= cfg.capture_threshold_db):
+                # The stronger arrival corrupts the header, the receiver drops
+                # the packet on the header CRC and synchronises to the new one.
+                return True, False
+            if cfg.lock_survival_db is not None:
+                needed = lock_survival_threshold_db(cfg, earlier.sf)
+                earlier_lost = earlier.rssi - later.rssi < needed
+            else:
+                earlier_lost = stronger_by >= cfg.capture_threshold_db
+            return earlier_lost, True
+    if abs(stronger_by) < cfg.capture_threshold_db:
+        return True, True
+    if later.rssi < earlier.rssi:
+        return False, True
+    return True, False
+
+
+def inter_sf_threshold_db(cfg: SimConfig, ref_sf: int, int_sf: int) -> float:
+    """The minimum SIR a packet on `ref_sf` needs against one on `int_sf`."""
+    try:
+        return cfg.inter_sf_rejection_db[ref_sf][int_sf]
+    except KeyError:
+        raise ValueError(
+            f"inter_sf_rejection_db has no entry for SF{ref_sf} interfered by "
+            f"SF{int_sf}. A table must cover every pair of spreading factors "
+            f"the study can put on the air.") from None
+
+
+def inter_sf_losses(cfg: SimConfig, earlier, later) -> Tuple[bool, bool]:
+    """Which of two overlapping packets on the same channel but DIFFERENT
+    spreading factors the receiver loses, as (earlier_lost, later_lost).
+
+    Each packet is judged against the other on its own row of the table: a
+    packet is lost when its SIR against the other falls below
+    `inter_sf_rejection_db[its SF][other SF]`, and the overlap covers at
+    least one symbol of it. The two verdicts are independent, so the
+    stronger packet usually survives while the weaker one does not, and with
+    the measured table, whose entries are all negative, two packets of equal
+    power never harm each other.
+
+    The one-symbol floor follows the measurement rather than a theory of the
+    demodulator. Croce et al. offset each interfering packet at random within
+    a window that guaranteed at least one symbol of overlap, so their
+    thresholds describe overlaps of that length and longer. Shorter overlaps
+    were not measured and are left harmless.
+
+    Neither the receiver rule nor the preamble allowance enters. Both were
+    measured for packets on one spreading factor, which a receiver can
+    synchronise to. A packet on another one is not something it locks onto,
+    and Croce et al. drew the offset at random and report one threshold per
+    pair, so there is no measured dependence on offset or arrival order to
+    model.
+
+    What this does not model, stated rather than filled in: interference from
+    several packets on other spreading factors is not summed, so each is
+    judged alone, as the same-SF rule judges pairs. The threshold is a step,
+    where the measured transition has some width. Of the two tables shipped,
+    Croce et al.'s was measured on a node radio and Eigner's on an SX1301
+    concentrator, and they agree within 1.5 dB."""
+    overlap = (min(earlier.start + earlier.dur, later.start + later.dur)
+               - later.start)
+
+    def lost(ref, other):
+        if overlap < (2.0 ** ref.sf) / cfg.bw_khz:
+            return False
+        return ref.rssi - other.rssi < inter_sf_threshold_db(cfg, ref.sf, other.sf)
+
+    return lost(earlier, later), lost(later, earlier)
+
+
 def choose_sf_adaptive(
-    cfg: SimConfig, distance_m: float, sf_options: Sequence[int]
+    cfg: SimConfig, distance_m: float, sf_options: Sequence[int],
+    shadowing_db: float = 0.0
 ) -> Optional[Tuple[int, float]]:
     """Lowest-airtime SF among `sf_options` whose sensitivity is still met at this
-    distance. Returns (sf, airtime_ms), or None if no SF reaches the node."""
-    prx = rssi_dbm(cfg, distance_m)
+    distance. Returns (sf, airtime_ms), or None if no SF reaches the node.
+
+    The node's fixed shadowing is part of its link, so the choice is made
+    against the link the node actually has rather than the median one. A node
+    in a hollow is assigned a slower spreading factor, which is what a real
+    network would do."""
+    prx = rssi_dbm(cfg, distance_m, shadowing_db=shadowing_db)
     best = None
     for sf in sf_options:
         if prx >= cfg.sensitivity_dbm[sf]:
@@ -161,6 +521,65 @@ def choose_sf_adaptive(
 # ---------------------------------------------------------------------------
 # Geometry (no third-party dependency, so the engine stays install-free)
 # ---------------------------------------------------------------------------
+
+def choose_adr(
+    cfg: SimConfig, distance_m: float, sf_options: Sequence[int],
+    shadowing_db: float = 0.0
+) -> Optional[Tuple[int, float]]:
+    """Steady-state ADR: the (spreading factor, transmit power) a converged
+    network would settle this node on. Returns None if no data rate reaches it.
+
+    The order is the one the real algorithm uses, and it is not arbitrary.
+    Data rate first: take the fastest whose sensitivity is still met, at full
+    power, with `adr_margin_db` to spare. Power second: spend whatever margin
+    is left over on reducing power, as far down the plan's offset list as the
+    node can go while keeping that margin.
+
+    The consequence is the point of the scenario. Every node on a given
+    spreading factor arrives at the gateway within one power step of the same
+    level, so the spread of received powers collapses to the quantisation,
+    2 dB in every plan. The capture effect needs a difference larger than
+    `capture_threshold_db`, normally 6 dB, to resolve a collision, so inside a
+    spreading factor it stops resolving anything. Shorter airtime pulls
+    capacity up and lost capture pushes it down, and which wins is what the
+    scenario measures rather than assumes.
+    """
+    loss = path_loss_db(cfg, distance_m) - shadowing_db
+    best = None
+    fallback = None
+    for sf in sf_options:
+        link = (cfg.tx_power_dbm + cfg.net_antenna_gain_db - loss
+                - cfg.sensitivity_dbm[sf])
+        if link < 0:
+            continue                      # this data rate does not reach at all
+        at = airtime_ms(cfg, sf)
+        # The slowest data rate that works at full power, kept in case no data
+        # rate affords the margin.
+        if fallback is None or at > fallback[1]:
+            fallback = (sf, at)
+        headroom = link - cfg.adr_margin_db
+        if headroom < 0:
+            continue                      # reaches, but with no margin to spare
+        if best is not None and at >= best[1]:
+            continue
+        if cfg.tx_power_offsets_db:
+            # the deepest cut that still fits inside the headroom
+            usable = [o for o in cfg.tx_power_offsets_db if -o <= headroom]
+            reduction = min(usable) if usable else 0.0
+        else:
+            reduction = 0.0
+        best = (sf, at, cfg.tx_power_dbm + reduction)
+    if best:
+        return best[0], best[2]
+    # No data rate affords the margin. ADR is an optimisation on top of a
+    # working link, not an admission test: a node whose link is poor stays at
+    # the slowest data rate it can use, at full power, and simply never speeds
+    # up. Excluding it instead would hide a struggling node from DER entirely
+    # and make the scenario look better the worse the propagation got.
+    if fallback:
+        return fallback[0], cfg.tx_power_dbm
+    return None
+
 
 def point_in_ring(x: float, y: float, ring: Sequence[Tuple[float, float]]) -> bool:
     """Ray-casting point-in-polygon test."""
@@ -254,8 +673,12 @@ class _Packet:
 
 
 def parse_scenario(scenario: str, cfg: SimConfig):
-    """'SF9' -> (9, (9,)). 'MULTI' -> (None, allowed adaptive SFs)."""
-    if scenario.upper() == "MULTI":
+    """'SF9' -> (9, (9,)). 'MULTI' and 'ADR' -> (None, allowed SFs).
+
+    MULTI and ADR share this shape because both assign the spreading factor
+    per node. They differ in how, which `scenario_is_adr` reports separately
+    so that callers only interested in which SFs are in play need not care."""
+    if scenario.upper() in ("MULTI", "ADR"):
         opts = cfg.adaptive_sf_options or tuple(sorted(cfg.sensitivity_dbm))
         missing = [sf for sf in opts if sf not in cfg.sensitivity_dbm]
         if missing:
@@ -267,7 +690,8 @@ def parse_scenario(scenario: str, cfg: SimConfig):
         sf = int(scenario.upper().replace("SF", ""))
     except ValueError:
         raise ValueError(
-            f"unrecognised scenario {scenario!r}. Use 'SF<n>' (e.g. 'SF9') or 'MULTI'."
+            f"unrecognised scenario {scenario!r}. Use 'SF<n>' (e.g. 'SF9'), "
+            f"'MULTI' or 'ADR'."
         )
     if sf not in cfg.sensitivity_dbm:
         raise ValueError(
@@ -275,6 +699,98 @@ def parse_scenario(scenario: str, cfg: SimConfig):
             f"does not define. Defined: {sorted(cfg.sensitivity_dbm)}"
         )
     return sf, (sf,)
+
+
+def scenario_is_adr(scenario: str) -> bool:
+    """True for the scenario that applies a margin and controls power.
+
+    MULTI assigns the spreading factor too, but with neither, so it stands as
+    the ideal bound: instant convergence, no margin, full power. ADR is what a
+    converged real network looks like. Keeping them apart is what lets a
+    figure show the difference, which is the whole reason ADR exists here."""
+    return scenario.upper() == "ADR"
+
+
+def resolve_collisions(cfg: SimConfig, packets) -> dict:
+    """Decide which packets the gateway loses, given every packet that cleared
+    sensitivity, in order of arrival. Draws nothing random.
+
+    Returns `lost_capacity`, the packets dropped for want of a demodulator,
+    and `collided_ids`, the (nodeid, start) of every other packet lost to an
+    overlap. When `cfg.inter_sf_rejection_db` is set, also `inter_sf_ids`,
+    the subset of `collided_ids` that an overlap with another spreading
+    factor took, whether or not a same-SF overlap took it too."""
+    n_lost_capacity = 0
+    collided_ids = set()
+    inter_sf_ids = set()
+    inter_sf = cfg.inter_sf_rejection_db is not None
+    active_by_channel_sf: Dict[tuple, list] = {}
+    active_global: list = []
+
+    for pkt in packets:
+        start = pkt.start
+        key = (pkt.channel, pkt.sf)
+        if key in active_by_channel_sf:
+            active_by_channel_sf[key] = [
+                p for p in active_by_channel_sf[key] if p.start + p.dur > start
+            ]
+
+        # Chip-wide simultaneous-demodulation limit. A packet arriving when every
+        # demodulation path is busy is not decoded, but its RF energy is still on
+        # the air, so it must remain able to corrupt overlapping transmissions.
+        if cfg.max_simultaneous_demodulations is not None:
+            active_global[:] = [p for p in active_global if p.start + p.dur > start]
+            if len(active_global) >= cfg.max_simultaneous_demodulations:
+                pkt.capacity_dropped = True
+                n_lost_capacity += 1
+
+        for other in active_by_channel_sf.get(key, []):
+            # Same channel and SF is already established by the index key.
+            # `other` is still in the air, so it started first.
+            earlier_lost, later_lost = resolve_overlap(cfg, other, pkt)
+            if later_lost:
+                pkt.collided = True
+            if earlier_lost:
+                other.collided = True
+                # A packet dropped for want of a demodulator is already one
+                # capacity loss. Counting it again here, as the loop did until
+                # ROADMAP item 16, lost the same packet twice.
+                if not other.capacity_dropped:
+                    collided_ids.add((other.nodeid, other.start))
+
+        if inter_sf:
+            for (ch, sf), active in active_by_channel_sf.items():
+                if ch != pkt.channel or sf == pkt.sf:
+                    continue
+                # For speed only: a finished packet has a negative overlap
+                # and would fail the one-symbol floor anyway.
+                active[:] = [p for p in active if p.start + p.dur > start]
+                for other in active:
+                    earlier_lost, later_lost = inter_sf_losses(cfg, other, pkt)
+                    if later_lost:
+                        pkt.collided = True
+                        inter_sf_ids.add((pkt.nodeid, pkt.start))
+                    if earlier_lost:
+                        other.collided = True
+                        # Already counted once as a capacity loss.
+                        if not other.capacity_dropped:
+                            collided_ids.add((other.nodeid, other.start))
+                            inter_sf_ids.add((other.nodeid, other.start))
+
+        active_by_channel_sf.setdefault(key, []).append(pkt)
+        if cfg.max_simultaneous_demodulations is not None and not pkt.capacity_dropped:
+            active_global.append(pkt)
+        # A capacity-dropped packet counts once, as a capacity loss, never also
+        # as a collision.
+        if pkt.collided and not pkt.capacity_dropped:
+            collided_ids.add((pkt.nodeid, pkt.start))
+
+    out = {"lost_capacity": n_lost_capacity, "collided_ids": collided_ids}
+    if inter_sf:
+        # An arriving packet is added before the loop knows whether it was
+        # also dropped for want of a demodulator, so those are removed here.
+        out["inter_sf_ids"] = inter_sf_ids & collided_ids
+    return out
 
 
 def run_single_sim(cfg: SimConfig, n_nodes: int, sim_time_ms: float,
@@ -286,18 +802,40 @@ def run_single_sim(cfg: SimConfig, n_nodes: int, sim_time_ms: float,
 
     positions = _sample_positions(cfg, n_nodes, max_d, rng)
 
+    is_adr = scenario_is_adr(scenario)
     node_sf = {}
+    node_tx = {}
+    # Drawn once per node and kept for the whole run: this is obstruction that
+    # belongs to where the node is, not to when it transmits.
+    node_shadow = {
+        nid: (rng.gauss(0.0, cfg.shadowing_sigma_db)
+              if cfg.shadowing_sigma_db > 0 else 0.0)
+        for nid, _ in positions
+    }
     unreachable = 0
     for nid, d in positions:
-        if fixed_sf is None:
-            choice = choose_sf_adaptive(cfg, d, sf_options)
+        sh = node_shadow[nid]
+        if is_adr:
+            choice = choose_adr(cfg, d, sf_options, sh)
+            if choice is None:
+                # No data rate reaches this node with the margin in hand. A
+                # real network would leave it unjoined, so it is counted the
+                # same way an out-of-range node is.
+                unreachable += 1
+                node_sf[nid] = None
+                continue
+            node_sf[nid], node_tx[nid] = choice
+        elif fixed_sf is None:
+            choice = choose_sf_adaptive(cfg, d, sf_options, sh)
             if choice is None:
                 unreachable += 1
                 node_sf[nid] = None
                 continue
             node_sf[nid] = choice[0]
+            node_tx[nid] = cfg.tx_power_dbm
         else:
             node_sf[nid] = fixed_sf
+            node_tx[nid] = cfg.tx_power_dbm
     node_dist = dict(positions)
 
     # Poisson traffic per node (exponential inter-arrival times)
@@ -313,62 +851,63 @@ def run_single_sim(cfg: SimConfig, n_nodes: int, sim_time_ms: float,
 
     n_transmitted = len(events)
     n_lost_signal = 0
-    n_lost_capacity = 0
-    collided_ids = set()
 
-    active_by_channel_sf: Dict[tuple, list] = {}
-    active_global: list = []
+    # Transmit energy. Charged for every packet put on the air, whether or not
+    # it survives, because the node spends it either way: a collided packet
+    # costs exactly what a received one costs. That is what makes energy per
+    # EXTRACTED message the figure worth reporting rather than energy per
+    # transmission.
+    tx_energy_j = 0.0
+    if cfg.tx_current_ma is not None:
+        for start, nid in events:
+            sf = node_sf[nid]
+            if sf is None:
+                continue
+            current = _current_at(cfg, node_tx[nid])
+            # ms * mA * V / 1e6 = J
+            tx_energy_j += (airtime_ms(cfg, sf) * current
+                            * cfg.supply_voltage_v / 1e6)
 
+    # Two phases. The first draws everything random, packet by packet in
+    # arrival order, exactly as the engine always has. The second resolves
+    # collisions and draws nothing, which is what lets the tests feed it
+    # synthetic traffic and check it against closed-form results.
+    packets = []
     for start, nid in events:
         sf = node_sf[nid]
-        rssi = rssi_dbm(cfg, node_dist[nid])
+        # The node's fixed shadowing, plus this packet's fading draw if any.
+        offset = node_shadow[nid]
+        if cfg.fading_sigma_db > 0:
+            offset += rng.gauss(0.0, cfg.fading_sigma_db)
+        rssi = rssi_dbm(cfg, node_dist[nid], node_tx[nid], offset)
         if rssi < cfg.sensitivity_dbm[sf]:
             n_lost_signal += 1
             continue
-
         channel = rng.randrange(cfg.n_channels)
-        dur = airtime_ms(cfg, sf)
-        key = (channel, sf)
-        if key in active_by_channel_sf:
-            active_by_channel_sf[key] = [
-                p for p in active_by_channel_sf[key] if p.start + p.dur > start
-            ]
-        pkt = _Packet(nid, sf, channel, rssi, start, dur)
+        packets.append(_Packet(nid, sf, channel, rssi, start, airtime_ms(cfg, sf)))
 
-        # Chip-wide simultaneous-demodulation limit. A packet arriving when every
-        # demodulation path is busy is not decoded, but its RF energy is still on
-        # the air, so it must remain able to corrupt overlapping transmissions.
-        if cfg.max_simultaneous_demodulations is not None:
-            active_global[:] = [p for p in active_global if p.start + p.dur > start]
-            if len(active_global) >= cfg.max_simultaneous_demodulations:
-                pkt.capacity_dropped = True
-                n_lost_capacity += 1
-
-        for other in active_by_channel_sf.get(key, []):
-            # Same channel and SF is already established by the index key.
-            if not timing_collision(cfg, pkt, other):
-                continue
-            if abs(pkt.rssi - other.rssi) < cfg.capture_threshold_db:
-                pkt.collided = True
-                other.collided = True
-                collided_ids.add((other.nodeid, other.start))
-            elif pkt.rssi < other.rssi:
-                pkt.collided = True
-            else:
-                other.collided = True
-                collided_ids.add((other.nodeid, other.start))
-
-        active_by_channel_sf.setdefault(key, []).append(pkt)
-        if cfg.max_simultaneous_demodulations is not None and not pkt.capacity_dropped:
-            active_global.append(pkt)
-        # A capacity-dropped packet counts once, as a capacity loss, never also
-        # as a collision.
-        if pkt.collided and not pkt.capacity_dropped:
-            collided_ids.add((pkt.nodeid, pkt.start))
+    outcome = resolve_collisions(cfg, packets)
+    n_lost_capacity = outcome["lost_capacity"]
+    collided_ids = outcome["collided_ids"]
 
     n_collided = len(collided_ids)
     n_received = n_transmitted - n_lost_signal - n_lost_capacity - n_collided
     der = n_received / n_transmitted if n_transmitted else float("nan")
+
+    # DER over the INTENDED fleet, not just the nodes that got on the air.
+    #
+    # An adaptive scenario drops a node with no usable data rate: it never
+    # transmits, so it never appears in `n_transmitted` and cannot lower DER.
+    # A fixed-SF node in the same position does transmit, and fails, and does
+    # lower it. Without this second figure the two are not comparable, and the
+    # discrepancy grows with shadowing precisely when it matters most: a
+    # scenario can post a rising DER while quietly excluding a quarter of the
+    # deployment. Expected rather than simulated traffic is used for the
+    # excluded nodes, since generating it would change the collisions it is
+    # supposed to be measured against.
+    expected_lost = unreachable * (sim_time_ms / cfg.avg_send_interval_ms)
+    fleet_total = n_transmitted + expected_lost
+    der_fleet = n_received / fleet_total if fleet_total else float("nan")
     # DER counting only collision and weak-signal losses, which is the definition
     # used in most of the LoRa scalability literature. Reported alongside `der`
     # for comparability. The two coincide whenever the demodulation limit is not
@@ -378,7 +917,7 @@ def run_single_sim(cfg: SimConfig, n_nodes: int, sim_time_ms: float,
         if n_transmitted else float("nan")
     )
 
-    return {
+    result = {
         "n_nodes": n_nodes,
         "scenario": scenario,
         "transmitted": n_transmitted,
@@ -388,9 +927,84 @@ def run_single_sim(cfg: SimConfig, n_nodes: int, sim_time_ms: float,
         "received": n_received,
         "der": der,
         "der_classic": der_classic,
+        "der_fleet": der_fleet,
         "unreachable_nodes": unreachable,
+        "unreachable_fraction": unreachable / n_nodes if n_nodes else 0.0,
+        # How the nodes that got on the air are spread over spreading factors.
+        # Orthogonality between SFs is the mechanism by which ADR's margin buys
+        # capacity, so the distribution is reported rather than described.
+        # Unreachable nodes are excluded: they hold no data rate at all.
+        "nodes_per_sf": _count_per_sf(node_sf),
+        "tx_energy_j": tx_energy_j if cfg.tx_current_ma is not None else None,
+        # Network energy consumption: what the whole network spends to get one
+        # message through, Bor et al.'s NEC. It rises with congestion even
+        # though the per-transmission cost does not, because the numerator
+        # includes every packet that was paid for and lost.
+        "nec_j_per_message": (
+            tx_energy_j / n_received
+            if cfg.tx_current_ma is not None and n_received else None),
         "max_dist_m": max_d,
+        # The spread of received powers within a spreading factor is what the
+        # capture effect feeds on, since orthogonality means collisions only
+        # happen inside one. Reported because it is the mechanism by which
+        # power control changes capacity, and a number is more use than an
+        # argument about it.
+        "rssi_spread_db": _rssi_spread(cfg, positions, node_sf, node_tx,
+                                       node_shadow),
+        "mean_tx_power_dbm": (
+            sum(node_tx[nid] for nid, _ in positions if node_sf[nid] is not None)
+            / max(1, sum(1 for nid, _ in positions if node_sf[nid] is not None))
+        ),
     }
+    # Only present when the rule is on, so that results written with it off
+    # are byte for byte what they were before it existed.
+    if "inter_sf_ids" in outcome:
+        result["lost_inter_sf"] = len(outcome["inter_sf_ids"])
+    return result
+
+
+def _current_at(cfg: SimConfig, tx_power_dbm: float) -> float:
+    """Current draw at a transmit power, from the study's own table.
+
+    Rounds to the nearest tabulated decibel and refuses to go outside the
+    table. Power amplifier stages switch at particular powers and the draw
+    jumps there, so extrapolating off the end is not a small error: in the
+    SX1272 figures the step from 14 to 15 dBm nearly doubles it."""
+    table = cfg.tx_current_ma
+    rounded = int(round(tx_power_dbm))
+    if rounded in table:
+        return float(table[rounded])
+    raise KeyError(
+        f"No transmit current for {tx_power_dbm:g} dBm. The table covers "
+        f"{min(table)} to {max(table)} dBm. Power amplifier stages switch "
+        f"inside that range, so a figure outside it cannot be interpolated."
+    )
+
+
+def _count_per_sf(node_sf) -> dict:
+    counts = {}
+    for sf in node_sf.values():
+        if sf is not None:
+            counts[sf] = counts.get(sf, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def _rssi_spread(cfg, positions, node_sf, node_tx, node_shadow=None):
+    """Largest within-spreading-factor range of received power, in dB.
+
+    Includes each node's fixed shadowing, since that is a standing feature of
+    its link. Per-packet fading is left out: it moves every node equally in
+    expectation and would turn this into a measure of the draw rather than of
+    the deployment."""
+    by_sf = {}
+    for nid, d in positions:
+        sf = node_sf.get(nid)
+        if sf is None:
+            continue
+        sh = 0.0 if node_shadow is None else node_shadow.get(nid, 0.0)
+        by_sf.setdefault(sf, []).append(rssi_dbm(cfg, d, node_tx[nid], sh))
+    spreads = [max(v) - min(v) for v in by_sf.values() if len(v) > 1]
+    return max(spreads) if spreads else 0.0
 
 
 def run_batch(cfg: SimConfig, n_nodes: int, sim_time_ms: float, scenario: str,
@@ -404,18 +1018,42 @@ def run_batch(cfg: SimConfig, n_nodes: int, sim_time_ms: float, scenario: str,
         for i in range(n_runs)
     ]
     ders = [r["der"] for r in results]
-    return {
+    batch = {
         "scenario": scenario,
         "n_nodes": n_nodes,
         "n_runs": n_runs,
         "der_mean": stats.mean(ders),
         "der_std": stats.stdev(ders) if len(ders) > 1 else 0.0,
         "der_classic_mean": stats.mean(r["der_classic"] for r in results),
+        "der_fleet_mean": stats.mean(r["der_fleet"] for r in results),
+        "der_fleet_runs": [r["der_fleet"] for r in results],
+        "unreachable_fraction_mean": stats.mean(
+            r["unreachable_fraction"] for r in results),
         "transmitted_mean": stats.mean(r["transmitted"] for r in results),
         "collided_mean": stats.mean(r["collided"] for r in results),
         "lost_signal_mean": stats.mean(r["lost_signal"] for r in results),
         "lost_capacity_mean": stats.mean(r["lost_capacity"] for r in results),
         "unreachable_mean": stats.mean(r["unreachable_nodes"] for r in results),
+        "rssi_spread_db_mean": stats.mean(r["rssi_spread_db"] for r in results),
+        "tx_energy_j_mean": (
+            stats.mean(r["tx_energy_j"] for r in results)
+            if results[0]["tx_energy_j"] is not None else None),
+        "nec_j_per_message_mean": (
+            stats.mean(r["nec_j_per_message"] for r in results
+                       if r["nec_j_per_message"] is not None)
+            if any(r["nec_j_per_message"] is not None for r in results)
+            else None),
+        "mean_tx_power_dbm": stats.mean(r["mean_tx_power_dbm"] for r in results),
+        # Keys are strings because this row goes straight into JSON. A data
+        # rate absent from one run counts as zero there, not as missing.
+        "nodes_per_sf_mean": {
+            str(sf): stats.mean(r["nodes_per_sf"].get(sf, 0) for r in results)
+            for sf in sorted({sf for r in results for sf in r["nodes_per_sf"]})
+        },
         "max_dist_m": results[0]["max_dist_m"],
         "der_runs": ders,
     }
+    if "lost_inter_sf" in results[0]:
+        batch["lost_inter_sf_mean"] = stats.mean(
+            r["lost_inter_sf"] for r in results)
+    return batch

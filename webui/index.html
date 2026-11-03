@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoRaCAP</title>
+<style>
+  :root{
+    --bg:#f6f5f2; --panel:#fff; --ink:#1b1b1a; --muted:#6b6a66; --line:#dedcd6;
+    --accent:#1f6fb2; --ok:#1f7a4d; --warn:#9a6a10; --warnbg:#fdf6e3;
+    --err:#b3261e; --errbg:#fdf0ef; --okbg:#eef6f1;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:var(--bg);color:var(--ink)}
+  header{background:var(--panel);border-bottom:1px solid var(--line);padding:18px 24px}
+  header h1{margin:0;font-size:19px;letter-spacing:-.2px}
+  header p{margin:4px 0 0;color:var(--muted);font-size:13.5px}
+  .wrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;
+        max-width:1320px;margin:20px auto;padding:0 24px;align-items:start}
+  @media(max-width:1000px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+        padding:18px 20px;margin-bottom:16px}
+  .card h2{margin:0 0 4px;font-size:15px;letter-spacing:.01em}
+  .card .hint{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:11px}
+  label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:3px}
+  input,select,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);
+    border-radius:6px;font:inherit;font-size:14px;background:#fff;color:var(--ink)}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);
+    outline-offset:-1px;border-color:transparent}
+  textarea{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+  button{font:inherit;font-size:14px;padding:8px 15px;border-radius:7px;
+    border:1px solid var(--line);background:#fff;cursor:pointer}
+  button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover:not(:disabled){filter:brightness(1.08);color:#fff}
+  .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  .msg{padding:9px 12px;border-radius:7px;font-size:13.2px;margin:7px 0;
+       border:1px solid transparent}
+  .msg.e{background:var(--errbg);border-color:#f0cdc9;color:var(--err)}
+  .msg.w{background:var(--warnbg);border-color:#efe0b8;color:var(--warn)}
+  .msg.i{background:#f2f1ed;border-color:var(--line);color:var(--muted)}
+  .msg.s{background:var(--okbg);border-color:#c8e2d3;color:var(--ok)}
+  code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  pre{background:#faf9f6;border:1px solid var(--line);border-radius:7px;
+      padding:12px;overflow:auto;font-size:12.2px;max-height:330px;margin:10px 0 0}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:9px}
+  th,td{text-align:left;padding:5px 7px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:12px}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .side h2{font-size:14px}
+  .pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;
+        border:1px solid var(--line);color:var(--muted);margin-left:6px}
+  .pill.ok{background:var(--okbg);border-color:#c8e2d3;color:var(--ok)}
+  .pill.bad{background:var(--errbg);border-color:#f0cdc9;color:var(--err)}
+  .fileline{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .fileline .name{font-size:12.5px;color:var(--muted)}
+  svg.poly{width:100%;height:230px;background:#faf9f6;border:1px solid var(--line);
+           border-radius:7px;margin-top:10px}
+  .bar{height:7px;background:#eceae4;border-radius:4px;overflow:hidden;margin:9px 0}
+  .bar > div{height:100%;background:var(--accent);width:0;transition:width .3s}
+  details{margin-top:10px}
+  summary{cursor:pointer;font-size:13px;color:var(--accent)}
+  .foot{color:var(--muted);font-size:12.5px;max-width:1320px;margin:0 auto 32px;
+        padding:0 24px}
+  .srcnote{font-size:12px;color:var(--muted);margin-top:7px;line-height:1.45}
+  .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-top:4px}
+  .tab{border:none;border-bottom:2px solid transparent;border-radius:0;
+       background:none;padding:8px 14px;color:var(--muted);font-size:13.5px}
+  .tab:hover:not(.on){color:var(--ink)}
+  .tab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <h1>LoRaCAP</h1>
+  <p>Set up a capacity study. This writes a <code>study.py</code> and runs it
+     through the same code as the command line, so what you get here stays
+     reproducible.</p>
+</header>
+
+<div class="wrap">
+<div>
+
+  <!-- 1. site -->
+  <div class="card">
+    <h2>1. Site</h2>
+    <p class="hint">Where the gateway is, and the boundary nodes are spread
+       over. Export the boundary from Google Earth as KML.</p>
+    <div class="grid">
+      <div><label>Study name</label><input id="f_name" placeholder="mysite"></div>
+      <div><label>Site</label><input id="f_site" placeholder="Where this is"></div>
+      <div><label>Gateway latitude</label><input id="f_lat" type="number" step="any"></div>
+      <div><label>Gateway longitude</label><input id="f_lon" type="number" step="any"></div>
+    </div>
+    <div class="row">
+      <input type="file" id="kmlfile" accept=".kml,.xml" style="display:none">
+      <button onclick="document.getElementById('kmlfile').click()">Choose KML…</button>
+      <span class="name" id="kmlname">no boundary loaded</span>
+    </div>
+    <div id="kmlout"></div>
+  </div>
+
+  <!-- 2. radio -->
+  <div class="card">
+    <h2>2. Radio</h2>
+    <p class="hint">The band decides which spreading factors exist on uplink.
+       The chip fills in sensitivity, channels and the demodulation limit from
+       its datasheet.</p>
+    <div class="grid">
+      <div><label>Region</label><select id="f_region"></select></div>
+      <div><label>Bandwidth (kHz)</label><input id="f_bw" type="number" value="125"></div>
+      <div><label>Gateway chip</label><select id="f_chip"></select></div>
+      <div><label>Gateways</label><input id="f_ngw" type="number" value="1"></div>
+    </div>
+    <div id="dwellbox" style="display:none;margin-top:12px">
+      <label>Uplink dwell time</label>
+      <select id="f_dwell"></select>
+      <div class="srcnote">This plan publishes a different payload ceiling for
+        each setting, and at the slow data rates they differ by more than
+        tenfold, so there is nothing safe to assume on your behalf.</div>
+    </div>
+    <div id="chipnote" class="srcnote"></div>
+    <div class="grid" style="margin-top:12px">
+      <div><label>Node Tx power (dBm)</label><input id="f_tx" type="number" step="any" value="14"></div>
+      <div><label>Node antenna (dBi)</label><input id="f_gtx" type="number" step="any" value="0"></div>
+      <div><label>Gateway antenna (dBi)</label><input id="f_grx" type="number" step="any" value="0"></div>
+      <div><label>Cable losses (dB)</label><input id="f_cable" type="number" step="any" value="0"></div>
+    </div>
+  </div>
+
+  <!-- 3. propagation -->
+  <div class="card">
+    <h2>3. Propagation <span id="origin" class="pill">not set</span></h2>
+    <p class="hint">The one thing that cannot be borrowed from another site.
+       Everything downstream rests on it, so how you arrived at it is recorded
+       in <code>study.py</code> alongside the numbers.</p>
+
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-pane="pane_fit">I have field measurements</button>
+      <button class="tab" data-pane="pane_terrain">I have none</button>
+    </div>
+
+    <div id="pane_fit" class="pane">
+      <p class="hint" style="margin-top:12px">A CSV of received messages with
+         RSSI, latitude and longitude. Filter it first to one spreading factor
+         and one gateway.</p>
+      <div class="row">
+        <input type="file" id="csvfile" accept=".csv,.tsv,.txt" style="display:none">
+        <button onclick="document.getElementById('csvfile').click()">Choose measurements CSV…</button>
+        <span class="name" id="csvname">none</span>
+      </div>
+      <div id="fitout"></div>
+    </div>
+
+    <div id="pane_terrain" class="pane" style="display:none">
+      <p class="hint" style="margin-top:12px">Published measurements give the
+         exponent for a comparable environment. They do not give the intercept,
+         and free-space loss is not a usable stand-in: on the one deployment
+         here with field data it is about 59&nbsp;dB optimistic at 100&nbsp;m,
+         because a node on an animal radiates through a body, close to wet
+         ground and often through vegetation. So the intercept is anchored to
+         the one thing you can state without a campaign, which is how far the
+         link is expected to work.</p>
+      <div class="grid">
+        <div><label>Environment</label><select id="f_terrain"></select></div>
+        <div><label>Expected range (m)</label><input id="f_range" type="number" step="any"></div>
+        <div><label>…at which spreading factor</label><select id="f_anchorsf"></select></div>
+      </div>
+      <div class="row">
+        <button class="primary" onclick="applyTerrain()">Build the model</button>
+        <span class="name">sets the exponent and derives the intercept</span>
+      </div>
+      <div id="terrainout"></div>
+    </div>
+
+    <div class="grid" style="margin-top:14px">
+      <div><label>Exponent n</label><input id="f_n" type="number" step="any" value="2.0"></div>
+      <div><label>Loss at d₀ (dB)</label><input id="f_ref" type="number" step="any" value="0"></div>
+      <div><label>d₀ (m)</label><input id="f_d0" type="number" step="any" value="100"></div>
+      <div><label>Validity floor (m)</label><input id="f_minv" type="number" step="any" value="30"></div>
+      <div><label>Shadowing σ (dB)</label><input id="f_sigma" type="number" step="any" value="0"></div>
+    </div>
+    <div class="srcnote">Shadowing is the spread the mean trend does not
+      explain, drawn once per node and fixed: obstruction that belongs to
+      where the node is. Leaving it at 0 makes two nodes the same distance
+      away receive identical power, which no site does. Adopting a fit fills
+      it from that fit's residual.</div>
+    <div style="margin-top:11px"><label>Where this model came from</label>
+      <input id="f_plsrc" placeholder="Field fit, or a published model you are citing"></div>
+    <div id="assumednote"></div>
+  </div>
+
+  <!-- 4. traffic and design -->
+  <div class="card">
+    <h2>4. Traffic and experiment</h2>
+    <p class="hint">Use the shortest reporting interval the deployment can
+       produce: capacity measured at the worst case is a bound you can defend.</p>
+    <div class="grid">
+      <div><label>Payload (bytes)</label><input id="f_pl" type="number" value="32"></div>
+      <div><label>Coding rate index</label><input id="f_cr" type="number" value="1"></div>
+      <div><label>Send interval (s)</label><input id="f_int" type="number" step="any" value="60"></div>
+      <div><label>Simulated time (s)</label><input id="f_time" type="number" value="3600"></div>
+      <div><label>Runs per point</label><input id="f_runs" type="number" value="30"></div>
+      <div><label>DER threshold</label><input id="f_th" type="number" step="any" value="0.9"></div>
+      <div><label>Random seed</label><input id="f_seed" type="number" value="99"></div>
+      <div><label>Placement</label><select id="f_place">
+        <option value="polygon">polygon (the real site)</option>
+        <option value="disc">disc (theoretical coverage)</option></select></div>
+    </div>
+    <div style="margin-top:12px"><label>Receiver model</label>
+      <div class="grid" style="margin-top:2px">
+        <div><label>Receiver rule</label><select id="f_rx"></select></div>
+        <div><label>Capture threshold (dB)</label>
+          <input id="f_capthr" type="number" step="any"></div>
+        <div><label>Spreading factors</label><select id="f_isf"></select></div>
+        <div><label>Locked packet survival</label><select id="f_lsurv"></select></div>
+        <div><label>Header recapture</label>
+          <select id="f_hrec"><option value="">off (default)</option>
+            <option value="1">on</option></select></div>
+      </div>
+      <div id="rxnote" class="srcnote"></div></div>
+    <div style="margin-top:12px"><label>Scenarios</label>
+      <div id="scenbox" class="row" style="margin-top:2px"></div>
+      <div class="srcnote">MULTI gives every node the fastest spreading factor
+        its link reaches: ideal, instantly converged assignment with no margin
+        and full power, so it is a bound rather than a network. ADR is what a
+        converged real network settles into, keeping a link margin and
+        reducing transmit power. Running both shows what the idealisation is
+        worth.</div></div>
+    <div style="margin-top:10px"><label>Highlighted scenario, drawn in colour</label>
+      <select id="f_hl"></select></div>
+  </div>
+
+  <!-- 5. create and run -->
+  <div class="card">
+    <h2>5. Create and run</h2>
+    <p class="hint">Writing the study puts <code>study.py</code> and
+       <code>site_polygon.py</code> in <code>studies/&lt;name&gt;/</code>. From
+       there it is an ordinary study, editable by hand.</p>
+    <div class="row">
+      <button class="primary" id="btn_create" onclick="createStudy()">Write study.py</button>
+      <button id="btn_run" onclick="runStudy()" disabled>Run simulation</button>
+      <label style="display:inline-flex;gap:6px;align-items:center;margin:0;color:var(--muted)">
+        <input type="checkbox" id="f_over" style="width:auto"> overwrite if it exists</label>
+    </div>
+    <div id="createout"></div>
+    <div id="runout"></div>
+  </div>
+
+</div>
+
+<!-- live validation -->
+<div class="side">
+  <div class="card" style="position:sticky;top:16px">
+    <h2>Checks <span id="vstamp" class="pill">waiting</span></h2>
+    <p class="hint">Updated as you type. A bad parameter does not make the
+       simulation fail, it makes it return a wrong answer quietly.</p>
+    <div id="vout"></div>
+  </div>
+</div>
+</div>
+
+<p class="foot">Everything here goes through the same engine as
+  <code>python3 run.py</code>. Values and sources are recorded in the generated
+  <code>study.py</code>, and results carry their configuration in
+  <code>results.json</code>.</p>
+
+<script>
+let BOOT=null, RINGS=null, RING_NAMES=null, LASTFIT=null, CREATED=null, POLL=null;
+let ADOPTED_R2=null, HL_TOUCHED=false;
+// How the propagation model was arrived at. It decides what the result means:
+// a fitted model supports a capacity figure, an assumed one supports a range.
+let ORIGIN='manual', TERRAIN=null;
+
+const $ = id => document.getElementById(id);
+const num = (id,d) => { const v=parseFloat($(id).value); return isNaN(v)?d:v; };
+
+async function post(path, body){
+  const r = await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},
+                             body:JSON.stringify(body||{})});
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error||'request failed');
+  return j.result;
+}
+
+function msg(kind, text){
+  const d=document.createElement('div'); d.className='msg '+kind; d.textContent=text; return d;
+}
+
+/* ---------- bootstrap ---------- */
+async function boot(){
+  BOOT = await post('/api/bootstrap');
+  const reg=$('f_region');
+  Object.keys(BOOT.regions).sort().forEach(r=>{
+    const o=document.createElement('option'); o.value=r;
+    o.textContent=r+'  (SF'+BOOT.regions[r].join(', SF')+')';
+    if(r==='US915') o.selected=true; reg.appendChild(o);
+  });
+  const chip=$('f_chip');
+  const none=document.createElement('option'); none.value='';
+  none.textContent='none — enter sensitivity by hand'; chip.appendChild(none);
+  BOOT.chips.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;chip.appendChild(o);});
+  chip.value = BOOT.chips[0]||'';
+  chip.onchange = chipNote; chipNote();
+  reg.onchange = ()=>{buildScenarios(); buildAnchorSf(); buildDwell(); validate();};
+  buildDwell();
+  buildScenarios();
+  buildTerrain();
+  buildAnchorSf();
+  buildReceiver();
+  document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x===t));
+    document.querySelectorAll('.pane').forEach(p=>
+      p.style.display = (p.id===t.dataset.pane) ? '' : 'none');
+  });
+  setOrigin('manual');
+  document.querySelectorAll('input,select').forEach(el=>{
+    el.addEventListener('input', schedule); el.addEventListener('change', schedule);
+  });
+  // Typing a propagation parameter by hand detaches it from the fit, so the
+  // recorded R^2 would no longer describe the model written into study.py.
+  ['f_n','f_ref','f_d0'].forEach(id=>
+    $(id).addEventListener('input', ()=>{ ADOPTED_R2=null; setOrigin('manual'); }));
+  $('f_hl').addEventListener('change', ()=>{ HL_TOUCHED=true; });
+  validate();
+}
+
+function buildDwell(){
+  const region=$('f_region').value, box=$('dwellbox'), sel=$('f_dwell');
+  const opts=(BOOT.dwell_time_options||{})[region];
+  if(!opts){ box.style.display='none'; return; }
+  box.style.display='';
+  const cur=sel.value; sel.innerHTML='';
+  const n=document.createElement('option'); n.value=''; n.textContent='choose…';
+  sel.appendChild(n);
+  opts.forEach(ms=>{
+    const o=document.createElement('option'); o.value=ms;
+    o.textContent = ms===0 ? 'no dwell limit' : ms+' ms limit';
+    sel.appendChild(o);
+  });
+  if(Array.from(sel.options).some(o=>o.value===cur)) sel.value=cur;
+  sel.onchange=schedule;
+}
+
+function chipNote(){
+  const c=$('f_chip').value, box=$('chipnote');
+  if(!c){ box.textContent='No chip selected, so you must supply sensitivity values yourself in study.py.'; return; }
+  const d=BOOT.chip_detail[c];
+  const s=Object.keys(d.sensitivity).sort((a,b)=>a-b)
+          .map(k=>'SF'+k+' '+d.sensitivity[k]).join(' · ');
+  box.textContent=c+': '+s+' dBm · '+d.channels+' channels · '
+                 +d.max_demod+' simultaneous demodulations. Source: '+d.source;
+}
+
+function buildScenarios(){
+  const sfs = BOOT.regions[$('f_region').value]||[];
+  const box=$('scenbox'); const prev=new Set(selectedScenarios()); box.innerHTML='';
+  sfs.concat(['MULTI','ADR']).forEach(sf=>{
+    const id='sc_'+sf;
+    const name=(sf==='MULTI'||sf==='ADR')?sf:('SF'+sf);
+    const w=document.createElement('label');
+    w.style.cssText='display:inline-flex;gap:5px;align-items:center;margin:0;color:var(--ink);font-size:13.5px';
+    w.innerHTML='<input type="checkbox" id="'+id+'" value="'+name+'" style="width:auto">'+name;
+    box.appendChild(w);
+    const cb=w.querySelector('input');
+    cb.checked = prev.size ? prev.has(name) : (sf===sfs[0]||sf===sfs[sfs.length-1]);
+    cb.addEventListener('change', ()=>{buildHighlight();schedule();});
+  });
+  buildHighlight();
+}
+function selectedScenarios(){
+  return Array.from(document.querySelectorAll('#scenbox input:checked')).map(c=>c.value);
+}
+function buildHighlight(){
+  const sel=$('f_hl'), cur=sel.value; sel.innerHTML='';
+  const n=document.createElement('option'); n.value=''; n.textContent='none'; sel.appendChild(n);
+  selectedScenarios().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+  // Default to the first scenario rather than "none": a figure with no
+  // highlighted curve is a quietly worse figure, not a neutral choice. Once
+  // the choice has been made by hand it is kept, including a chosen "none".
+  if(HL_TOUCHED && Array.from(sel.options).some(o=>o.value===cur)) sel.value=cur;
+  else if(sel.options.length>1) sel.selectedIndex=1;
+}
+
+/* ---------- KML ---------- */
+$('kmlfile').onchange = async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  $('kmlname').textContent=f.name;
+  const out=$('kmlout'); out.innerHTML='';
+  if($('f_lat').value===''||$('f_lon').value===''){
+    out.appendChild(msg('e','Enter the gateway latitude and longitude first: the boundary is projected relative to it.'));
+    return;
+  }
+  try{
+    const r = await post('/api/kml',{kml:await f.text(),lat:num('f_lat'),lon:num('f_lon')});
+    RINGS=r.rings; RING_NAMES=r.names; showKml(r);
+    // The site's own radius is the minimum assumption under which the
+    // deployment works at all, so it is the sensible starting anchor.
+    if(!$('f_range').value) $('f_range').value = Math.round(r.max_radius_m);
+    schedule();
+  }catch(err){ out.appendChild(msg('e',err.message)); RINGS=null; }
+};
+
+function showKml(r){
+  const out=$('kmlout'); out.innerHTML='';
+  let t='<table><tr><th>Polygon</th><th>Area (ha)</th><th>Vertices</th></tr>';
+  r.polygons.forEach(p=>{t+='<tr><td>'+p.name+'</td><td class="num">'+p.area_ha.toFixed(2)
+    +'</td><td class="num">'+p.vertices+'</td></tr>';});
+  t+='<tr><td><b>Total</b></td><td class="num"><b>'+r.total_area_ha.toFixed(2)
+    +'</b></td><td></td></tr></table>';
+  out.innerHTML=t;
+  out.appendChild(msg(r.gateway_inside?'s':'e',
+    r.gateway_inside ? 'Gateway falls inside the boundary. Farthest point '
+        + r.max_radius_m.toFixed(0)+' m away.'
+      : 'The gateway falls OUTSIDE every polygon. Usually that means the coordinates are wrong.'));
+  if(r.overlaps.length){
+    out.appendChild(msg('w','Polygons overlap by about '
+      + r.overlaps.map(o=>o.a+'/'+o.b+' '+o.area_ha.toFixed(2)+' ha').join(', ')
+      + '. The total above double-counts it, and nodes would concentrate there.'));
+  }
+  out.appendChild(drawPoly(r));
+}
+
+function drawPoly(r){
+  const b=r.bounds_m, pad=0.06;
+  const w=b.max_x-b.min_x||1, h=b.max_y-b.min_y||1;
+  const minx=b.min_x-w*pad, miny=b.min_y-h*pad, W=w*(1+2*pad), H=h*(1+2*pad);
+  const ns='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(ns,'svg'); svg.setAttribute('class','poly');
+  svg.setAttribute('viewBox',minx+' '+(-miny-H)+' '+W+' '+H);
+  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  r.rings.forEach(ring=>{
+    const p=document.createElementNS(ns,'polygon');
+    p.setAttribute('points',ring.map(c=>c[0]+','+(-c[1])).join(' '));
+    p.setAttribute('fill','rgba(31,111,178,.13)');
+    p.setAttribute('stroke','#1f6fb2'); p.setAttribute('stroke-width',Math.max(W,H)/260);
+    svg.appendChild(p);
+  });
+  const g=document.createElementNS(ns,'circle');
+  g.setAttribute('cx',0); g.setAttribute('cy',0);
+  g.setAttribute('r',Math.max(W,H)/90); g.setAttribute('fill','#b3261e');
+  svg.appendChild(g);
+  return svg;
+}
+
+/* ---------- path loss ---------- */
+$('csvfile').onchange = async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  $('csvname').textContent=f.name;
+  const out=$('fitout'); out.innerHTML=''; out.appendChild(msg('i','Fitting…'));
+  if($('f_lat').value===''||$('f_lon').value===''){
+    out.innerHTML=''; out.appendChild(msg('e','Enter the gateway position first.')); return;
+  }
+  try{
+    const netGain = num('f_gtx',0)+num('f_grx',0)-num('f_cable',0);
+    const r = await post('/api/fit',{csv:await f.text(),lat:num('f_lat'),lon:num('f_lon'),
+      tx_power_dbm:num('f_tx'),net_gain_db:netGain,d0_m:num('f_d0',100),
+      min_distance_m:num('f_minv',30)});
+    LASTFIT=r; showFit(r);
+  }catch(err){ out.innerHTML=''; out.appendChild(msg('e',err.message)); }
+};
+
+function showFit(r){
+  const out=$('fitout'); out.innerHTML='';
+  out.appendChild(msg('i', r.n_usable+' usable rows, '+r.n_kept+' beyond the '
+    + r.fits[0].min_distance_m.toFixed(0)+' m floor, spanning '
+    + r.distance_min_m.toFixed(0)+'–'+r.distance_max_m.toFixed(0)+' m'));
+  r.warnings.forEach(w=>out.appendChild(msg('w',w.message)));
+  let t='<table><tr><th>Fit</th><th>n</th><th>R²</th><th>σ (dB)</th><th>L(d₀)</th><th>Points</th><th></th></tr>';
+  r.fits.forEach((f,i)=>{
+    t+='<tr><td>'+f.label+'</td><td class="num">'+f.path_loss_exponent.toFixed(3)
+      +'</td><td class="num">'+f.r_squared.toFixed(3)+'</td><td class="num">'
+      +(f.shadowing_sigma_db!==undefined?f.shadowing_sigma_db.toFixed(2):'—')
+      +'</td><td class="num">'
+      +(f.path_loss_ref_db!==undefined?f.path_loss_ref_db.toFixed(2):'—')
+      +'</td><td class="num">'+f.n_points+'</td>'
+      +'<td><button onclick="useFit('+i+')">Use</button></td></tr>';
+  });
+  out.innerHTML += t+'</table>';
+  const d=document.createElement('div'); d.className='srcnote';
+  d.textContent='Binned averages each distance band once, so uneven sampling does '
+    +'not dominate. Unbinned is the usual choice in the literature. They can differ '
+    +'enough to matter, so pick deliberately and say which you used. For σ take '
+    +'the unbinned value: binning averages away the very scatter σ measures, so '
+    +'the binned figure understates shadowing, often by half.';
+  out.appendChild(d);
+}
+
+/* ---------- terrain, for a site with no measurements ---------- */
+function buildTerrain(){
+  const sel=$('f_terrain'); sel.innerHTML='';
+  const n=document.createElement('option'); n.value=''; n.textContent='choose…';
+  sel.appendChild(n);
+  Object.keys(BOOT.terrains).forEach(k=>{
+    const t=BOOT.terrains[k], o=document.createElement('option');
+    o.value=k;
+    o.textContent=k+'  (n = '+t.low+' to '+t.high+', median '+t.median+')';
+    sel.appendChild(o);
+  });
+  sel.onchange=showTerrainInfo;
+  const note=document.createElement('div'); note.className='srcnote';
+  note.textContent='Ranges pooled from published LoRa measurement campaigns: '
+    + BOOT.terrain_source + '. The labels are the review’s, not a '
+    + 'classification of your site. If none describes it, set the exponent by '
+    + 'hand and say where it came from.';
+  $('pane_terrain').appendChild(note);
+}
+
+function buildAnchorSf(){
+  const sel=$('f_anchorsf'), cur=sel.value; sel.innerHTML='';
+  (BOOT.regions[$('f_region').value]||[]).forEach(sf=>{
+    const o=document.createElement('option'); o.value=sf; o.textContent='SF'+sf;
+    sel.appendChild(o);
+  });
+  if(Array.from(sel.options).some(o=>o.value===cur)) sel.value=cur;
+  else sel.selectedIndex=sel.options.length-1;     // the longest-range SF
+}
+
+function showTerrainInfo(){
+  const k=$('f_terrain').value, out=$('terrainout'); out.innerHTML='';
+  if(!k) return;
+  const t=BOOT.terrains[k];
+  out.appendChild(msg('i', k+': '+t.n_studies+' studies, measured at '
+    + t.freqs.join(', ')+' MHz. Exponent from '+t.low+' to '+t.high
+    + ', median '+t.median+'.'));
+}
+
+async function applyTerrain(){
+  const out=$('terrainout'); out.innerHTML='';
+  const k=$('f_terrain').value;
+  if(!k){ out.appendChild(msg('e','Choose an environment first.')); return; }
+  const rng=num('f_range');
+  if(!rng || rng<=0){
+    out.appendChild(msg('e','Enter roughly how far the link is expected to '
+      +'work. If you have no idea at all, the site’s own radius is the '
+      +'minimum assumption under which the deployment works, and the checks '
+      +'panel shows that radius.'));
+    return;
+  }
+  try{
+    const a = await post('/api/anchor',{
+      terrain:k, range_m:rng, sf:parseInt($('f_anchorsf').value,10),
+      chip:$('f_chip').value||null, region:$('f_region').value,
+      tx_power_dbm:num('f_tx',14), tx_antenna_gain_db:num('f_gtx',0),
+      rx_antenna_gain_db:num('f_grx',0), cable_loss_db:num('f_cable',0),
+      d0_m:num('f_d0',100)});
+    $('f_n').value=a.exponent.toFixed(3);
+    $('f_ref').value=a.ref_db.toFixed(2);
+    $('f_plsrc').value='Assumed: median exponent for '+k+' from '
+      + BOOT.terrain_source + '; intercept anchored to an expected reach of '
+      + rng.toFixed(0)+' m at SF'+a.sf;
+    ADOPTED_R2=null;
+    setOrigin('terrain', {low:a.low, high:a.high, label:k});
+    out.innerHTML='';
+    out.appendChild(msg('s','n = '+a.exponent.toFixed(2)+', L(d₀) = '
+      + a.ref_db.toFixed(1)+' dB. Across the published range the same anchor '
+      + 'gives L(d₀) from '+a.ref_db_high.toFixed(1)+' to '
+      + a.ref_db_low.toFixed(1)+' dB.'));
+    a.warnings.forEach(w=>out.appendChild(msg('w',w)));
+    schedule();
+  }catch(e){ out.appendChild(msg('e',e.message)); }
+}
+
+function setOrigin(o, terrain){
+  ORIGIN=o; TERRAIN=terrain||null;
+  const pill=$('origin'), note=$('assumednote');
+  note.innerHTML='';
+  if(o==='fit'){
+    pill.textContent='fitted'; pill.className='pill ok';
+  }else if(o==='terrain'){
+    pill.textContent='assumed'; pill.className='pill';
+    note.appendChild(msg('w','This model is assumed, not measured. A single '
+      + 'capacity figure would misrepresent it, so the run is followed by a '
+      + 'sweep across the published exponent range for '+terrain.label
+      + ' (' + terrain.low + ' to ' + terrain.high + '), and what you report '
+      + 'is the range that comes out of it.'));
+  }else{
+    pill.textContent='entered by hand'; pill.className='pill';
+    note.appendChild(msg('i','An exponent set by hand is an assumption like any '
+      + 'other. Say where it came from in the field above, and check with a '
+      + 'sweep how much the answer depends on it.'));
+  }
+}
+
+function useFit(i){
+  const f=LASTFIT.fits[i];
+  ADOPTED_R2 = (f.r_squared!==undefined && f.r_squared!==null) ? f.r_squared : null;
+  setOrigin('fit');
+  $('f_n').value=f.path_loss_exponent.toFixed(3);
+  if(f.path_loss_ref_db!==undefined){
+    $('f_ref').value=f.path_loss_ref_db.toFixed(2);
+    $('f_d0').value=f.path_loss_ref_distance_m;
+  }
+  $('f_minv').value=f.min_distance_m;
+  if(f.shadowing_sigma_db!==undefined && f.shadowing_sigma_db!==null)
+    $('f_sigma').value=f.shadowing_sigma_db.toFixed(2);
+  $('f_plsrc').value='Field fit ('+f.label+'), '+f.n_points+' points, '
+    + f.min_distance_m.toFixed(0)+' m to '+f.max_distance_m.toFixed(0)+' m';
+  schedule();
+}
+
+/* ---------- receiver model ---------- */
+// Three choices that change how collisions are resolved. Each is offered
+// with what it rests on, and the note says plainly when the configuration
+// has left LoRaSim's, because every result then depends on that choice.
+function buildReceiver(){
+  const rx=$('f_rx');
+  BOOT.receiver_models.forEach(m=>{
+    const o=document.createElement('option'); o.value=m.value;
+    o.textContent = m.value + (m.value===BOOT.default_receiver_model ? ' (default)' : '');
+    rx.appendChild(o);
+  });
+  rx.value=BOOT.default_receiver_model;
+  $('f_capthr').value=BOOT.default_capture_threshold_db;
+  const isf=$('f_isf');
+  const orth=document.createElement('option'); orth.value='';
+  orth.textContent='orthogonal (default)'; isf.appendChild(orth);
+  BOOT.inter_sf_tables.forEach(t=>{
+    const o=document.createElement('option'); o.value=t.value;
+    o.textContent=t.value; isf.appendChild(o);
+  });
+  isf.value='';
+  const ls=$('f_lsurv');
+  const capt=document.createElement('option'); capt.value='';
+  capt.textContent='capture threshold (default)'; ls.appendChild(capt);
+  BOOT.lock_survival_tables.forEach(t=>{
+    const o=document.createElement('option'); o.value=t.value;
+    o.textContent=t.value; ls.appendChild(o);
+  });
+  ls.value='';
+  ['f_rx','f_capthr','f_isf','f_lsurv','f_hrec'].forEach(id=>{
+    $(id).addEventListener('input', receiverNote);
+    $(id).addEventListener('change', receiverNote);
+  });
+  receiverNote();
+}
+
+function receiverNote(){
+  const note=$('rxnote'); note.innerHTML='';
+  const rule=BOOT.receiver_models.find(m=>m.value===$('f_rx').value);
+  const thr=num('f_capthr', BOOT.default_capture_threshold_db);
+  const table=BOOT.inter_sf_tables.find(t=>t.value===$('f_isf').value);
+  const p=t=>{const d=document.createElement('div'); d.textContent=t; note.appendChild(d);};
+  if(rule) p('Rule: '+rule.note);
+  p('Threshold: '+BOOT.capture_threshold_note);
+  p('Spreading factors: '+(table ? 'measured rejection between spreading '
+    + 'factors, from '+table.source+' Results are conditional on this table. '
+    + 'See "Spreading factors that are not orthogonal" in the README.'
+    : BOOT.orthogonal_note));
+  // The two refinements exist only under the lock rule, so they are greyed
+  // out otherwise and not sent, which keeps `check` from refusing the study.
+  const isLock = $('f_rx').value==='lock';
+  $('f_lsurv').disabled=!isLock; $('f_hrec').disabled=!isLock;
+  if(isLock){
+    const surv=BOOT.lock_survival_tables.find(t=>t.value===$('f_lsurv').value);
+    p('Locked packet survival: '+(surv ? 'per spreading factor, from '
+      + surv.source : BOOT.lock_survival_default_note));
+    if($('f_hrec').value) p('Header recapture: '+BOOT.header_recapture_note);
+  }
+  const departs = $('f_rx').value!==BOOT.default_receiver_model
+    || thr!==BOOT.default_capture_threshold_db || !!table;
+  if(departs) note.appendChild(msg('w','This receiver model departs from '
+    + 'LoRaSim\'s. Report it with every result, since capacity depends on it.'));
+}
+
+/* ---------- values and validation ---------- */
+function values(){
+  const v={
+    name:$('f_name').value.trim()||'draft',
+    site:$('f_site').value.trim(),
+    region:$('f_region').value,
+    bw_khz:Math.round(num('f_bw',125)),
+    spreading_factors:BOOT?BOOT.regions[$('f_region').value]:[],
+    n_gateways:Math.round(num('f_ngw',1)),
+    tx_power_dbm:num('f_tx',14), tx_antenna_gain_db:num('f_gtx',0),
+    rx_antenna_gain_db:num('f_grx',0), cable_loss_db:num('f_cable',0),
+    path_loss_exponent:num('f_n',2), path_loss_ref_db:num('f_ref',0),
+    path_loss_ref_distance_m:num('f_d0',100), min_valid_distance_m:num('f_minv',30),
+    shadowing_sigma_db:num('f_sigma',0),
+    path_loss_source:$('f_plsrc').value.trim(),
+    payload_bytes:Math.round(num('f_pl',32)), coding_rate:Math.round(num('f_cr',1)),
+    send_interval_s:num('f_int',60), sim_time_s:num('f_time',3600),
+    n_runs:Math.round(num('f_runs',30)), der_threshold:num('f_th',0.9),
+    base_seed:Math.round(num('f_seed',99)),
+    receiver_model:$('f_rx').value||'lorasim',
+    capture_threshold_db:num('f_capthr',6),
+    placement:$('f_place').value,
+    scenarios:selectedScenarios(),
+    node_counts:BOOT?BOOT.default_node_counts:[3,10,30,100,300],
+    figure_basename:'capacity'
+  };
+  if($('f_chip').value) v.chip=$('f_chip').value;
+  if($('f_dwell').value!=='') v.uplink_dwell_time_ms=parseInt($('f_dwell').value,10);
+  if($('f_hl').value) v.highlight_scenario=$('f_hl').value;
+  // Left out when orthogonal, so study.py stays as it was written before the
+  // option existed instead of gaining an explicit None.
+  if($('f_isf').value) v.inter_sf_rejection=$('f_isf').value;
+  if(v.receiver_model==='lock'){
+    if($('f_lsurv').value) v.lock_survival=$('f_lsurv').value;
+    if($('f_hrec').value) v.header_recapture=true;
+  }
+  if(ADOPTED_R2!==null) v.path_loss_r_squared=ADOPTED_R2;
+  return v;
+}
+
+let timer=null;
+function schedule(){ clearTimeout(timer); timer=setTimeout(validate,320); }
+
+async function validate(){
+  if(!BOOT) return;
+  $('vstamp').textContent='checking…'; $('vstamp').className='pill';
+  try{
+    const r = await post('/api/validate',{values:values(),rings:RINGS});
+    const out=$('vout'); out.innerHTML='';
+    r.errors.forEach(e=>out.appendChild(msg('e',e)));
+    r.warnings.forEach(w=>out.appendChild(msg('w',w)));
+    if(r.reach.length){
+      let t='<table><tr><th>Scenario</th><th>Reach</th><th>Covers site</th></tr>';
+      r.reach.forEach(x=>{
+        const c = x.covers===null?'—':(x.covers?'<span class="pill ok">yes</span>'
+                                               :'<span class="pill bad">no</span>');
+        t+='<tr><td>'+x.scenario+'</td><td class="num">'+x.reach_m.toFixed(0)
+          +' m</td><td>'+c+'</td></tr>';
+      });
+      out.innerHTML += t+'</table>';
+      if(r.reach.some(x=>x.covers===false)){
+        out.appendChild(msg('w','Some nodes will sit beyond range, so their packets '
+          +'count as weak-signal losses. Capacity there is limited by coverage, not '
+          +'by collisions.'));
+      }
+    }
+    r.info.forEach(i=>out.appendChild(msg('i',i)));
+    if(!r.errors.length){
+      $('vstamp').textContent='valid'; $('vstamp').className='pill ok';
+      $('btn_create').disabled=false;
+    }else{
+      $('vstamp').textContent=r.errors.length+' error'+(r.errors.length>1?'s':'');
+      $('vstamp').className='pill bad'; $('btn_create').disabled=true;
+    }
+  }catch(e){
+    $('vout').innerHTML=''; $('vout').appendChild(msg('e',e.message));
+    $('vstamp').textContent='error'; $('vstamp').className='pill bad';
+  }
+}
+
+/* ---------- create and run ---------- */
+async function createStudy(){
+  const out=$('createout'); out.innerHTML='';
+  const name=$('f_name').value.trim();
+  if(!name){ out.appendChild(msg('e','Give the study a name.')); return; }
+  try{
+    const r = await post('/api/create',{values:values(),rings:RINGS,
+      ring_names:RING_NAMES,lat:num('f_lat'),lon:num('f_lon'),
+      overwrite:$('f_over').checked,
+      source_note:'Boundary uploaded through the web interface.'});
+    CREATED=r.name;
+    out.appendChild(msg('s','Wrote '+r.written.join(' and ')));
+    r.warnings.forEach(w=>out.appendChild(msg('w',w)));
+    const d=document.createElement('details');
+    d.innerHTML='<summary>Show the generated study.py</summary><pre>'
+      + r.study_py.replace(/[<&]/g,c=>({'<':'&lt;','&':'&amp;'}[c])) + '</pre>';
+    out.appendChild(d);
+    out.appendChild(msg('i','From here it behaves like any other study: '
+      +'python3 run.py check '+r.name+' · run '+r.name+' · sweep '+r.name));
+    $('btn_run').disabled=false;
+  }catch(e){ out.appendChild(msg('e',e.message)); }
+}
+
+async function runStudy(){
+  if(!CREATED) return;
+  const out=$('runout'); out.innerHTML='';
+  $('btn_run').disabled=true;
+  try{
+    await post('/api/run',{name:CREATED});
+    out.innerHTML='<div class="bar"><div id="prog"></div></div>'
+      +'<div id="progtext" class="msg i">Starting…</div>'
+      +'<pre id="runlog" style="max-height:170px"></pre>';
+    POLL=setInterval(pollRun,700);
+  }catch(e){ out.appendChild(msg('e',e.message)); $('btn_run').disabled=false; }
+}
+
+async function pollRun(){
+  let s; try{ s=await post('/api/status'); }catch(e){ return; }
+  const pct = s.total ? Math.round(100*s.done/s.total) : 0;
+  const bar=$('prog'); if(bar) bar.style.width=pct+'%';
+  const pt=$('progtext');
+  if(pt) pt.textContent = s.state==='running'
+    ? 'Simulating… '+s.done+' of '+s.total+' points ('+pct+'%)'
+    : s.state;
+  const lg=$('runlog');
+  if(lg && s.log.length){ lg.textContent=s.log.slice(-40).join('\n'); lg.scrollTop=lg.scrollHeight; }
+  if(s.state==='done'||s.state==='error'){
+    clearInterval(POLL); POLL=null; $('btn_run').disabled=false;
+    const out=$('runout');
+    if(s.state==='error'){ out.appendChild(msg('e',s.error)); return; }
+    let t='<table><tr><th>Scenario</th><th>Capacity</th><th>95% CI</th></tr>';
+    Object.keys(s.capacity).forEach(k=>{
+      const c=s.capacity[k];
+      t+='<tr><td>'+k+'</td><td class="num">'
+        +(c.capacity===null?'no crossing':c.capacity.toFixed(1))+'</td><td class="num">'
+        +(c.ci_low===null||c.ci_low===undefined?'—':
+          '['+c.ci_low.toFixed(1)+', '+c.ci_high.toFixed(1)+']')+'</td></tr>';
+    });
+    const d=document.createElement('div'); d.innerHTML=t+'</table>'; out.appendChild(d);
+    out.appendChild(msg('i','Written to studies/'+CREATED+'/outputs/. Capacity is a '
+      +'simulation estimate: the field campaign validates coverage and link quality, '
+      +'not capacity.'));
+    if(ORIGIN!=='fit') offerSweep(out);
+    if(s.figure){
+      try{
+        const f=await post('/api/figure',{path:s.figure});
+        const img=document.createElement('img');
+        img.src=f.data_url; img.style.cssText='width:100%;margin-top:11px;border:1px solid var(--line);border-radius:7px';
+        out.appendChild(img);
+      }catch(e){}
+    }
+  }
+}
+
+/* ---------- the sweep an assumed model requires ---------- */
+function sweepRange(){
+  // A terrain carries its own published span. An exponent typed by hand has
+  // none, so it gets the wide default bracket: it is no better justified than
+  // a published median and deserves the same treatment.
+  return TERRAIN ? {low:TERRAIN.low, high:TERRAIN.high}
+                 : {low:2.0, high:3.5};
+}
+
+function offerSweep(out){
+  const r=sweepRange();
+  const why = TERRAIN
+    ? 'The exponent above is the median of a published range. The figure to '
+      + 'report is not the single capacity in the table but how much it moves '
+      + 'across that range.'
+    : 'The exponent above was entered by hand, so the capacity in the table '
+      + 'rests on it. Sweeping the usual 2.0 to 3.5 bracket shows whether that '
+      + 'matters here, and the sweep is also where coverage failures show up.';
+  const box=document.createElement('div');
+  box.innerHTML='<div class="msg w">'+why+'</div>'
+    + '<div class="row"><button class="primary" id="btn_sweep">Sweep n from '
+    + (+r.low).toFixed(2)+' to '+(+r.high).toFixed(2)+'</button>'
+    + '<span class="name">bisects for the crossing at each exponent, so it '
+    + 'takes a few minutes</span></div><div id="sweepout"></div>';
+  out.appendChild(box);
+  $('btn_sweep').onclick=runSweep;
+}
+
+async function runSweep(){
+  const b=$('btn_sweep'), out=$('sweepout');
+  b.disabled=true; out.innerHTML=''; out.appendChild(msg('i','Sweeping…'));
+  try{
+    const sr = sweepRange();
+    const r = await post('/api/sweep',{name:CREATED, low:sr.low,
+      high:sr.high, steps:5, scenario:$('f_hl').value||null,
+      runs:Math.min(10, Math.round(num('f_runs',30)))});
+    out.innerHTML='';
+    (r.warnings||[]).forEach(w=>out.appendChild(msg('w',w)));
+    const pre=document.createElement('pre'); pre.style.maxHeight='none';
+    pre.textContent=r.text; out.appendChild(pre);
+    out.appendChild(msg('i','Also written to '
+      +'studies/'+CREATED+'/outputs/propagation_sweep.json. Reported with a '
+      +'reduced run count for speed; re-run it from the command line at the '
+      +'study’s full n_runs before publishing.'));
+  }catch(e){ out.appendChild(msg('e',e.message)); }
+  b.disabled=false;
+}
+
+boot().catch(e=>{document.body.innerHTML='<p style="padding:24px">Could not start: '+e.message+'</p>';});
+</script>
+</body>
+</html>

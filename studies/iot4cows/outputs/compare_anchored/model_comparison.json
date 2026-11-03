@@ -1,0 +1,335 @@
+{
+  "comparison": {
+    "study": "iot4cows",
+    "baseline_model": {
+      "path_loss_exponent": 2.16,
+      "path_loss_ref_db": 130.3,
+      "path_loss_ref_distance_m": 100.0,
+      "min_valid_distance_m": 30.0,
+      "shadowing_sigma_db": 0.0
+    },
+    "threshold": 0.9,
+    "n_runs": 30,
+    "scenarios": [
+      "SF7",
+      "SF8",
+      "SF9"
+    ],
+    "site_radius_m": 957.5239877935173,
+    "variants": [
+      {
+        "label": "fitted (field)",
+        "overrides": {},
+        "capacity": {
+          "SF7": {
+            "capacity": 114.90954845022107,
+            "ci_low": 113.8777855252453,
+            "ci_high": 115.94869909329306,
+            "n_bootstrap": 2000
+          },
+          "SF8": {
+            "capacity": 61.842762399272026,
+            "ci_low": 61.08938142113569,
+            "ci_high": 62.64964106911322,
+            "n_bootstrap": 2000
+          },
+          "SF9": {
+            "capacity": 33.9399990828778,
+            "ci_low": 32.96358633362298,
+            "ci_high": 34.65981360661771,
+            "n_bootstrap": 2000
+          }
+        },
+        "reach_m": {
+          "SF7": 1816.5997883753248,
+          "SF8": 2371.3737056616515,
+          "SF9": 3095.5707954434865
+        },
+        "reach_ratio": {
+          "SF7": 1.8971846256942657,
+          "SF8": 2.4765684577011555,
+          "SF9": 3.232891118035387
+        },
+        "covers_site": {
+          "SF7": true,
+          "SF8": true,
+          "SF9": true
+        },
+        "unreachable_fraction": {
+          "SF7": 0.0,
+          "SF8": 0.0,
+          "SF9": 0.0
+        }
+      },
+      {
+        "label": "assumed (rural)",
+        "overrides": {
+          "path_loss_exponent": 2.94,
+          "path_loss_ref_db": 133.65419991726338,
+          "path_loss_ref_distance_m": 100.0
+        },
+        "capacity": {
+          "SF7": {
+            "capacity": null,
+            "ci_low": null,
+            "ci_high": null,
+            "note": "DER never crosses the threshold over the simulated node range; widen node_counts."
+          },
+          "SF8": {
+            "capacity": 20.392089124599416,
+            "ci_low": 3.3717322402277388,
+            "ci_high": 23.913671310868992,
+            "n_bootstrap": 2000
+          },
+          "SF9": {
+            "capacity": 36.77759175226373,
+            "ci_low": 36.180818888668064,
+            "ci_high": 37.42740039060139,
+            "n_bootstrap": 2000
+          }
+        },
+        "reach_m": {
+          "SF7": 647.2642722687366,
+          "SF8": 787.2554014670394,
+          "SF9": 957.523987793517
+        },
+        "reach_ratio": {
+          "SF7": 0.6759770831018743,
+          "SF8": 0.8221782550650887,
+          "SF9": 0.9999999999999997
+        },
+        "covers_site": {
+          "SF7": false,
+          "SF8": false,
+          "SF9": true
+        },
+        "unreachable_fraction": {
+          "SF7": 0.0,
+          "SF8": 0.0,
+          "SF9": 0.0
+        }
+      }
+    ]
+  },
+  "verdict": {
+    "comparisons": [
+      {
+        "variant": "assumed (rural)",
+        "scenario": "SF7",
+        "baseline": 114.90954845022107,
+        "baseline_ci": [
+          113.8777855252453,
+          115.94869909329306
+        ],
+        "estimate": null,
+        "estimate_ci": [
+          null,
+          null
+        ],
+        "inside": null,
+        "relative_error": null,
+        "covers_site": false
+      },
+      {
+        "variant": "assumed (rural)",
+        "scenario": "SF8",
+        "baseline": 61.842762399272026,
+        "baseline_ci": [
+          61.08938142113569,
+          62.64964106911322
+        ],
+        "estimate": 20.392089124599416,
+        "estimate_ci": [
+          3.3717322402277388,
+          23.913671310868992
+        ],
+        "inside": false,
+        "relative_error": -0.6702590839499845,
+        "covers_site": false
+      },
+      {
+        "variant": "assumed (rural)",
+        "scenario": "SF9",
+        "baseline": 33.9399990828778,
+        "baseline_ci": [
+          32.96358633362298,
+          34.65981360661771
+        ],
+        "estimate": 36.77759175226373,
+        "estimate_ci": [
+          36.180818888668064,
+          37.42740039060139
+        ],
+        "inside": false,
+        "relative_error": 0.08360615044381234,
+        "covers_site": true
+      }
+    ],
+    "all_inside": false
+  },
+  "provenance": {
+    "source": "manifest",
+    "manifest": "studies/iot4cows/experiments.py",
+    "experiment": "compare_anchored",
+    "kind": "compare",
+    "description": "Fitted model against a fully assumed one: rural's median exponent with the intercept anchored so the slowest simulated rate just reaches the site edge, which is the position of a deployer with no measurements.",
+    "variant": null,
+    "variant_label": null,
+    "overrides": {},
+    "n_runs": 30,
+    "sim_time_s": 3600.0,
+    "base_seed": 99,
+    "node_counts": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      10,
+      12,
+      14,
+      17,
+      20,
+      23,
+      28,
+      33,
+      39,
+      46,
+      54,
+      65,
+      77,
+      91,
+      108,
+      128,
+      152,
+      180,
+      213,
+      253,
+      300
+    ],
+    "scenarios": [
+      "SF7",
+      "SF8",
+      "SF9"
+    ],
+    "n_bootstrap": 2000,
+    "options": {
+      "variant": "terrain",
+      "terrain": "rural"
+    },
+    "regenerate": "python3 run.py reproduce iot4cows --only compare_anchored",
+    "study": {
+      "name": "iot4cows",
+      "site": "Guamal, Meta, Colombia",
+      "description": "Capacity of a single-gateway LoRaWAN network for collar-mounted cattle monitoring over an 88.54 ha grazing area.",
+      "region": "US915",
+      "bw_khz": 125,
+      "spreading_factors": [
+        7,
+        8,
+        9,
+        10
+      ],
+      "chip": "SX1301",
+      "sensitivity_dbm": null,
+      "n_channels": null,
+      "max_simultaneous_demodulations": null,
+      "n_gateways": 1,
+      "tx_power_dbm": 22.0,
+      "tx_antenna_gain_db": 2.0,
+      "rx_antenna_gain_db": 8.0,
+      "cable_loss_db": 1.0,
+      "path_loss_exponent": 2.16,
+      "path_loss_ref_db": 130.3,
+      "path_loss_ref_distance_m": 100.0,
+      "min_valid_distance_m": 30.0,
+      "path_loss_r_squared": 0.634,
+      "shadowing_sigma_db": 0.0,
+      "fading_sigma_db": 0.0,
+      "path_loss_source": "Field fit over 1,229 aggregated RSSI points, 30 m to 2.21 km, IoT4Cows deployment",
+      "uplink_dwell_time_ms": null,
+      "payload_bytes": 32,
+      "coding_rate": 1,
+      "send_interval_s": 15.0,
+      "capture_threshold_db": 6.0,
+      "receiver_model": "lorasim",
+      "inter_sf_rejection": null,
+      "lock_survival": null,
+      "header_recapture": false,
+      "radio": null,
+      "tx_current_ma": null,
+      "supply_voltage_v": 3.0,
+      "sleep_current_ua": null,
+      "battery_capacity_mah": null,
+      "adr_margin_db": 10.0,
+      "tx_power_offsets_db": null,
+      "placement": "polygon",
+      "polygons_m": "<3 polygon(s), omitted for brevity>",
+      "gateway_lat": 3.91915,
+      "gateway_lon": -73.82184,
+      "scenarios": [
+        "SF7",
+        "SF8",
+        "SF9"
+      ],
+      "adaptive_sf_options": null,
+      "node_counts": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        12,
+        14,
+        17,
+        20,
+        23,
+        28,
+        33,
+        39,
+        46,
+        54,
+        65,
+        77,
+        91,
+        108,
+        128,
+        152,
+        180,
+        213,
+        253,
+        300
+      ],
+      "sim_time_s": 3600.0,
+      "n_runs": 30,
+      "base_seed": 99,
+      "der_threshold": 0.9,
+      "highlight_scenario": "SF8",
+      "highlight_color": "#1f6fb2",
+      "plot_full_xlim": null,
+      "plot_zoom_xlim": [
+        10,
+        160
+      ],
+      "plot_zoom_ylim": [
+        0.75,
+        1.0
+      ],
+      "figure_basename": "iot4cows_capacity",
+      "resolved_sensitivity_dbm": {
+        "7": -126.5,
+        "8": -129.0,
+        "9": -131.5,
+        "10": -134.0
+      },
+      "net_antenna_gain_db": 9.0
+    },
+    "loracap_version": "2.0.0",
+    "code_sha256": "9c324d1a0c0070673a27dd1eb479d588ac3f9e704103d97e7aa73def8951a4b9",
+    "python": "3.13.18",
+    "generated": "2026-11-03T03:08:35+00:00"
+  }
+}

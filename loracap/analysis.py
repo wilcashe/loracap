@@ -52,10 +52,14 @@ def crossing(node_counts, ders, threshold):
 
 def capacity_with_ci(rows, threshold=0.9, n_boot=2000, seed=12345, conf=0.95):
     by = group_by_scenario(rows)
-    rng = random.Random(seed)
     lo_q, hi_q = (1 - conf) / 2, 1 - (1 - conf) / 2
     out = {}
     for scen, rs in by.items():
+        # One stream per scenario. With a single stream shared across
+        # scenarios, a scenario's interval depended on which scenarios were
+        # resampled before it, so the same curve got a different interval in
+        # a different table. Seeding from a string is deterministic.
+        rng = random.Random(f"{seed}:{scen}")
         counts = [r["n_nodes"] for r in rs]
         point = crossing(counts, [r["der_mean"] for r in rs], threshold)
         if point is None:
@@ -88,10 +92,21 @@ def capacity_with_ci(rows, threshold=0.9, n_boot=2000, seed=12345, conf=0.95):
     return out
 
 
-def write_capacity(study_name, capacity, threshold, root=None):
-    path = os.path.join(output_dir(study_name, root), CAPACITY_JSON)
+def write_capacity(study_name, capacity, threshold, root=None, out_dir=None,
+                   provenance=None, fleet_capacity=None):
+    out = out_dir or output_dir(study_name, root)
+    os.makedirs(out, exist_ok=True)
+    payload = {"der_threshold": threshold, "capacity": capacity}
+    if fleet_capacity is not None:
+        # Counting the nodes an adaptive scenario excluded as lost traffic.
+        # Stored beside the headline figure because `run` reports both
+        # whenever they diverge, and a reported number needs a file.
+        payload["fleet_capacity"] = fleet_capacity
+    if provenance is not None:
+        payload["provenance"] = provenance
+    path = os.path.join(out, CAPACITY_JSON)
     with open(path, "w") as f:
-        json.dump({"der_threshold": threshold, "capacity": capacity}, f, indent=2)
+        json.dump(payload, f, indent=2)
     return path
 
 
@@ -106,3 +121,45 @@ def format_capacity(capacity, threshold, conf=0.95) -> str:
         ci = f"[{c['ci_low']:.1f}, {c['ci_high']:.1f}]" if c["ci_low"] is not None else "-"
         lines.append(f"  {scen:<10}{c['capacity']:>9.1f}{ci:>18}")
     return "\n".join(lines)
+
+
+def service_life(row, study, n_nodes=None):
+    """Average current and battery service life for one node, from a result row.
+
+    Transmit energy alone is not a service life, because the node also draws
+    while idle, so this needs `sleep_current_ua` and returns None without it.
+
+    Which term dominates is reported rather than assumed, as `transmit_share`,
+    because it is not the same for every deployment. At a 1000 s interval with
+    1.3 s of SF12 airtime, transmitting is about 97% of the average current.
+    Stretch the interval to several hours and a few microamps of sleep draw
+    overtakes it.
+
+    Returns None when the study asks for no energy figure, or gives no sleep
+    current, or no battery capacity.
+    """
+    energy = row.get("tx_energy_j_mean")
+    if (energy is None or study.sleep_current_ua is None
+            or study.battery_capacity_mah is None):
+        return None
+    nodes = n_nodes or row["n_nodes"]
+    if not nodes or study.supply_voltage_v <= 0 or study.sim_time_s <= 0:
+        return None
+
+    # average transmit current per node, in mA
+    joules_per_node = energy / nodes
+    tx_ma = 1000.0 * joules_per_node / (study.supply_voltage_v * study.sim_time_s)
+    sleep_ma = study.sleep_current_ua / 1000.0
+    total_ma = tx_ma + sleep_ma
+    if total_ma <= 0:
+        return None
+    hours = study.battery_capacity_mah / total_ma
+    return {
+        "n_nodes": nodes,
+        "tx_current_ma": tx_ma,
+        "sleep_current_ma": sleep_ma,
+        "average_current_ma": total_ma,
+        "transmit_share": tx_ma / total_ma,
+        "service_life_days": hours / 24.0,
+        "service_life_years": hours / 24.0 / 365.25,
+    }
