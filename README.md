@@ -1352,7 +1352,7 @@ tools/
 webui/
     server.py               loopback server behind `run.py serve`
     index.html              the setup form
-tests/                      225 fast checks, `run.py test`
+tests/                      336 fast checks, `run.py test`
 studies/
     _template/              commented starting point, copied by `run.py new`
     iot4cows/               worked example, see below
