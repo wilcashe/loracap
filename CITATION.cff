@@ -16,17 +16,27 @@ authors:
     affiliation: 'School of Engineering, Pontificia Universidad Javeriana, Bogotá, Colombia'
 repository-code: 'https://github.com/wilcashe/loracap'
 abstract: >-
-  LoRaCAP is a LoRaWAN uplink capacity simulator in which the engine is
-  independent of any particular deployment. A site is described in a single
-  study file and the rest is automatic. The collision model re-implements LoRaSim (Bor et al.,
-  MSWiM 2016) in Python 3 and extends it with direct multi-channel simulation
-  instead of single-channel extrapolation, an enforced chip-wide
-  simultaneous-demodulation limit, and node placement over a real site
-  boundary rather than a theoretical coverage disc. Reports the Data
-  Extraction Rate against node count with mean and standard deviation over
-  repeated runs, and derives the capacity at a chosen threshold with a
-  bootstrap confidence interval. Includes tools to convert a KML boundary and
-  to fit a log-distance propagation model from field measurements.
+  LoRaCAP estimates how many nodes a single-gateway LoRaWAN network supports
+  on a given site before the Data Extraction Rate falls below a chosen
+  threshold. A site is described in one study file: the boundary over which
+  nodes are placed, its propagation model, fitted from field measurements or assumed from terrain,
+  and its radio configuration. The engine is independent of any deployment.
+  Its collision model re-implements LoRaSim (Bor et al., MSWiM 2016) and
+  extends it with multi-channel simulation, a chip-wide limit on simultaneous
+  demodulations, regional data-rate and power tables, log-normal shadowing,
+  steady-state ADR and an energy model. Two receiver rules are available,
+  LoRaSim's and a lock rule based on measured SX1272 and SX1301 behaviour,
+  together with optional rejection between spreading factors taken from
+  published measurements. The engine is validated twice. It degenerates onto
+  the analytical pure-ALOHA bound when the mechanisms the theory lacks are
+  switched off, and it agrees with LoRaSim within 0.009 DER on Bor et al.'s
+  Experiment Set 1. Capacity is reported with a bootstrap confidence
+  interval. Every quoted result is regenerated from a manifest that fixes its
+  configuration and seed, and every output file records the digest of the
+  code that produced it. Written in Python 3 with the standard library only,
+  plus matplotlib for figures. Includes tools to convert a KML boundary and to
+  fit a log-distance model to field measurements, and a web interface for
+  configuring a study.
 keywords:
   - LoRaWAN
   - LPWAN
