@@ -1,6 +1,6 @@
 ### iot4cows / lock_refined
 
-The lock rule with its two refinements of ROADMAP item 18, one at a time and together: Eigner's per-SF survival table for the locked packet, and recapture during its header. The unrefined lock rule's rows are in experiment `receiver`, at the same seed and grid.
+The lock rule with its two refinements of design item 18, one at a time and together: Eigner's per-SF survival table for the locked packet, and recapture during its header. The unrefined lock rule's rows are in experiment `receiver`, at the same seed and grid.
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|

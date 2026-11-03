@@ -1,6 +1,6 @@
 ### iot4cows / inter_sf_threshold
 
-Croce et al.'s rejection table at the 1 and 3 dB same-SF thresholds, under both receiver rules, for ADR with and without power control (ROADMAP item 17). The orthogonal counterparts of every row are in experiment `receiver`, at the same seed and grid.
+Croce et al.'s rejection table at the 1 and 3 dB same-SF thresholds, under both receiver rules, for ADR with and without power control (design item 17). The orthogonal counterparts of every row are in experiment `receiver`, at the same seed and grid.
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|

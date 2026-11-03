@@ -1,5 +1,5 @@
 """Figures that compare configurations, and reference marks on a figure
-(ROADMAP item 20).
+(design item 20).
 
 A figure is held to the same rule as a table: every number on it comes from
 a file an experiment wrote. These tests pin the three ways a figure can

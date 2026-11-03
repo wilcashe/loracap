@@ -1,4 +1,4 @@
-"""Two refinements of the lock receiver rule (ROADMAP item 18).
+"""Two refinements of the lock receiver rule (design item 18).
 
 `lock_survival_db` decides, per spreading factor, whether the locked packet
 survives a later one past the lock window. `header_recapture` lets a later

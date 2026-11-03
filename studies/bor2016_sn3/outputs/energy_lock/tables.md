@@ -1,6 +1,6 @@
 ### bor2016_sn3 / energy_lock
 
-The energy comparison above under the lock receiver rule (ROADMAP items 13 and 17). Energy per extracted message depends on how many packets get through, so it depends on the rule too. Same seed and grid as `energy`, so the two tables differ only by the rule.
+The energy comparison above under the lock receiver rule (design items 13 and 17). Energy per extracted message depends on how many packets get through, so it depends on the rule too. Same seed and grid as `energy`, so the two tables differ only by the rule.
 
 | N | MULTI vs SF12 | ADR vs SF12 |
 |---|---|---|

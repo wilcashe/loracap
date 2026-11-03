@@ -1,6 +1,6 @@
 ### iot4cows / inter_sf_eigner
 
-Rejection between spreading factors with Eigner's table, measured on an SX1301 concentrator, in place of Croce et al.'s, measured on an SX1272 node radio (ROADMAP item 19). ADR with and without power control under both receiver rules. The Croce and orthogonal counterparts of every row are in experiment `inter_sf`, at the same seed and grid. MULTI is left out: at this site it puts every node on SF7, where neither table has anything to act on.
+Rejection between spreading factors with Eigner's table, measured on an SX1301 concentrator, in place of Croce et al.'s, measured on an SX1272 node radio (design item 19). ADR with and without power control under both receiver rules. The Croce and orthogonal counterparts of every row are in experiment `inter_sf`, at the same seed and grid. MULTI is left out: at this site it puts every node on SF7, where neither table has anything to act on.
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|

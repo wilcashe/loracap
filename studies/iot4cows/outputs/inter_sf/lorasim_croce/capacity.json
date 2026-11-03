@@ -33,7 +33,7 @@
     "manifest": "studies/iot4cows/experiments.py",
     "experiment": "inter_sf",
     "kind": "run",
-    "description": "Spreading factors that are not perfectly orthogonal (ROADMAP item 14). Croce et al.'s measured rejection table against the engine's orthogonal default, for the two adaptive scenarios and ADR without power control, under both receiver rules. Same site, same seed, so the difference between paired rows is the table.",
+    "description": "Spreading factors that are not perfectly orthogonal (design item 14). Croce et al.'s measured rejection table against the engine's orthogonal default, for the two adaptive scenarios and ADR without power control, under both receiver rules. Same site, same seed, so the difference between paired rows is the table.",
     "variant": "lorasim_croce",
     "variant_label": "LoRaSim rule, Croce rejection",
     "overrides": {
@@ -186,8 +186,8 @@
       "net_antenna_gain_db": 9.0
     },
     "loracap_version": "2.0.0",
-    "code_sha256": "9c324d1a0c0070673a27dd1eb479d588ac3f9e704103d97e7aa73def8951a4b9",
+    "code_sha256": "466d6df698a2f44ac0317cb9f93c70bd64a2808c7a0ba87ebea76bbbe924e12b",
     "python": "3.13.18",
-    "generated": "2026-11-03T03:36:27+00:00"
+    "generated": "2026-11-03T19:32:14+00:00"
   }
 }

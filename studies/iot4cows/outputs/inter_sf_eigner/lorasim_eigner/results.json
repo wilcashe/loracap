@@ -2542,7 +2542,7 @@
     "manifest": "studies/iot4cows/experiments.py",
     "experiment": "inter_sf_eigner",
     "kind": "run",
-    "description": "Rejection between spreading factors with Eigner's table, measured on an SX1301 concentrator, in place of Croce et al.'s, measured on an SX1272 node radio (ROADMAP item 19). ADR with and without power control under both receiver rules. The Croce and orthogonal counterparts of every row are in experiment `inter_sf`, at the same seed and grid. MULTI is left out: at this site it puts every node on SF7, where neither table has anything to act on.",
+    "description": "Rejection between spreading factors with Eigner's table, measured on an SX1301 concentrator, in place of Croce et al.'s, measured on an SX1272 node radio (design item 19). ADR with and without power control under both receiver rules. The Croce and orthogonal counterparts of every row are in experiment `inter_sf`, at the same seed and grid. MULTI is left out: at this site it puts every node on SF7, where neither table has anything to act on.",
     "variant": "lorasim_eigner",
     "variant_label": "LoRaSim rule, Eigner rejection",
     "overrides": {
@@ -2693,8 +2693,8 @@
       "net_antenna_gain_db": 9.0
     },
     "loracap_version": "2.0.0",
-    "code_sha256": "9c324d1a0c0070673a27dd1eb479d588ac3f9e704103d97e7aa73def8951a4b9",
+    "code_sha256": "466d6df698a2f44ac0317cb9f93c70bd64a2808c7a0ba87ebea76bbbe924e12b",
     "python": "3.13.18",
-    "generated": "2026-11-03T04:03:25+00:00"
+    "generated": "2026-11-03T20:03:41+00:00"
   }
 }

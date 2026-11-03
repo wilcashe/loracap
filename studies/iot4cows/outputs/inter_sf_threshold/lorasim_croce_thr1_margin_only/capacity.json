@@ -21,7 +21,7 @@
     "manifest": "studies/iot4cows/experiments.py",
     "experiment": "inter_sf_threshold",
     "kind": "run",
-    "description": "Croce et al.'s rejection table at the 1 and 3 dB same-SF thresholds, under both receiver rules, for ADR with and without power control (ROADMAP item 17). The orthogonal counterparts of every row are in experiment `receiver`, at the same seed and grid.",
+    "description": "Croce et al.'s rejection table at the 1 and 3 dB same-SF thresholds, under both receiver rules, for ADR with and without power control (design item 17). The orthogonal counterparts of every row are in experiment `receiver`, at the same seed and grid.",
     "variant": "lorasim_croce_thr1_margin_only",
     "variant_label": "LoRaSim rule, Croce rejection, 1 dB threshold, ADR margin only",
     "overrides": {
@@ -175,8 +175,8 @@
       "net_antenna_gain_db": 9.0
     },
     "loracap_version": "2.0.0",
-    "code_sha256": "9c324d1a0c0070673a27dd1eb479d588ac3f9e704103d97e7aa73def8951a4b9",
+    "code_sha256": "466d6df698a2f44ac0317cb9f93c70bd64a2808c7a0ba87ebea76bbbe924e12b",
     "python": "3.13.18",
-    "generated": "2026-11-03T03:45:50+00:00"
+    "generated": "2026-11-03T19:41:35+00:00"
   }
 }

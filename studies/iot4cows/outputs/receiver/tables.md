@@ -1,6 +1,6 @@
 ### iot4cows / receiver
 
-The two receiver rules side by side: LoRaSim's, where power decides at any offset, and the lock rule, where the receiver stays on the packet it synchronised to first (ROADMAP item 13). Same site, same seed, so the difference between rows is the rule.
+The two receiver rules side by side: LoRaSim's, where power decides at any offset, and the lock rule, where the receiver stays on the packet it synchronised to first (design item 13). Same site, same seed, so the difference between rows is the rule.
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|

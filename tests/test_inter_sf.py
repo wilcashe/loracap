@@ -1,4 +1,4 @@
-"""Rejection between spreading factors (ROADMAP item 14).
+"""Rejection between spreading factors (design item 14).
 
 The engine treats spreading factors as orthogonal unless a study names a
 rejection table. These tests pin the table to its source, the pair rule to

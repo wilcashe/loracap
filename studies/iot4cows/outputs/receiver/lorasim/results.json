@@ -7215,7 +7215,7 @@
     "manifest": "studies/iot4cows/experiments.py",
     "experiment": "receiver",
     "kind": "run",
-    "description": "The two receiver rules side by side: LoRaSim's, where power decides at any offset, and the lock rule, where the receiver stays on the packet it synchronised to first (ROADMAP item 13). Same site, same seed, so the difference between rows is the rule.",
+    "description": "The two receiver rules side by side: LoRaSim's, where power decides at any offset, and the lock rule, where the receiver stays on the packet it synchronised to first (design item 13). Same site, same seed, so the difference between rows is the rule.",
     "variant": "lorasim",
     "variant_label": "LoRaSim rule",
     "overrides": {},
@@ -7368,8 +7368,8 @@
       "net_antenna_gain_db": 9.0
     },
     "loracap_version": "2.0.0",
-    "code_sha256": "9c324d1a0c0070673a27dd1eb479d588ac3f9e704103d97e7aa73def8951a4b9",
+    "code_sha256": "466d6df698a2f44ac0317cb9f93c70bd64a2808c7a0ba87ebea76bbbe924e12b",
     "python": "3.13.18",
-    "generated": "2026-11-03T03:23:27+00:00"
+    "generated": "2026-11-03T19:16:48+00:00"
   }
 }

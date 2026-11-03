@@ -2,7 +2,7 @@
 rule.
 
 Every number this repository has published comes out of the collision loop in
-`core.run_single_sim`. ROADMAP item 13 restructures that loop to make room for
+`core.run_single_sim`. design item 13 restructures that loop to make room for
 a second receiver rule, and a restructuring is exactly the kind of change that
 can alter a result while every statistical test still passes: a reordered
 comparison, a tie broken the other way, a loss counted twice. So the output of
@@ -16,7 +16,7 @@ shadowing and fading together; fixed, adaptive and ADR scenarios; disc and
 polygon placement.
 
 `golden_engine.json` was first written by the code before item 13 touched
-it. It has been regenerated once since, on purpose, by ROADMAP item 16: the
+it. It has been regenerated once since, on purpose, by design item 16: the
 loop counted a packet dropped for want of a demodulator a second time when a
 later same-SF packet collided with it. Only the three `demod_binding` runs
 changed, collisions falling by about 200 per run and DER rising by about

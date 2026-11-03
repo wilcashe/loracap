@@ -1055,7 +1055,7 @@ Performance"*, IEEE Trans. Wireless Commun. 19(2):822-834, 2020,
 <https://doi.org/10.1109/TWC.2019.2948872>, was measured on an SX1272 node
 radio. Table 5.2 of Eigner, *"Interference Analysis of LoRaWAN Systems"*,
 diploma thesis, TU Wien, 2021, was measured on an SX1301 concentrator at
-125 kHz, the gateway chip family the shipped studies use (ROADMAP item 19).
+125 kHz, the gateway chip family the shipped studies use (design item 19).
 In both, an SF7 packet is lost to an interferer on another spreading factor
 8 to 9.5 dB stronger than it, an SF12 packet only at 22.5 to 25 dB. The
 sources sit beside the values in `presets.INTER_SF_REJECTION_DB`.
@@ -1227,7 +1227,7 @@ eventually deletes.
 
 One of them guards everything else. `tests/test_engine_golden.py` holds the
 exact output of the collision loop, for configurations chosen to reach every
-branch of it, as the loop stood before ROADMAP item 13 restructured it. Under
+branch of it, as the loop stood before design item 13 restructured it. Under
 LoRaSim's receiver rule the output must come back identical, not merely
 close, so a refactoring of the engine cannot move a published number without
 failing here first. It held through item 14 too, which split the loop into a
@@ -1238,11 +1238,11 @@ against closed-form results. It has been changed once on purpose, by item
 demodulator a second time as a collision. Only the configuration where the
 limit binds hard moved.
 
-When the suite had 120 checks, at the close of ROADMAP item 10, it was
+When the suite had 120 checks, at the close of design item 10, it was
 checked by putting six real past bugs back in one at a time and confirming it
 failed. This is a record of that verification, not a figure that
 `reproduce` regenerates, and the checks added since are covered only where
-their own ROADMAP item says so:
+their own design item says so:
 
 | Bug reintroduced | Caught by |
 |---|---|
@@ -1397,7 +1397,7 @@ SF10, [16.9, 18.1], against SF9's 33.9 here, because airtime nearly halves
 from 453 ms to 247 ms. The code behind the article is commit `8779a30` of
 [github.com/wilcashe/loracap](https://github.com/wilcashe/loracap). SF8, the
 headline figure, is untouched. Interval bounds here can differ from the
-article's by 0.1 node, because of a bootstrap fix described in ROADMAP item
+article's by 0.1 node, because of a bootstrap fix described in design item
 11. Point estimates are unchanged.
 
 This is the kind of thing the tool exists to catch, and it is worth saying
@@ -1539,8 +1539,15 @@ over an hour on one core.
   Eigner, *"Interference Analysis of LoRaWAN Systems"*, diploma thesis, TU
   Wien, 2021, Tables 5.1 and 5.2.
 
-`ROADMAP.md` says what each of these would take to lift, and which are
-deliberately out of scope.
+The design log, kept outside this repository, records what each of these
+would take to lift and which are deliberately out of scope.
+
+## Design log
+
+Every design decision is recorded, with its reasoning and the alternatives
+discarded, in a design log kept outside this repository. Its items are
+numbered, and the references to "design item N" or "item N" in the code, the
+tests, the experiment descriptions and this README point to them.
 
 ## Citing
 

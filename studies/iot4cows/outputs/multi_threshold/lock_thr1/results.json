@@ -2461,7 +2461,7 @@
     "manifest": "studies/iot4cows/experiments.py",
     "experiment": "multi_threshold",
     "kind": "run",
-    "description": "MULTI at the 1 and 3 dB same-SF thresholds under both receiver rules, so that the margin's gain over MULTI can be read at those thresholds against the ADR rows of `receiver` and `inter_sf_threshold` (ROADMAP item 17). No rejection table: at this site MULTI puts every node on SF7, where the table has nothing to act on.",
+    "description": "MULTI at the 1 and 3 dB same-SF thresholds under both receiver rules, so that the margin's gain over MULTI can be read at those thresholds against the ADR rows of `receiver` and `inter_sf_threshold` (design item 17). No rejection table: at this site MULTI puts every node on SF7, where the table has nothing to act on.",
     "variant": "lock_thr1",
     "variant_label": "lock rule, 1 dB threshold",
     "overrides": {
@@ -2613,8 +2613,8 @@
       "net_antenna_gain_db": 9.0
     },
     "loracap_version": "2.0.0",
-    "code_sha256": "9c324d1a0c0070673a27dd1eb479d588ac3f9e704103d97e7aa73def8951a4b9",
+    "code_sha256": "466d6df698a2f44ac0317cb9f93c70bd64a2808c7a0ba87ebea76bbbe924e12b",
     "python": "3.13.18",
-    "generated": "2026-11-03T03:54:12+00:00"
+    "generated": "2026-11-03T19:51:20+00:00"
   }
 }

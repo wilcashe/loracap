@@ -1,5 +1,5 @@
 """
-Every result the README and ROADMAP quote for the worked example.
+Every result the README quotes for the worked example.
 
 Run with `python3 run.py reproduce iot4cows`, or one experiment with
 `--only <name>`. Each writes into outputs/<name>/, which nothing run by hand
@@ -131,7 +131,7 @@ EXPERIMENTS = [
         description=("The two receiver rules side by side: LoRaSim's, where "
                      "power decides at any offset, and the lock rule, where "
                      "the receiver stays on the packet it synchronised to "
-                     "first (ROADMAP item 13). Same site, same seed, so the "
+                     "first (design item 13). Same site, same seed, so the "
                      "difference between rows is the rule."),
         node_counts=GRID,
         scenarios=("SF8", "MULTI", "ADR"),
@@ -178,7 +178,7 @@ EXPERIMENTS = [
         name="inter_sf",
         kind="run",
         description=("Spreading factors that are not perfectly orthogonal "
-                     "(ROADMAP item 14). Croce et al.'s measured rejection "
+                     "(design item 14). Croce et al.'s measured rejection "
                      "table against the engine's orthogonal default, for "
                      "the two adaptive scenarios and ADR without power "
                      "control, under both receiver rules. Same site, same "
@@ -213,7 +213,7 @@ EXPERIMENTS = [
         kind="run",
         description=("Croce et al.'s rejection table at the 1 and 3 dB "
                      "same-SF thresholds, under both receiver rules, for "
-                     "ADR with and without power control (ROADMAP item 17). "
+                     "ADR with and without power control (design item 17). "
                      "The orthogonal counterparts of every row are in "
                      "experiment `receiver`, at the same seed and grid."),
         node_counts=GRID,
@@ -240,7 +240,7 @@ EXPERIMENTS = [
         description=("MULTI at the 1 and 3 dB same-SF thresholds under both "
                      "receiver rules, so that the margin's gain over MULTI "
                      "can be read at those thresholds against the ADR rows "
-                     "of `receiver` and `inter_sf_threshold` (ROADMAP item "
+                     "of `receiver` and `inter_sf_threshold` (design item "
                      "17). No rejection table: at this site MULTI puts every "
                      "node on SF7, where the table has nothing to act on."),
         node_counts=GRID,
@@ -258,7 +258,7 @@ EXPERIMENTS = [
     Experiment(
         name="lock_refined",
         kind="run",
-        description=("The lock rule with its two refinements of ROADMAP item "
+        description=("The lock rule with its two refinements of design item "
                      "18, one at a time and together: Eigner's per-SF "
                      "survival table for the locked packet, and recapture "
                      "during its header. The unrefined lock rule's rows are "
@@ -289,7 +289,7 @@ EXPERIMENTS = [
         description=("Rejection between spreading factors with Eigner's "
                      "table, measured on an SX1301 concentrator, in place "
                      "of Croce et al.'s, measured on an SX1272 node radio "
-                     "(ROADMAP item 19). ADR with and without power "
+                     "(design item 19). ADR with and without power "
                      "control under both receiver rules. The Croce and "
                      "orthogonal counterparts of every row are in "
                      "experiment `inter_sf`, at the same seed and grid. "

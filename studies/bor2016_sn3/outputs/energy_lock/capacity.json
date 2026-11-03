@@ -45,7 +45,7 @@
     "manifest": "studies/bor2016_sn3/experiments.py",
     "experiment": "energy_lock",
     "kind": "run",
-    "description": "The energy comparison above under the lock receiver rule (ROADMAP items 13 and 17). Energy per extracted message depends on how many packets get through, so it depends on the rule too. Same seed and grid as `energy`, so the two tables differ only by the rule.",
+    "description": "The energy comparison above under the lock receiver rule (design items 13 and 17). Energy per extracted message depends on how many packets get through, so it depends on the rule too. Same seed and grid as `energy`, so the two tables differ only by the rule.",
     "variant": null,
     "variant_label": null,
     "overrides": {
@@ -180,8 +180,8 @@
       "net_antenna_gain_db": 0.0
     },
     "loracap_version": "2.0.0",
-    "code_sha256": "9c324d1a0c0070673a27dd1eb479d588ac3f9e704103d97e7aa73def8951a4b9",
+    "code_sha256": "466d6df698a2f44ac0317cb9f93c70bd64a2808c7a0ba87ebea76bbbe924e12b",
     "python": "3.13.18",
-    "generated": "2026-11-03T03:01:29+00:00"
+    "generated": "2026-11-03T18:47:58+00:00"
   }
 }

@@ -1,6 +1,6 @@
 ### iot4cows / inter_sf
 
-Spreading factors that are not perfectly orthogonal (ROADMAP item 14). Croce et al.'s measured rejection table against the engine's orthogonal default, for the two adaptive scenarios and ADR without power control, under both receiver rules. Same site, same seed, so the difference between paired rows is the table.
+Spreading factors that are not perfectly orthogonal (design item 14). Croce et al.'s measured rejection table against the engine's orthogonal default, for the two adaptive scenarios and ADR without power control, under both receiver rules. Same site, same seed, so the difference between paired rows is the table.
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|

@@ -1,4 +1,4 @@
-"""Every lost packet is lost exactly once (ROADMAP item 16).
+"""Every lost packet is lost exactly once (design item 16).
 
 A packet dropped for want of a demodulator is a capacity loss. Its RF energy
 is still on the air, so it can still be hit by a later packet, but it was

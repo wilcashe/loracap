@@ -557,7 +557,7 @@ def replot(study_name: str, root=None, log=print) -> List[str]:
 # ---------------------------------------------------------------------------
 #
 # Each renderer reads saved files only. They are markdown because that is what
-# the README and ROADMAP are written in, and each ends with the line that says
+# the README is written in, and each ends with the line that says
 # where its numbers came from.
 
 def _load_json(path):

@@ -398,7 +398,7 @@ def resolve_overlap(cfg: SimConfig, earlier, later) -> Tuple[bool, bool]:
     exp(-G), the check in `validation`.
 
     Two refinements of the lock rule, both off by default and both ignored
-    under 'lorasim' (ROADMAP item 18):
+    under 'lorasim' (design item 18):
 
     - `lock_survival_db` replaces the capture threshold in the one decision
       made past the lock window: the locked packet survives only if its SIR
@@ -754,7 +754,7 @@ def resolve_collisions(cfg: SimConfig, packets) -> dict:
                 other.collided = True
                 # A packet dropped for want of a demodulator is already one
                 # capacity loss. Counting it again here, as the loop did until
-                # ROADMAP item 16, lost the same packet twice.
+                # design item 16, lost the same packet twice.
                 if not other.capacity_dropped:
                     collided_ids.add((other.nodeid, other.start))
 

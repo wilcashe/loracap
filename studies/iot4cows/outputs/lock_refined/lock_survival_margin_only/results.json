@@ -2515,7 +2515,7 @@
     "manifest": "studies/iot4cows/experiments.py",
     "experiment": "lock_refined",
     "kind": "run",
-    "description": "The lock rule with its two refinements of ROADMAP item 18, one at a time and together: Eigner's per-SF survival table for the locked packet, and recapture during its header. The unrefined lock rule's rows are in experiment `receiver`, at the same seed and grid.",
+    "description": "The lock rule with its two refinements of design item 18, one at a time and together: Eigner's per-SF survival table for the locked packet, and recapture during its header. The unrefined lock rule's rows are in experiment `receiver`, at the same seed and grid.",
     "variant": "lock_survival_margin_only",
     "variant_label": "lock rule, Eigner survival, ADR margin only",
     "overrides": {
@@ -2668,8 +2668,8 @@
       "net_antenna_gain_db": 9.0
     },
     "loracap_version": "2.0.0",
-    "code_sha256": "9c324d1a0c0070673a27dd1eb479d588ac3f9e704103d97e7aa73def8951a4b9",
+    "code_sha256": "466d6df698a2f44ac0317cb9f93c70bd64a2808c7a0ba87ebea76bbbe924e12b",
     "python": "3.13.18",
-    "generated": "2026-11-03T03:57:30+00:00"
+    "generated": "2026-11-03T19:55:49+00:00"
   }
 }

@@ -1,6 +1,6 @@
 ### iot4cows / multi_threshold
 
-MULTI at the 1 and 3 dB same-SF thresholds under both receiver rules, so that the margin's gain over MULTI can be read at those thresholds against the ADR rows of `receiver` and `inter_sf_threshold` (ROADMAP item 17). No rejection table: at this site MULTI puts every node on SF7, where the table has nothing to act on.
+MULTI at the 1 and 3 dB same-SF thresholds under both receiver rules, so that the margin's gain over MULTI can be read at those thresholds against the ADR rows of `receiver` and `inter_sf_threshold` (design item 17). No rejection table: at this site MULTI puts every node on SF7, where the table has nothing to act on.
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|
