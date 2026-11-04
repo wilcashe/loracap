@@ -81,7 +81,7 @@ def write_results(study: Study, rows: list, root=None, out_dir=None,
     csv_rows = [{k: v for k, v in r.items() if k not in _JSON_ONLY}
                 for r in rows]
     csv_path = os.path.join(out, RESULTS_CSV)
-    with open(csv_path, "w", newline="") as f:
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(csv_rows[0].keys()))
         w.writeheader()
         w.writerows(csv_rows)
@@ -92,7 +92,7 @@ def write_results(study: Study, rows: list, root=None, out_dir=None,
     if provenance is not None:
         payload["provenance"] = provenance
     json_path = os.path.join(out, RESULTS_JSON)
-    with open(json_path, "w") as f:
+    with open(json_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
 
     return csv_path, json_path
@@ -104,5 +104,5 @@ def load_results(study_name: str, root=None, out_dir=None) -> list:
         raise FileNotFoundError(
             f"No results at {path}. Run the study first:  python3 run.py run {study_name}"
         )
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)["results"]

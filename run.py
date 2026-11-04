@@ -67,10 +67,10 @@ def cmd_new(args):
     shutil.copytree(src, dest, ignore=shutil.ignore_patterns("outputs"))
 
     path = os.path.join(dest, "study.py")
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         text = f.read()
     text = text.replace('name="_template"', f'name="{name}"')
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         f.write(text)
 
     print(f"Created {dest}\n")
@@ -518,7 +518,27 @@ def cmd_serve(args):
     return 0
 
 
+def _utf8_output():
+    """Print UTF-8 when the output goes to a file or a pipe.
+
+    Python encodes redirected output in the locale's encoding, cp1252 on a
+    Spanish Windows, and some tables print characters cp1252 does not have
+    (the subscripts in BW₂/BW₁), so `run.py reproduce reference > out.txt`
+    stopped with UnicodeEncodeError. A terminal is left in its own encoding,
+    which is what it can display, but a character it cannot show becomes "?"
+    instead of stopping the command.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        if not hasattr(stream, "reconfigure"):
+            continue
+        if stream.isatty():
+            stream.reconfigure(errors="replace")
+        else:
+            stream.reconfigure(encoding="utf-8")
+
+
 def main():
+    _utf8_output()
     ap = argparse.ArgumentParser(
         description="LoRaWAN network-capacity simulator",
         formatter_class=argparse.RawDescriptionHelpFormatter,

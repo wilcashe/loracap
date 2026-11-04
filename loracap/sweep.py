@@ -291,7 +291,7 @@ def _write(filename, study_name, data, root, out_dir, provenance):
     if provenance is not None:
         payload["provenance"] = provenance
     path = os.path.join(out, filename)
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
     return path
 

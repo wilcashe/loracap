@@ -33,7 +33,7 @@ GATEWAY_NAMES = ["gateway_id", "gateway", "gw_id", "gweui", "gateway_eui"]
 
 def read_csv(source: str, is_text: bool = False):
     """Returns (header, rows). `source` is a path, or CSV text when is_text."""
-    handle = io.StringIO(source) if is_text else open(source, newline="")
+    handle = io.StringIO(source) if is_text else open(source, newline="", encoding="utf-8-sig")
     try:
         reader = csv.DictReader(handle)
         return (reader.fieldnames or []), list(reader)

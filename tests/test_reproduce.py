@@ -53,7 +53,8 @@ class TempStudy(unittest.TestCase):
     def setUp(self):
         self.root = tempfile.mkdtemp(prefix="loracap-test-")
         os.makedirs(os.path.join(self.root, "tiny"))
-        with open(os.path.join(self.root, "tiny", "study.py"), "w") as f:
+        with open(os.path.join(self.root, "tiny", "study.py"), "w",
+                  encoding="utf-8") as f:
             f.write(TINY_STUDY)
 
     def tearDown(self):
@@ -211,7 +212,7 @@ class TestEveryFileCarriesItsProvenance(TempStudy):
         paths = list(self.json_files(d))
         self.assertTrue(paths)
         for path in paths:
-            with open(path) as f:
+            with open(path, encoding="utf-8") as f:
                 prov = json.load(f).get("provenance")
             with self.subTest(file=os.path.basename(path)):
                 self.assertIsNotNone(prov, f"{path} has no provenance")
@@ -270,9 +271,11 @@ class TestTheSameConfigurationGivesTheSameNumber(TempStudy):
         reproduce.run_experiment("tiny", run, **quiet)
         reproduce.run_experiment("tiny", cmp, **quiet)
         out = os.path.join(self.root, "tiny", "outputs")
-        with open(os.path.join(out, "headline", "capacity.json")) as f:
+        with open(os.path.join(out, "headline", "capacity.json"),
+                  encoding="utf-8") as f:
             headline = json.load(f)["capacity"]["SF8"]
-        with open(os.path.join(out, "cmp", "model_comparison.json")) as f:
+        with open(os.path.join(out, "cmp", "model_comparison.json"),
+                  encoding="utf-8") as f:
             fitted = json.load(f)["comparison"]["variants"][0]["capacity"]["SF8"]
         self.assertIsNotNone(headline["capacity"])
         for key in ("capacity", "ci_low", "ci_high"):
@@ -314,7 +317,8 @@ class TestOverridesReachTheEngine(TempStudy):
         d = os.path.join(self.root, "tiny", "outputs", "sh")
         loaded = {}
         for v in ("clear", "shadowed"):
-            with open(os.path.join(d, v, "results.json")) as f:
+            with open(os.path.join(d, v, "results.json"),
+                      encoding="utf-8") as f:
                 loaded[v] = json.load(f)
         self.assertEqual(loaded["shadowed"]["study"]["shadowing_sigma_db"], 12.0)
         self.assertEqual(loaded["clear"]["study"]["shadowing_sigma_db"], 0.0)
@@ -349,7 +353,8 @@ class TestTables(TempStudy):
                                  log=lambda *_: None)
         text = reproduce.render_tables("tiny", exp, root=self.root)
         with open(os.path.join(self.root, "tiny", "outputs", "headline",
-                               "capacity.json")) as f:
+                               "capacity.json"),
+                  encoding="utf-8") as f:
             cap = json.load(f)["capacity"]["SF8"]["capacity"]
         self.assertIn(f"{cap:.1f}", text)
         self.assertIn("experiment `headline`", text)

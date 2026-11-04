@@ -546,7 +546,7 @@ def replot(study_name: str, root=None, log=print) -> List[str]:
             rows = experiment_mod.load_results(study_name, out_dir=out)
             written += _plot_run(s, rows, out, log, exp.figure_marks)
         elif exp.kind == "validate":
-            with open(os.path.join(out, "validation.json")) as f:
+            with open(os.path.join(out, "validation.json"), encoding="utf-8") as f:
                 ladder = json.load(f)["ladder"]
             written += _plot_validation(s, ladder, out, log)
     return written
@@ -561,7 +561,7 @@ def replot(study_name: str, root=None, log=print) -> List[str]:
 # where its numbers came from.
 
 def _load_json(path):
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -945,7 +945,7 @@ def write_tables(study_name: str, exp: Experiment, root=None) -> str:
     """Save the rendered tables next to the data they came from."""
     text = render_tables(study_name, exp, root)
     path = os.path.join(experiment_dir(study_name, exp, None, root), "tables.md")
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         f.write(text)
     return path
 

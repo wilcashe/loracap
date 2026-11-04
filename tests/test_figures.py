@@ -200,7 +200,8 @@ class TestPanelFigureFromAnExperiment(TempStudy):
         for p in figs:
             os.remove(p)
 
-        with open(os.path.join(self.root, "tiny", "experiments.py"), "w") as f:
+        with open(os.path.join(self.root, "tiny", "experiments.py"), "w",
+                  encoding="utf-8") as f:
             f.write("from loracap.reproduce import Experiment, Variant\n"
                     f"EXPERIMENTS = [{exp!r}]\n")
         redrawn = reproduce.replot("tiny", root=self.root, log=lambda *_: None)

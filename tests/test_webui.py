@@ -154,7 +154,7 @@ class TestThePage(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        with open(PAGE) as f:
+        with open(PAGE, encoding="utf-8") as f:
             cls.html = f.read()
 
     def test_the_controls_exist(self):

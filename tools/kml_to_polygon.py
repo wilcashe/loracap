@@ -95,7 +95,7 @@ def main():
     text = geo.render_site_polygon(
         rings, args.lat, args.lon, args.name,
         source_note=f"Converted from {os.path.basename(args.kml)}.")
-    with open(args.output, "w") as f:
+    with open(args.output, "w", encoding="utf-8") as f:
         f.write(text)
     print(f"\nWrote {args.output}\n")
 

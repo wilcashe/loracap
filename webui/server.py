@@ -386,7 +386,7 @@ def api_create(body):
             values.get("site") or name,
             source_note=body.get("source_note", ""))
         path = os.path.join(target, "site_polygon.py")
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write(text)
         written.append(os.path.relpath(path, ROOT))
 
@@ -395,7 +395,7 @@ def api_create(body):
         values, use_site_polygon=use_poly,
         generated_note="Created with the loracap web interface.")
     path = os.path.join(target, "study.py")
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         f.write(text)
     written.append(os.path.relpath(path, ROOT))
 
@@ -510,7 +510,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path in ("/", "/index.html"):
             try:
-                with open(os.path.join(HERE, "index.html")) as f:
+                with open(os.path.join(HERE, "index.html"), encoding="utf-8") as f:
                     self._send(200, f.read(), "text/html")
             except OSError:
                 self._send(500, "index.html is missing from webui/", "text/plain")

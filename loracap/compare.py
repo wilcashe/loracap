@@ -345,6 +345,6 @@ def write_comparison(study_name: str, result: dict, verdict=None, root=None,
     if provenance is not None:
         payload["provenance"] = provenance
     path = os.path.join(out, "model_comparison.json")
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
     return path

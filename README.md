@@ -47,6 +47,11 @@ defending a result:
 Python 3.8 or newer. The simulation itself uses only the standard library.
 `matplotlib` is needed for the figure, and nothing else is.
 
+Every file is read and written as UTF-8 whatever the operating system, so
+the web page, the `study.py` it writes and a measurements CSV saved by Excel
+behave the same on Windows as on Linux. Output redirected to a file, as in
+`python3 run.py reproduce reference > tables.md`, is written as UTF-8 too.
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -1216,7 +1221,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-336 checks, about ten seconds, standard library only like the rest of the
+344 checks, about ten seconds, standard library only like the rest of the
 package, so nothing needs installing. They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
 studies take minutes each and nobody runs those on every edit.
@@ -1352,7 +1357,7 @@ tools/
 webui/
     server.py               loopback server behind `run.py serve`
     index.html              the setup form
-tests/                      336 fast checks, `run.py test`
+tests/                      344 fast checks, `run.py test`
 studies/
     _template/              commented starting point, copied by `run.py new`
     iot4cows/               worked example, see below

@@ -111,7 +111,7 @@ class TestEngineIsUnchanged(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        with open(GOLDEN) as f:
+        with open(GOLDEN, encoding="utf-8") as f:
             cls.golden = json.load(f)["results"]
         cls.now = compute()
 
@@ -139,7 +139,7 @@ class TestEngineIsUnchanged(unittest.TestCase):
 def _write():
     from loracap.reproduce import code_digest
     payload = {"code_sha256": code_digest(), "results": compute()}
-    with open(GOLDEN, "w") as f:
+    with open(GOLDEN, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=1, sort_keys=True)
     print(f"wrote {GOLDEN}: {len(payload['results'])} runs")
 
