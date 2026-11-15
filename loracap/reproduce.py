@@ -410,8 +410,8 @@ def run_experiment(study_name: str, exp: Experiment, root=None,
 
         if exp.kind == "run":
             rows = experiment_mod.run_study(s, progress=False)
-            written += list(experiment_mod.write_results(
-                s, rows, out_dir=out, provenance=prov))
+            written += [p for p in experiment_mod.write_results(
+                s, rows, out_dir=out, provenance=prov) if p]
             cap = analysis.capacity_with_ci(rows, threshold=s.der_threshold,
                                             n_boot=exp.n_bootstrap)
             fleet = analysis.capacity_with_ci(

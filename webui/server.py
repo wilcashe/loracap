@@ -30,6 +30,7 @@ The server binds to the loopback interface and is not intended to be exposed.
 """
 from __future__ import annotations
 
+import io
 import json
 import os
 import re
@@ -37,6 +38,7 @@ import sys
 import threading
 import traceback
 import webbrowser
+import zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -113,6 +115,11 @@ ORTHOGONAL_NOTE = (
     "over several spreading factors an upper bound.")
 
 
+OUTPUT_FIELDS = ("highlight_color", "plot_zoom_ylim", "figure_basename",
+                 "extra_figures", "figure_formats", "figure_dpi",
+                 "figure_size_in", "figure_greyscale", "data_files")
+
+
 def _study_default(name: str):
     import dataclasses as _dc
     return next(f.default for f in _dc.fields(study_mod.Study) if f.name == name)
@@ -172,13 +179,13 @@ def field_limits():
         "path_loss_ref_db": {"kind": "accepted", "gt": 0,
                              "text": "greater than 0 dB"},
         "shadowing_sigma_db": {"kind": "accepted", "ge": 0, "warn_gt": 20,
-                               "text": "0 to 20 dB; above 20 is checked"},
+                               "text": "0 to 20 dB, above 20 is checked"},
         "lat": {"kind": "accepted", "ge": -90, "le": 90,
                 "text": "decimal degrees, -90 to 90, negative south"},
         "lon": {"kind": "accepted", "ge": -180, "le": 180,
                 "text": "decimal degrees, -180 to 180, negative west"},
-        "n_runs": {"kind": "recommended", "warn_lt": 20,
-                   "text": "20 or more recommended"},
+        "n_runs": {"kind": "accepted", "ge": 2, "warn_lt": 20,
+                   "text": "at least 2, and 20 or more recommended"},
         "sim_time_s": {"kind": "recommended", "warn_lt": 600,
                        "text": "600 s or more recommended"},
         "path_loss_exponent": {
@@ -187,7 +194,7 @@ def field_limits():
                 f"{_short_cite(presets.TERRAIN_SOURCE)}"},
         "capture_threshold_db": {
             "kind": "measured", "text":
-                f"measured {lo:g} to {hi:g} dB; LoRaSim's value is "
+                f"measured {lo:g} to {hi:g} dB, LoRaSim's value is "
                 f"{_study_default('capture_threshold_db'):g} dB"},
     }
 
@@ -264,6 +271,18 @@ def api_bootstrap(_):
         "default_header_recapture": _study_default("header_recapture"),
         "limits": field_limits(),
         "payload_ceilings": payload_ceilings(),
+        # Node radios with a transmit current table. Choosing none, the
+        # default, is choosing no energy figures: a guessed current would
+        # read as a measured result.
+        "radios": [{"value": r, "source": presets.TX_CURRENT_SOURCE.get(r, ""),
+                    "low_dbm": min(t), "high_dbm": max(t)}
+                   for r, t in sorted(presets.TX_CURRENT_MA.items())],
+        # What the Output tab starts from, read from Study itself so the page
+        # cannot drift from what a study written by hand would get.
+        "output_defaults": {k: _study_default(k) for k in OUTPUT_FIELDS},
+        "figure_kinds": list(study_mod.FIGURE_KINDS),
+        "figure_formats": list(study_mod.FIGURE_FORMATS),
+        "data_files": list(study_mod.DATA_FILES),
     }
 
 
@@ -408,12 +427,19 @@ def api_sweep(body):
             "warnings": [str(w.message) for w in caught]}
 
 
+# Fields that arrive from the page as JSON lists and are tuples in a Study.
+SEQUENCE_FIELDS = ("spreading_factors", "scenarios", "node_counts",
+                   "adaptive_sf_options", "extra_figures", "figure_formats",
+                   "data_files", "figure_size_in", "plot_full_xlim",
+                   "plot_zoom_xlim", "plot_zoom_ylim")
+
+
 def _study_from_values(values: dict) -> study_mod.Study:
     """Build a Study from form values, ignoring keys it does not define."""
     import dataclasses as _dc
     fields = {f.name for f in _dc.fields(study_mod.Study)}
     kwargs = {k: v for k, v in values.items() if k in fields and v is not None}
-    for seq in ("spreading_factors", "scenarios", "node_counts", "adaptive_sf_options"):
+    for seq in SEQUENCE_FIELDS:
         if seq in kwargs and kwargs[seq] is not None:
             kwargs[seq] = tuple(kwargs[seq])
     if "sensitivity_dbm" in kwargs and kwargs["sensitivity_dbm"]:
@@ -486,6 +512,9 @@ def api_create(body):
         written.append(os.path.relpath(path, ROOT))
 
     values.pop("polygons_m", None)
+    for k in SEQUENCE_FIELDS:
+        if isinstance(values.get(k), list):
+            values[k] = tuple(values[k])
     text = study_mod.render_study_module(
         values, use_site_polygon=use_poly,
         generated_note="Created with the loracap web interface.")
@@ -523,6 +552,7 @@ def _run_worker(name: str, bootstrap: int):
         cap = analysis.capacity_with_ci(rows, threshold=st.der_threshold,
                                         n_boot=bootstrap)
         analysis.write_capacity(st.name, cap, st.der_threshold)
+        analysis.write_capacity_tables(st, cap)
         figure = None
         try:
             from loracap import plotting
@@ -572,6 +602,29 @@ def api_figure(body):
                             base64.b64encode(f.read()).decode()}
 
 
+def study_zip(name: str) -> bytes:
+    """A copy of one study for download: its study.py, its site polygon, and
+    the files of its last run in outputs/. Experiment subdirectories are left
+    out, since they belong to `reproduce` and are regenerated by it. The
+    files stay where they are, so run.py plot, capacity and reproduce still
+    find them: the zip is a copy, not a move."""
+    target = safe_study_dir(name)
+    out = os.path.join(target, "outputs")
+    if not os.path.isfile(os.path.join(out, experiment.RESULTS_JSON)):
+        raise ValueError(f"Study {name!r} has no results yet. Run it first.")
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for fname in ("study.py", "site_polygon.py"):
+            path = os.path.join(target, fname)
+            if os.path.isfile(path):
+                z.write(path, f"{name}/{fname}")
+        for fname in sorted(os.listdir(out)):
+            path = os.path.join(out, fname)
+            if os.path.isfile(path):
+                z.write(path, f"{name}/outputs/{fname}")
+    return buf.getvalue()
+
+
 ROUTES = {
     "/api/bootstrap": api_bootstrap,
     "/api/kml": api_kml,
@@ -603,6 +656,22 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        m = re.fullmatch(r"/download/([^/]+)\.zip", self.path)
+        if m:
+            try:
+                data = study_zip(m.group(1))
+            except ValueError as e:
+                self._send(404, str(e), "text/plain")
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "application/zip")
+            self.send_header("Content-Disposition",
+                             f'attachment; filename="{m.group(1)}.zip"')
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if self.path in ("/", "/index.html"):
             try:
                 with open(os.path.join(HERE, "index.html"), encoding="utf-8") as f:

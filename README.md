@@ -72,7 +72,8 @@ python3 run.py serve                # set a new study up through a local web pag
 `run` writes everything into that study's `outputs/` directory: `results.csv`,
 `results.json` (which carries the full configuration alongside the numbers, so
 a result file is never orphaned from the settings that produced it),
-`capacity.json`, and the figure in PDF, SVG and PNG.
+`capacity.json`, and the figure in PDF, SVG and PNG. A study can ask for more
+figures and files, or fewer: see [Figures and files](#figures-and-files).
 
 ## Setting up a new site
 
@@ -109,6 +110,25 @@ runs, and a field with no such basis, such as transmit power, shows none. The
 checks name each field as the form labels it, and clicking one leads to the
 field. A problem in a part of the form you have not reached yet is listed as
 still to fill in, and turns red only once you enter a value that is wrong.
+
+The page opens in **basic** mode: only what has no default, or is usually
+changed, is shown. A field marked with an asterisk has no default and must be
+filled in. Everything else, from the gateway chip and the antenna gains to
+the receiver rule and the random seed, sits in a block per section, "advanced
+radio settings" and so on, opened one at a time or all at once with the
+**Basic | Advanced** switch at the top. A hidden setting is never changed
+silently: while a block is closed it says how many settings it holds and
+lists every one that differs from its default, with both values and a
+button that restores the defaults. The checks still cover hidden fields, and
+clicking one opens its block. Every abbreviation on the page (DER, SF, ADR,
+RSSI and the rest) is written out where it first appears, carries its
+definition on hover, and is listed under *Terms used on this page*.
+
+A second tab, **Output**, chooses the figures and files of the run, writes
+the choice into `study.py` like any other setting, and lists the files the run
+will write. Once the run is done it offers them, with `study.py`, as one zip
+to download. The files themselves stay in `outputs/`, where `plot`,
+`capacity` and `reproduce` look for them.
 
 When you press the button it writes
 `studies/<name>/study.py` and `site_polygon.py`, shows you the file it wrote,
@@ -333,6 +353,55 @@ that single-slope fits are often inadequate, which this simulator nonetheless
 uses: a swept range is a coarser description of reality than the best available
 models.
 
+## Figures and files
+
+What a run draws and writes is part of the study, set in `study.py` (or on
+the form's Output tab) like everything else, so `run.py plot` redraws exactly
+what the run drew. None of it changes a number. Left at their defaults the
+fields below draw and write what a study has always produced, so a study
+written before they existed is unaffected.
+
+| Field | Default | What it does |
+|---|---|---|
+| `extra_figures` | `()` | Figures beside the DER figure, by name: `"delivered"`, `"energy"`, `"losses"` |
+| `figure_formats` | `("pdf", "svg", "png")` | Formats of every figure |
+| `figure_dpi` | `200` | Resolution of the PNG files |
+| `figure_size_in` | `None` | `(width, height)` in inches for every figure. None keeps each figure's own size |
+| `figure_greyscale` | `False` | The highlighted scenario in black and the threshold in dark grey, for a print with no colour |
+| `data_files` | `("csv",)` | Files beside `results.json` and `capacity.json`: `"csv"`, `"md"`, `"latex"` |
+
+No journal size is offered by name. The width belongs to the journal the
+figure is for, one column or two, and its author guidelines give it.
+
+The three figures beside the DER figure read only what the run saved:
+
+- **`delivered`**, messages delivered per hour against node count: packets
+  transmitted times DER, scaled from the simulated time to an hour, beside
+  the traffic offered if every packet arrived. A circle marks each
+  scenario's capacity. On most sites the curve goes on rising past it,
+  because the threshold is a requirement on the share delivered and says
+  nothing about the most the gateway can carry.
+- **`energy`**, energy per delivered message in millijoules. Transmit energy
+  only, from the node radio's current table, so a study must declare its
+  `radio` (or `tx_current_ma`) to ask for it. Sleep current is not in it,
+  which is why it is not a battery life.
+- **`losses`**, where packets are lost: below sensitivity, collision and no
+  free demodulator, as shares of the packets sent, one panel per scenario on
+  a shared axis. The engine counts the three so they never overlap. Nodes no
+  data rate reaches never transmit and are not here: the fleet DER counts
+  them.
+
+The capacity table, as `capacity_table.md` or `capacity_table.tex`, gives
+each scenario's capacity and 95% bootstrap interval, and says under it what
+those numbers are conditional on: the receiver rule, the capture threshold,
+and whether spreading factors were treated as orthogonal or which rejection
+table was used. The LaTeX version is a plain `tabular` that compiles without
+extra packages.
+
+`run.py plot` takes the simulated time and the send interval from the record
+saved with the results, not from `study.py`, so a study edited after its run
+still redraws the run it describes.
+
 ## What `check` catches
 
 - Spreading factors the band does not offer on uplink. Simulating SF11 or SF12
@@ -361,6 +430,12 @@ models.
 - A gateway that falls outside the boundary, which usually means the wrong
   coordinates were used when converting the KML.
 - Too few repetitions, or a simulated duration too short to expose collisions.
+  Fewer than two runs per point is an error rather than a warning: the
+  capacity interval is built from the spread between runs, and with one run
+  it collapses to a point that reads as exact.
+- Output settings that would only fail after the whole simulation: an energy
+  figure with no node radio, no figure format, a file name with a folder in
+  it, axis limits in the wrong order.
 
 ### Where the regional tables come from
 
@@ -1233,7 +1308,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-364 checks, about ten seconds, standard library only like the rest of the
+413 checks, about fifteen seconds, standard library only like the rest of the
 package, so nothing needs installing. They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
 studies take minutes each and nobody runs those on every edit.
@@ -1355,21 +1430,22 @@ loracap/
     study.py                the Study definition, loading and validation
     presets.py              regional SF ranges and datasheet sensitivity tables
     experiment.py           runs the grid, writes results
-    analysis.py             capacity and bootstrap confidence interval
+    analysis.py             capacity, bootstrap confidence interval, capacity tables
     sweep.py                propagation sensitivity sweep
     validation.py           the ALOHA bound and the degeneracy ladder
     compare.py              one study under two propagation models
     reproduce.py            experiments.py manifests behind `run.py reproduce`
-    plotting.py             the figures: one run, the ladder, panels side by side
+    plotting.py             the figures: one run and the three beside it, the
+                            ladder, panels side by side
     geo.py                  KML parsing, projection, area and overlap checks
     pathloss.py             log-distance fit and its sanity checks
 tools/
     kml_to_polygon.py       KML boundary  ->  site_polygon.py
     fit_path_loss.py        field RSSI    ->  propagation model
 webui/
-    server.py               loopback server behind `run.py serve`
-    index.html              the setup form
-tests/                      364 fast checks, `run.py test`
+    server.py               loopback server behind `run.py serve`, and the zip download
+    index.html              the setup form: basic and advanced modes, Output tab
+tests/                      413 fast checks, `run.py test`
 studies/
     _template/              commented starting point, copied by `run.py new`
     iot4cows/               worked example, see below

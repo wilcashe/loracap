@@ -16,6 +16,7 @@ from __future__ import annotations
 import importlib.util
 import math
 import os
+import re
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence, Tuple, Union
 
@@ -26,6 +27,18 @@ from .core import (
 )
 
 STUDIES_DIRNAME = "studies"
+
+# Figures a study can ask for beside the DER figure, and the file suffix each
+# is written under: <figure_basename>_<suffix>.<format>.
+#   delivered  messages delivered per hour against node count, with the
+#              traffic offered if every packet arrived
+#   energy     energy per delivered message, only for a study that declares
+#              its node radio, since that is where the current table comes from
+#   losses     where packets are lost: weak signal, collision, no free
+#              demodulator, as shares of the packets sent, one panel per scenario
+FIGURE_KINDS = ("delivered", "energy", "losses")
+FIGURE_FORMATS = ("pdf", "svg", "png")
+DATA_FILES = ("csv", "md", "latex")
 
 
 def node_counts_logspace(low: int, high: int, count: int = 27):
@@ -162,6 +175,24 @@ class Study:
     plot_zoom_xlim: Optional[Tuple[float, float]] = None   # None -> around crossings
     plot_zoom_ylim: Tuple[float, float] = (0.75, 1.0)
     figure_basename: str = "capacity"
+    # Figures beside the DER figure, drawn from the same results, by name from
+    # FIGURE_KINDS. Empty by default, so a study written before they existed
+    # draws exactly what it drew then.
+    extra_figures: Sequence[str] = ()
+    figure_formats: Sequence[str] = ("pdf", "svg", "png")
+    figure_dpi: int = 200                        # PNG only, vector formats ignore it
+    # (width, height) in inches for every figure. None keeps each figure's own
+    # size. No journal size is offered by name: the width belongs to whichever
+    # journal the figure is for, and the study cannot know that.
+    figure_size_in: Optional[Tuple[float, float]] = None
+    # The highlighted scenario drawn in black instead of highlight_color, and
+    # the threshold in dark grey, for a print that has no colour at all. The
+    # other curves are grey already and stay told apart by line and marker.
+    figure_greyscale: bool = False
+    # Files beside results.json and capacity.json, which are always written:
+    # "csv" (results.csv, written by default as it always was), "md" and
+    # "latex" (the capacity table, ready for a README or a manuscript).
+    data_files: Sequence[str] = ("csv",)
 
     # ------------------------------------------------------------------ #
 
@@ -733,7 +764,16 @@ def validate(study: Study):
         errors.append("node_counts must be sorted and free of duplicates.")
     if min(study.node_counts, default=0) < 1:
         errors.append("node_counts must be positive.")
-    if study.n_runs < 20:
+    # Two runs is the least that gives a spread, and the capacity interval is
+    # built from that spread. With one run the interval collapses to a point
+    # that reads as exact, and with none `run_batch` has nothing to average.
+    # The same bound as `reproduce` puts on an experiment.
+    if isinstance(study.n_runs, bool) or not isinstance(study.n_runs, int) \
+            or study.n_runs < 2:
+        errors.append(
+            f"n_runs must be an integer >= 2, not {study.n_runs!r}: the "
+            f"capacity interval is built from the spread between runs.")
+    elif study.n_runs < 20:
         warnings.append(
             f"n_runs = {study.n_runs}. Below about 20 the standard deviation is "
             f"itself noisy, and reviewers of LoRa scalability work routinely ask "
@@ -747,6 +787,9 @@ def validate(study: Study):
         )
     if not 0 < study.der_threshold < 1:
         errors.append("der_threshold must lie strictly between 0 and 1.")
+
+    # --- figures and files ---
+    errors += _output_errors(study)
 
     if cfg is not None:
         info.append(f"Channels: {cfg.n_channels}, simultaneous demodulations: "
@@ -817,6 +860,66 @@ def validate(study: Study):
     return errors, warnings, info
 
 
+def _output_errors(study: Study) -> list:
+    """Problems with what a study asks to be drawn and written. Kept apart
+    from the physics checks: none of these changes a number, but each would
+    otherwise fail only after the whole simulation had run."""
+    errors = []
+    unknown = [k for k in study.extra_figures if k not in FIGURE_KINDS]
+    if unknown:
+        errors.append(f"extra_figures has {unknown}, not among {list(FIGURE_KINDS)}.")
+    if "energy" in study.extra_figures and not (study.radio or study.tx_current_ma):
+        errors.append(
+            "extra_figures asks for 'energy' but the study declares no radio "
+            "or tx_current_ma. Energy needs the node radio's transmit current, "
+            "and a guessed one would read as a measured result.")
+    if not study.figure_formats:
+        errors.append("figure_formats is empty, so no figure would be written.")
+    bad = [f for f in study.figure_formats if f not in FIGURE_FORMATS]
+    if bad:
+        errors.append(f"figure_formats has {bad}, not among {list(FIGURE_FORMATS)}.")
+    if isinstance(study.figure_dpi, bool) or not isinstance(study.figure_dpi, int) \
+            or study.figure_dpi <= 0:
+        errors.append(f"figure_dpi must be a positive integer, not {study.figure_dpi!r}.")
+    if study.figure_size_in is not None:
+        try:
+            size = tuple(study.figure_size_in)
+        except TypeError:           # a single number rather than a pair
+            size = ()
+        if len(size) != 2 or not all(isinstance(v, (int, float))
+                                     and not isinstance(v, bool) and v > 0
+                                     for v in size):
+            errors.append("figure_size_in must be (width, height) in inches, "
+                          "both positive, or None for each figure's own size.")
+    bad = [f for f in study.data_files if f not in DATA_FILES]
+    if bad:
+        errors.append(f"data_files has {bad}, not among {list(DATA_FILES)}.")
+    # A plain file name: it is joined to the outputs/ directory, so a path in
+    # it would write somewhere else.
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", study.figure_basename or ""):
+        errors.append(
+            f"figure_basename {study.figure_basename!r} must be a plain file "
+            f"name: letters, digits, dot, hyphen or underscore, no folder.")
+    for name in ("plot_full_xlim", "plot_zoom_xlim"):
+        v = getattr(study, name)
+        if v is not None and not (_pair(v) and v[0] > 0):
+            errors.append(f"{name} must be (from, to) node counts with "
+                          f"0 < from < to, or None for automatic.")
+    if not _pair(study.plot_zoom_ylim):
+        errors.append("plot_zoom_ylim must be (from, to) with from < to.")
+    return errors
+
+
+def _pair(v) -> bool:
+    """Two real numbers, the first below the second."""
+    try:
+        a, b = v
+    except (TypeError, ValueError):
+        return False
+    return (all(isinstance(x, (int, float)) and not isinstance(x, bool)
+                for x in (a, b)) and a < b)
+
+
 STUDY_FIELD_ORDER = [
     ("name", "identification"), ("site", None), ("description", None),
     ("region", "band and spreading factors"), ("bw_khz", None),
@@ -843,7 +946,9 @@ STUDY_FIELD_ORDER = [
     ("base_seed", None), ("der_threshold", None),
     ("highlight_scenario", "figure"), ("highlight_color", None),
     ("plot_full_xlim", None), ("plot_zoom_xlim", None), ("plot_zoom_ylim", None),
-    ("figure_basename", None),
+    ("figure_basename", None), ("extra_figures", None), ("figure_formats", None),
+    ("figure_dpi", None), ("figure_size_in", None), ("figure_greyscale", None),
+    ("data_files", None),
 ]
 
 
@@ -885,7 +990,8 @@ def render_study_module(values: dict, use_site_polygon: bool = True,
                                    "max_simultaneous_demodulations", "chip",
                                    "adaptive_sf_options", "plot_full_xlim",
                                    "plot_zoom_xlim", "path_loss_r_squared",
-                                   "highlight_scenario"):
+                                   "highlight_scenario", "figure_size_in",
+                                   "radio"):
             continue    # leave the dataclass default rather than writing None
         if heading:
             lines.append(f"    # --- {heading} ---")

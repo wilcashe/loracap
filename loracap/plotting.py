@@ -32,6 +32,11 @@ LINESTYLES = ["-", "--", ":", "-.", (0, (3, 1, 1, 1)), (0, (5, 1)), (0, (1, 1))]
 MARKERS = ["o", "s", "^", "D", "v", "P", "X"]
 GREYS = ["0.15", "0.40", "0.60", "0.0", "0.50", "0.70", "0.30"]
 THRESHOLD_COLOR = "#c0392b"
+# For a study drawn in greyscale: the highlighted scenario in black and the
+# threshold in a dark grey, so neither depends on colour to be found.
+GREYSCALE_HIGHLIGHT = "0.0"
+GREYSCALE_THRESHOLD = "0.35"
+DEFAULT_SIZE_IN = (11, 4.6)
 
 
 def plot_validation(study: Study, ladder, root=None, formats=("pdf", "svg", "png"),
@@ -192,8 +197,15 @@ def _build_style(scenarios, highlight, highlight_color):
     return style
 
 
-def _style_axis(ax, xlim, ylim, threshold):
-    ax.axhline(threshold, color=THRESHOLD_COLOR, linewidth=1.3, linestyle="--", zorder=1)
+def _colors(study: Study):
+    """(highlight, threshold) colours for a study, honouring greyscale."""
+    if study.figure_greyscale:
+        return GREYSCALE_HIGHLIGHT, GREYSCALE_THRESHOLD
+    return study.highlight_color, THRESHOLD_COLOR
+
+
+def _style_axis(ax, xlim, ylim, threshold, threshold_color=THRESHOLD_COLOR):
+    ax.axhline(threshold, color=threshold_color, linewidth=1.3, linestyle="--", zorder=1)
     ax.set_xscale("log")
     ax.set_xlim(*xlim)
     ax.set_ylim(*ylim)
@@ -233,11 +245,11 @@ def _draw_marks(ax, marks, xlim, ylim):
     return drawn
 
 
-def _save(fig, base, formats):
+def _save(fig, base, formats, dpi=200):
     written = []
     for ext in formats:
         path = f"{base}.{ext}"
-        fig.savefig(path, bbox_inches="tight", dpi=200 if ext == "png" else None)
+        fig.savefig(path, bbox_inches="tight", dpi=dpi if ext == "png" else None)
         written.append(path)
     plt.close(fig)
     return written
@@ -247,7 +259,8 @@ def study_figure(study: Study, rows, marks=()):
     """The two-panel figure of one run, built but not saved."""
     by = group_by_scenario(rows)
     scenarios = [s for s in study.scenarios if s in by]
-    style = _build_style(scenarios, study.highlight_scenario, study.highlight_color)
+    hl_color, th_color = _colors(study)
+    style = _build_style(scenarios, study.highlight_scenario, hl_color)
     th = study.der_threshold
 
     crossings = {}
@@ -271,7 +284,7 @@ def study_figure(study: Study, rows, marks=()):
         "font.size": 12, "axes.labelsize": 12, "legend.fontsize": 9.5,
         "xtick.labelsize": 11, "ytick.labelsize": 11,
     })
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.6))
+    fig, axes = plt.subplots(1, 2, figsize=study.figure_size_in or DEFAULT_SIZE_IN)
 
     for scen in scenarios:
         rs = by[scen]
@@ -287,15 +300,15 @@ def study_figure(study: Study, rows, marks=()):
                             color=s["color"], alpha=0.15, linewidth=0)
 
     ax = axes[0]
-    _style_axis(ax, full_xlim, (0, 1.02), th)
+    _style_axis(ax, full_xlim, (0, 1.02), th, th_color)
     ax.set_ylabel("Data Extraction Rate (DER)")
     ax.text(full_xlim[0] * 1.08, th - 0.035, f"DER = {th:g} threshold",
-            fontsize=10, va="top", color=THRESHOLD_COLOR)
+            fontsize=10, va="top", color=th_color)
     ax.legend(loc="lower left", frameon=True, framealpha=0.9)
     _draw_marks(ax, marks, full_xlim, (0, 1.02))
 
     ax = axes[1]
-    _style_axis(ax, zoom_xlim, study.plot_zoom_ylim, th)
+    _style_axis(ax, zoom_xlim, study.plot_zoom_ylim, th, th_color)
     y0 = study.plot_zoom_ylim[0]
     for i, scen in enumerate(scenarios):
         xc = crossings[scen]
@@ -314,12 +327,225 @@ def study_figure(study: Study, rows, marks=()):
     return fig
 
 
-def plot_study(study: Study, rows, root=None, formats=("pdf", "svg", "png"),
-               out_dir=None, marks=()):
-    fig = study_figure(study, rows, marks)
+def plot_study(study: Study, rows, root=None, formats=None, out_dir=None,
+               marks=()):
+    """The DER figure of one run, then each figure in `study.extra_figures`.
+
+    `formats` defaults to the study's own. The delivered-traffic figure turns
+    packet counts into a rate with the study's simulated time and send
+    interval, so `run.py plot` hands over the study with those two taken from
+    the record saved beside the results: a study edited after its run still
+    redraws the run it describes."""
+    formats = tuple(formats or study.figure_formats)
     out = out_dir or output_dir(study.name, root)
     os.makedirs(out, exist_ok=True)
-    return _save(fig, os.path.join(out, study.figure_basename), formats)
+    base = os.path.join(out, study.figure_basename)
+    written = _save(study_figure(study, rows, marks), base, formats, study.figure_dpi)
+    for kind in study.extra_figures:
+        fig = EXTRA_FIGURES[kind](study, rows)
+        if fig is not None:
+            written += _save(fig, f"{base}_{kind}", formats, study.figure_dpi)
+    return written
+
+
+# ---------------------------------------------------------------------------
+# Figures beside the DER figure
+# ---------------------------------------------------------------------------
+#
+# Each reads only what a run already saved, so `run.py plot` redraws them
+# without simulating. They share the DER figure's conventions: one
+# highlighted scenario in colour, the others in grey, every series told apart
+# by line style and marker as well, so a greyscale print loses nothing.
+
+def _log_nodes_axis(ax, ns, sparse=False):
+    """Node count on a log axis with plain-number ticks. A narrow panel gets
+    one tick per half decade, or the labels run into each other."""
+    lo, hi = min(ns), max(ns)
+    ax.set_xscale("log")
+    ax.set_xlim(lo, hi)
+    if len(set(ns)) <= 6:
+        ticks = sorted(set(ns))
+    elif sparse:
+        ticks = [t for t in (1, 3, 10, 30, 100, 300, 1000, 3000, 10000)
+                 if lo <= t <= hi]
+    else:
+        ticks = _nice_log_ticks(lo, hi)
+    ax.xaxis.set_major_locator(FixedLocator(ticks))
+    ax.xaxis.set_major_formatter(ScalarFormatter())
+    ax.xaxis.set_minor_formatter(plt.NullFormatter())
+    ax.set_xlabel("Number of nodes")
+    ax.grid(True, which="major", linestyle="--", linewidth=0.6, color="0.85", zorder=0)
+    ax.set_axisbelow(True)
+
+
+def _rc():
+    plt.rcParams.update({
+        "font.size": 12, "axes.labelsize": 12, "legend.fontsize": 9.5,
+        "xtick.labelsize": 11, "ytick.labelsize": 11,
+    })
+
+
+def _scenarios(study: Study, rows):
+    by = group_by_scenario(rows)
+    return by, [s for s in study.scenarios if s in by]
+
+
+def delivered_figure(study: Study, rows):
+    """Messages delivered per hour against node count.
+
+    Delivered is what the simulation transmitted times its DER, scaled from
+    the simulated time to an hour. The dotted line is the traffic offered,
+    every node's reports at the study's interval, so the gap to it is what the
+    network loses. A circle marks each scenario's capacity, the node count
+    where its DER crosses the threshold: the curve goes on rising past it,
+    because the threshold is a requirement on the share delivered and says
+    nothing about the most the gateway can carry."""
+    by, scenarios = _scenarios(study, rows)
+    hl_color, _ = _colors(study)
+    style = _build_style(scenarios, study.highlight_scenario, hl_color)
+    th = study.der_threshold
+    per_hour = 3600.0 / study.sim_time_s
+    _rc()
+    fig, ax = plt.subplots(figsize=study.figure_size_in or (7.2, 4.6))
+    ns_all = sorted({r["n_nodes"] for r in rows})
+    ax.plot(ns_all, [n * 3600.0 / study.send_interval_s for n in ns_all],
+            color="0.55", linestyle=(0, (2, 2)), linewidth=1.2,
+            label="offered: every packet delivered")
+    circles = []
+    for scen in scenarios:
+        rs = by[scen]
+        ns = [r["n_nodes"] for r in rs]
+        y = [r["transmitted_mean"] * r["der_mean"] * per_hour for r in rs]
+        st = style[scen]
+        ax.plot(ns, y, color=st["color"], linestyle=st["ls"], marker=st["marker"],
+                markevery=2, markersize=4.5, linewidth=1.7, label=scen)
+        xc = crossing(ns, [r["der_mean"] for r in rs], th)
+        if xc is None:
+            continue
+        # the delivered rate at the crossing, on the same straight segment
+        # the crossing itself was interpolated on
+        i = next(k for k in range(len(ns) - 1) if ns[k] <= xc <= ns[k + 1])
+        f = 0.0 if ns[i + 1] == ns[i] else (xc - ns[i]) / (ns[i + 1] - ns[i])
+        yc = y[i] + f * (y[i + 1] - y[i])
+        ax.plot([xc], [yc], marker="o", markersize=7, markerfacecolor="white",
+                markeredgecolor=st["color"], markeredgewidth=1.6, zorder=5)
+        circles.append((xc, yc, scen))
+    # Two scenarios often cross within a few nodes of each other (MULTI and
+    # ADR do on most sites), and two bare numbers there cannot be told apart
+    # or kept from printing over each other. Each label names its scenario,
+    # and a circle close to the previous one stacks its label one line higher.
+    k, prev = 0, None
+    for xc, yc, scen in sorted(circles):
+        k = k + 1 if prev is not None and xc < prev * 1.25 else 0
+        ax.annotate(f"{scen} {xc:.0f}", (xc, yc), textcoords="offset points",
+                    xytext=(-7, 7 + 14 * k), ha="right", fontsize=9.5,
+                    fontweight="bold", color="0.15")
+        prev = xc
+    _log_nodes_axis(ax, ns_all)
+    ax.set_ylim(bottom=0)
+    ax.set_ylabel("Messages delivered per hour")
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(
+        lambda v, _: f"{v / 1000:g}k" if v >= 1000 else f"{v:g}"))
+    ax.set_title(f"Circles: capacity at DER = {th:g}", fontsize=10.5,
+                 loc="left", color="0.25")
+    ax.legend(loc="upper left", frameon=True, framealpha=0.9)
+    fig.tight_layout()
+    return fig
+
+
+def energy_figure(study: Study, rows):
+    """Energy per delivered message against node count, in millijoules.
+
+    Transmit energy only, from the node radio's current table: a packet lost
+    to a collision cost as much to send as one that arrived, so the figure
+    rises with the node count even where the DER still meets the threshold.
+    Sleep current is not in it, which is why it is not a battery life."""
+    by, scenarios = _scenarios(study, rows)
+    if not any(r.get("nec_j_per_message_mean") is not None for r in rows):
+        raise ValueError(
+            f"The results of {study.name!r} carry no energy figures. They were "
+            f"produced without a node radio: set radio in study.py and run "
+            f"the study again.")
+    hl_color, _ = _colors(study)
+    style = _build_style(scenarios, study.highlight_scenario, hl_color)
+    _rc()
+    fig, ax = plt.subplots(figsize=study.figure_size_in or (7.2, 4.6))
+    ns_all = sorted({r["n_nodes"] for r in rows})
+    for scen in scenarios:
+        pts = [(r["n_nodes"], 1000.0 * r["nec_j_per_message_mean"])
+               for r in by[scen] if r.get("nec_j_per_message_mean") is not None]
+        if not pts:
+            continue
+        st = style[scen]
+        ax.plot([p[0] for p in pts], [p[1] for p in pts], color=st["color"],
+                linestyle=st["ls"], marker=st["marker"], markevery=2 if len(pts) > 8 else 1,
+                markersize=5, linewidth=1.7, label=scen)
+    _log_nodes_axis(ax, ns_all)
+    ax.set_ylim(bottom=0)
+    ax.set_ylabel("Energy per delivered message (mJ)")
+    ax.set_title("Transmit energy only, sleep current not included",
+                 fontsize=10.5, loc="left", color="0.25")
+    ax.legend(loc="best", frameon=True, framealpha=0.9)
+    fig.tight_layout()
+    return fig
+
+
+# The three ways a transmitted packet fails to arrive. The engine counts
+# them so they never overlap (tests/test_accounting.py), which is what lets
+# them be drawn as shares of one total.
+LOSS_CAUSES = (
+    ("collided_mean", "collision"),
+    ("lost_signal_mean", "below sensitivity"),
+    ("lost_capacity_mean", "no free demodulator"),
+)
+
+
+def losses_figure(study: Study, rows):
+    """Where packets are lost, as shares of the packets sent, one panel per
+    scenario on a shared vertical axis. Nodes that no data rate reaches never
+    transmit, so they are not here: the fleet DER counts them."""
+    by, scenarios = _scenarios(study, rows)
+    hl_color, _ = _colors(study)
+    looks = [(hl_color, "-", "o"), (GREYS[0], "--", "s"), (GREYS[2], ":", "^")]
+    n = len(scenarios)
+    cols = min(3, n)
+    nrows = math.ceil(n / cols)
+    _rc()
+    fig, axes = plt.subplots(
+        nrows, cols, squeeze=False,
+        figsize=study.figure_size_in or (4.0 * cols, 4.2 * nrows))
+    ymax = 0.0
+    for k, scen in enumerate(scenarios):
+        ax = axes[k // cols][k % cols]
+        rs = by[scen]
+        ns = [r["n_nodes"] for r in rs]
+        for (key, label), (color, ls, mk) in zip(LOSS_CAUSES, looks):
+            y = [100.0 * (r.get(key) or 0.0) / r["transmitted_mean"]
+                 if r["transmitted_mean"] else 0.0 for r in rs]
+            ymax = max(ymax, max(y, default=0.0))
+            ax.plot(ns, y, color=color, linestyle=ls, marker=mk, markevery=3,
+                    markersize=4.5, linewidth=1.7, label=label)
+        _log_nodes_axis(ax, ns, sparse=True)
+        ax.set_title(scen, fontsize=11.5, loc="left")
+    for k in range(n, nrows * cols):
+        axes[k // cols][k % cols].axis("off")
+    for k in range(n):
+        axes[k // cols][k % cols].set_ylim(0, max(ymax * 1.05, 1.0))
+    for r in range(nrows):
+        axes[r][0].set_ylabel("Share of packets sent (%)")
+    # One legend for every panel, above them, where no curve can run under it.
+    handles, labels = axes[0][0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=len(labels),
+               frameon=False, bbox_to_anchor=(0.5, 1.0))
+    fig.tight_layout(rect=(0, 0, 1, 0.93))
+    return fig
+
+
+EXTRA_FIGURES = {
+    "delivered": delivered_figure,
+    "energy": energy_figure,
+    "losses": losses_figure,
+}
 
 
 def _panel_ylim(panels, xlim):

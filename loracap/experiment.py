@@ -12,7 +12,7 @@ import csv
 import json
 import os
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 
 from .core import run_batch
 from .study import Study, output_dir
@@ -69,7 +69,8 @@ _JSON_ONLY = ("der_runs", "der_fleet_runs", "nodes_per_sf_mean")
 
 def write_results(study: Study, rows: list, root=None, out_dir=None,
                   provenance=None) -> tuple:
-    """Write results.csv and results.json.
+    """Write results.json, and results.csv unless the study's `data_files`
+    leaves it out. Returns (csv path or None, json path).
 
     `out_dir` defaults to the study's outputs/ directory, which is where ad hoc
     runs land. `run.py reproduce` passes its own experiment directory instead,
@@ -78,13 +79,15 @@ def write_results(study: Study, rows: list, root=None, out_dir=None,
     out = out_dir or output_dir(study.name, root)
     os.makedirs(out, exist_ok=True)
 
-    csv_rows = [{k: v for k, v in r.items() if k not in _JSON_ONLY}
-                for r in rows]
-    csv_path = os.path.join(out, RESULTS_CSV)
-    with open(csv_path, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=list(csv_rows[0].keys()))
-        w.writeheader()
-        w.writerows(csv_rows)
+    csv_path = None
+    if "csv" in study.data_files:
+        csv_rows = [{k: v for k, v in r.items() if k not in _JSON_ONLY}
+                    for r in rows]
+        csv_path = os.path.join(out, RESULTS_CSV)
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=list(csv_rows[0].keys()))
+            w.writeheader()
+            w.writerows(csv_rows)
 
     # the full study definition travels with the results, so a result file is
     # always self-describing and no run is orphaned from its configuration
@@ -98,11 +101,25 @@ def write_results(study: Study, rows: list, root=None, out_dir=None,
     return csv_path, json_path
 
 
-def load_results(study_name: str, root=None, out_dir=None) -> list:
+def load_payload(study_name: str, root=None, out_dir=None) -> dict:
+    """The whole results.json: the rows and the study record they ran with."""
     path = os.path.join(out_dir or output_dir(study_name, root), RESULTS_JSON)
     if not os.path.isfile(path):
         raise FileNotFoundError(
             f"No results at {path}. Run the study first:  python3 run.py run {study_name}"
         )
     with open(path, encoding="utf-8") as f:
-        return json.load(f)["results"]
+        return json.load(f)
+
+
+def load_results(study_name: str, root=None, out_dir=None) -> list:
+    return load_payload(study_name, root, out_dir)["results"]
+
+
+def as_run(study: Study, payload: dict) -> Study:
+    """The study with the two values that turn packet counts into rates, the
+    simulated time and the send interval, taken from the record saved with
+    the results. A study edited after its run then still redraws that run."""
+    record = payload.get("study") or {}
+    keep = {k: record[k] for k in ("sim_time_s", "send_interval_s") if k in record}
+    return replace(study, **keep) if keep else study

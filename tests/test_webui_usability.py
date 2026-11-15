@@ -161,6 +161,16 @@ class TestTheRangesAreTheValidatorsOwn(unittest.TestCase):
             _, w = self._messages(**{field: lim["warn_lt"]})
             self.assertFalse(self._names(field, w), field)
 
+    def test_runs_below_two_are_refused(self):
+        # One run gives an interval of zero width that reads as exact, and
+        # none leaves run_batch nothing to average.
+        lim = self.limits["n_runs"]
+        for v in (0, 1, lim["ge"] - 1):
+            e, _ = self._messages(n_runs=v)
+            self.assertTrue(self._names("n_runs", e), v)
+        e, _ = self._messages(n_runs=lim["ge"])
+        self.assertFalse(self._names("n_runs", e))
+
     def test_every_range_has_a_control(self):
         html = _page()
         mapped = _js_object(html, "LIMIT_FIELDS")

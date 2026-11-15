@@ -96,11 +96,58 @@
   .note a{color:var(--accent)}
   .note .how{display:block;margin:3px 0 4px;color:var(--ink)}
   .note .using{display:block;color:var(--ink);font-weight:600;margin-bottom:2px}
+  .maintabs{display:flex;gap:4px;max-width:1320px;margin:16px auto 0;padding:0 24px}
+  .mtab{border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;
+        background:#efeee9;color:var(--muted);padding:9px 18px;font-size:14px}
+  .mtab.on{background:var(--panel);color:var(--ink);font-weight:600}
+  .view{border-top:1px solid var(--line)}
+  .opt{display:flex;gap:9px;align-items:flex-start;padding:7px 0;border-bottom:1px solid #efeee9}
+  .opt:last-child{border-bottom:none}
+  .opt input[type=checkbox]{width:auto;margin-top:3px}
+  .opt .t{font-size:14px;color:var(--ink)}
+  .opt .d{font-size:12.5px;color:var(--note);margin-top:1px}
+  .tag{display:inline-block;font-size:11px;padding:0 7px;border-radius:999px;margin-left:6px;
+       background:#eef3f8;border:1px solid #cfdbe8;color:#2c4a66}
+  .tag.now{background:var(--okbg);border-color:#c8e2d3;color:var(--ok)}
+  .files{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.3px;
+         line-height:1.7;color:var(--ink);background:#faf9f6;border:1px solid var(--line);
+         border-radius:7px;padding:9px 11px;margin-top:8px;white-space:pre-line}
+  .inline{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .inline label{display:inline-flex;gap:6px;align-items:center;margin:0;color:var(--ink);font-size:14px}
+  .inline input[type=checkbox],.inline input[type=radio]{width:auto}
   .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-top:4px}
   .tab{border:none;border-bottom:2px solid transparent;border-radius:0;
        background:none;padding:8px 14px;color:var(--muted);font-size:13.5px}
   .tab:hover:not(.on){color:var(--ink)}
   .tab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+  /* basic and advanced settings */
+  .modesw{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+  .modesw .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+  .modesw .seg button{border:none;border-radius:0;padding:6px 14px;font-size:13.5px;color:var(--muted)}
+  .modesw .seg button+button{border-left:1px solid var(--line)}
+  .modesw .seg button[aria-pressed=true]{background:#eaf2fb;color:var(--accent);font-weight:600}
+  .adv{margin-top:14px;border:1px dashed #cfdbe8;border-radius:8px;background:#fbfcfe}
+  .adv.open{border-style:solid}
+  .advbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 12px}
+  .advbar .advbtn{padding:5px 12px;font-size:13px;color:var(--accent);border-color:#cfdbe8}
+  .advbar .advbtn::before{content:"\25B8  ";}
+  .advbar .advbtn[aria-expanded=true]::before{content:"\25BE  ";}
+  .advbar .advstate{font-size:12.8px;color:var(--note);flex:1;min-width:220px}
+  .advbar .advstate b{color:var(--ink);font-weight:600}
+  .advbar .advstate .chg{display:block;color:var(--warn)}
+  .advbar .restore{padding:4px 10px;font-size:12.5px}
+  .advbody{padding:2px 12px 12px}
+  .pill.need{background:var(--errbg);border-color:#f0cdc9;color:var(--err)}
+  abbr[title]{text-decoration:underline dotted;cursor:help}
+  .req{color:var(--err);font-weight:600;margin-left:2px}
+  .reqnote{max-width:1320px;margin:12px auto 0;padding:0 24px;font-size:13px;color:var(--note)}
+  .terms{margin-top:8px;font-size:13.5px}
+  .terms summary{cursor:pointer;color:var(--accent)}
+  .terms dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0 0;
+            max-width:900px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+  .terms dt{font-weight:600;color:var(--ink)}
+  .terms dd{margin:0;color:var(--note)}
+  .opt label.t{display:inline;margin:0;font-weight:400}
 </style>
 </head>
 <body>
@@ -109,8 +156,25 @@
   <p>Set up a capacity study. This writes a <code>study.py</code> and runs it
      through the same code as the command line, so what you get here stays
      reproducible.</p>
+  <details class="terms" id="terms"><summary>Terms used on this page</summary>
+    <dl id="terms_list"></dl></details>
 </header>
 
+<nav class="maintabs">
+  <button class="mtab on" data-view="view_setup">Study setup (1 to 5)</button>
+  <button class="mtab" data-view="view_output">6. Output</button>
+  <div class="modesw" role="group" aria-label="Settings shown">
+    <span>Settings shown</span>
+    <span class="seg">
+      <button type="button" id="mode_basic" aria-pressed="true">Basic</button>
+      <button type="button" id="mode_adv" aria-pressed="false">Advanced</button>
+    </span>
+  </div>
+</nav>
+<div class="view" id="view_setup">
+<p class="reqnote"><span class="req" aria-hidden="true">*</span> Required: there is
+   no default for these, so they must be filled in. Every other field starts at a
+   value you can keep.</p>
 <div class="wrap">
 <div>
 
@@ -118,14 +182,19 @@
   <div class="card">
     <h2>1. Site</h2>
     <p class="hint">Where the gateway is, and the boundary nodes are spread
-       over. Export the boundary from Google Earth as KML.</p>
+       over. Export the boundary from Google Earth as a KML (Keyhole Markup
+       Language) file.</p>
     <div class="grid">
-      <div><label for="f_name">Study name</label><input id="f_name" placeholder="mysite"></div>
-      <div><label for="f_site">Site</label><input id="f_site" placeholder="Where this is"></div>
-      <div><label for="f_lat">Gateway latitude</label><input id="f_lat" type="number" step="any" placeholder="e.g. 3.91915"></div>
-      <div><label for="f_lon">Gateway longitude</label><input id="f_lon" type="number" step="any" placeholder="e.g. -73.82184"></div>
+      <div><label for="f_name">Study name<span class="req" aria-hidden="true">*</span></label><input id="f_name" placeholder="mysite" aria-required="true">
+        <div class="field-hint">letters, digits, hyphen or underscore</div></div>
+      <div><label for="f_site">Site</label><input id="f_site" placeholder="e.g. Ames, Iowa, USA">
+        <div class="field-hint" id="hint_f_site">optional, free text for the report: town, region, country</div></div>
+      <div><label for="f_lat">Gateway latitude<span class="req" aria-hidden="true">*</span></label><input id="f_lat" type="number" step="any" placeholder="e.g. 42.0347" aria-required="true"></div>
+      <div><label for="f_lon">Gateway longitude<span class="req" aria-hidden="true">*</span></label><input id="f_lon" type="number" step="any" placeholder="e.g. -93.6199" aria-required="true"></div>
     </div>
-    <div class="row">
+    <div class="grp" style="margin-top:12px">Site boundary (KML)<span class="req" aria-hidden="true">*</span>
+      <span style="font-weight:400;color:var(--muted)">needed for polygon placement, the default</span></div>
+    <div class="row" style="margin-top:4px">
       <input type="file" id="kmlfile" accept=".kml,.xml" style="display:none">
       <button id="kmlbtn" onclick="document.getElementById('kmlfile').click()">Choose KML…</button>
       <span class="name" id="kmlname">no boundary loaded</span>
@@ -136,29 +205,34 @@
   <!-- 2. radio -->
   <div class="card">
     <h2>2. Radio</h2>
-    <p class="hint">The band decides which spreading factors exist on uplink.
+    <p class="hint">The band decides which spreading factors (SF) exist on uplink.
        The chip fills in sensitivity, channels and the demodulation limit from
        its datasheet.</p>
     <div class="grid">
       <div><label for="f_region">Region</label><select id="f_region"></select></div>
-      <div><label for="f_bw">Bandwidth (kHz)</label><input id="f_bw" type="number" value="125"></div>
-      <div><label for="f_chip">Gateway chip</label><select id="f_chip"></select></div>
-      <div><label for="f_ngw">Gateways</label><input id="f_ngw" type="number" value="1"></div>
+      <div><label for="f_tx">Node Tx power (dBm)</label><input id="f_tx" type="number" step="any" value="14"></div>
     </div>
+    <!-- One gateway by design: kept for the checks, shown in neither mode. -->
+    <div style="display:none"><label for="f_ngw">Gateways</label><input id="f_ngw" type="number" value="1"></div>
     <div id="dwellbox" style="display:none;margin-top:12px">
-      <label for="f_dwell">Uplink dwell time</label>
+      <label for="f_dwell">Uplink dwell time<span class="req" aria-hidden="true">*</span></label>
       <select id="f_dwell"></select>
       <div class="srcnote" data-for="f_dwell">This plan publishes a different payload ceiling for
         each setting, and at the slow data rates they differ by more than
         tenfold, so there is nothing safe to assume on your behalf.</div>
     </div>
-    <div id="chipnote" class="srcnote" data-for="f_chip"></div>
-    <div class="grid" style="margin-top:12px">
-      <div><label for="f_tx">Node Tx power (dBm)</label><input id="f_tx" type="number" step="any" value="14"></div>
-      <div><label for="f_gtx">Node antenna (dBi)</label><input id="f_gtx" type="number" step="any" value="0"></div>
-      <div><label for="f_grx">Gateway antenna (dBi)</label><input id="f_grx" type="number" step="any" value="0"></div>
-      <div><label for="f_cable">Cable losses (dB)</label><input id="f_cable" type="number" step="any" value="0"></div>
-    </div>
+    <div class="adv" id="adv_radio" data-name="advanced radio settings"><div class="advbody">
+      <div class="grid">
+        <div><label for="f_bw">Bandwidth (kHz)</label><input id="f_bw" type="number" value="125"></div>
+        <div><label for="f_chip">Gateway chip</label><select id="f_chip"></select></div>
+        <div><label for="f_gtx">Node antenna (dBi)</label><input id="f_gtx" type="number" step="any" value="0"></div>
+        <div><label for="f_grx">Gateway antenna (dBi)</label><input id="f_grx" type="number" step="any" value="0"></div>
+        <div><label for="f_cable">Cable losses (dB)</label><input id="f_cable" type="number" step="any" value="0"></div>
+        <div><label for="f_radio">Node radio</label><select id="f_radio"></select></div>
+      </div>
+      <div id="chipnote" class="srcnote" data-for="f_chip"></div>
+      <div id="radionote" class="srcnote" data-for="f_radio"></div>
+    </div></div>
   </div>
 
   <!-- 3. propagation -->
@@ -168,14 +242,17 @@
        Everything downstream rests on it, so how you arrived at it is recorded
        in <code>study.py</code> alongside the numbers.</p>
 
+    <div class="grp">Propagation model<span class="req" aria-hidden="true">*</span>
+      <span style="font-weight:400;color:var(--muted)">from field measurements, or from the environment</span></div>
     <div class="tabs" id="tabs">
       <button class="tab on" data-pane="pane_fit">I have field measurements</button>
       <button class="tab" data-pane="pane_terrain">I have none</button>
     </div>
 
     <div id="pane_fit" class="pane">
-      <p class="hint" style="margin-top:12px">A CSV of received messages with
-         RSSI, latitude and longitude. Filter it first to one spreading factor
+      <p class="hint" style="margin-top:12px">A CSV (comma-separated values)
+         file of received messages with the received signal strength (RSSI),
+         latitude and longitude. Filter it first to one spreading factor
          and one gateway.</p>
       <div class="row">
         <input type="file" id="csvfile" accept=".csv,.tsv,.txt" style="display:none">
@@ -206,7 +283,9 @@
       <div id="terrainout"></div>
     </div>
 
-    <div class="grid" style="margin-top:14px">
+    <div id="assumednote"></div>
+    <div class="adv" id="adv_prop" data-name="advanced propagation settings"><div class="advbody">
+    <div class="grid">
       <div><label for="f_n">Exponent n</label><input id="f_n" type="number" step="any" value="2.0"></div>
       <div><label for="f_ref">Loss at d₀ (dB)</label><input id="f_ref" type="number" step="any" value="0"></div>
       <div><label for="f_d0">d₀ (m)</label><input id="f_d0" type="number" step="any" value="100"></div>
@@ -220,29 +299,50 @@
       it from that fit's residual.</div>
     <div style="margin-top:11px"><label for="f_plsrc">Where this model came from</label>
       <input id="f_plsrc" placeholder="Field fit, or a published model you are citing"></div>
-    <div id="assumednote"></div>
+    </div></div>
   </div>
 
   <!-- 4. traffic and design -->
   <div class="card">
     <h2>4. Traffic and experiment</h2>
-    <p class="hint">Use the shortest reporting interval the deployment can
-       produce: capacity measured at the worst case is a bound you can defend.</p>
+    <p class="hint">Capacity is the node count at which the data extraction
+       rate (DER), the share of transmitted packets the gateway receives, falls
+       below the threshold. Use the shortest reporting interval the deployment
+       can produce: capacity measured at the worst case is a bound you can defend.</p>
     <div class="grid">
       <div><label for="f_pl">Payload (bytes)</label><input id="f_pl" type="number" value="32"></div>
+      <div><label for="f_int">Send interval (s)</label><input id="f_int" type="number" step="any" value="60"></div>
+      <div><label for="f_th">DER threshold</label><input id="f_th" type="number" step="any" value="0.9"></div>
+    </div>
+    <div style="margin-top:12px"><div class="grp">Scenarios<span class="req" aria-hidden="true">*</span> <span style="font-weight:400;color:var(--muted)">at least one</span></div>
+      <div id="scenbox" class="row" style="margin-top:2px" data-noterms></div>
+      <ul class="scenhelp">
+        <li><b id="sfrange">Fixed SF</b>. Every node on that one spreading factor.</li>
+        <li><b>MULTI.</b> Every node on the fastest spreading factor its link
+          reaches: ideal, instantly converged assignment with no margin and
+          full power, so it is a bound rather than a network.</li>
+        <li><b>ADR</b> (adaptive data rate). What a converged real network settles into, keeping a
+          link margin and reducing transmit power.</li>
+        <li>Running MULTI and ADR together shows what the idealisation is
+          worth.</li>
+      </ul></div>
+    <div class="adv" id="adv_exp" data-name="advanced experiment settings"><div class="advbody">
+    <div class="grid">
       <div><label for="f_cr">Coding rate</label><select id="f_cr">
         <option value="1">4/5 (LoRaWAN)</option><option value="2">4/6</option>
         <option value="3">4/7</option><option value="4">4/8</option></select></div>
-      <div><label for="f_int">Send interval (s)</label><input id="f_int" type="number" step="any" value="60"></div>
       <div><label for="f_time">Simulated time (s)</label><input id="f_time" type="number" value="3600"></div>
       <div><label for="f_runs">Runs per point</label><input id="f_runs" type="number" value="30"></div>
-      <div><label for="f_th">DER threshold</label><input id="f_th" type="number" step="any" value="0.9"></div>
       <div><label for="f_seed">Random seed</label><input id="f_seed" type="number" value="99"></div>
       <div><label for="f_place">Placement</label><select id="f_place">
         <option value="polygon">polygon (the real site)</option>
         <option value="disc">disc (theoretical coverage)</option></select></div>
+      <div><label for="f_hl">Highlighted scenario, drawn in colour</label>
+      <select id="f_hl"></select></div>
     </div>
-    <div style="margin-top:12px"><div class="grp">Receiver model</div>
+    </div></div>
+    <div class="adv" id="adv_rx" data-name="advanced receiver settings"><div class="advbody">
+    <div><div class="grp">Receiver model</div>
       <div class="grid" style="margin-top:2px">
         <div><label for="f_rx">Receiver rule</label><select id="f_rx"></select></div>
         <div><label for="f_capthr">Capture threshold (dB)</label>
@@ -254,20 +354,7 @@
             <option value="1">on</option></select></div>
       </div>
       <div id="rxnote" class="notes"></div></div>
-    <div style="margin-top:12px"><div class="grp">Scenarios</div>
-      <div id="scenbox" class="row" style="margin-top:2px"></div>
-      <ul class="scenhelp">
-        <li><b id="sfrange">Fixed SF</b>. Every node on that one spreading factor.</li>
-        <li><b>MULTI.</b> Every node on the fastest spreading factor its link
-          reaches: ideal, instantly converged assignment with no margin and
-          full power, so it is a bound rather than a network.</li>
-        <li><b>ADR.</b> What a converged real network settles into, keeping a
-          link margin and reducing transmit power.</li>
-        <li>Running MULTI and ADR together shows what the idealisation is
-          worth.</li>
-      </ul></div>
-    <div style="margin-top:12px;max-width:320px"><div><label for="f_hl">Highlighted scenario, drawn in colour</label>
-      <select id="f_hl"></select></div></div>
+    </div></div>
   </div>
 
   <!-- 5. create and run -->
@@ -301,6 +388,113 @@
 </div>
 </div>
 
+</div>
+
+<div class="view" id="view_output" style="display:none">
+<div class="wrap">
+<div>
+  <div class="card">
+    <h2>Figures</h2>
+    <p class="hint">Recorded in <code>study.py</code> with the rest of the study, so
+       <code>run.py plot</code> redraws exactly what this page drew. Nothing here
+       changes a number, and the defaults draw the figure as it has always been drawn.</p>
+    <div class="grp">Which figures</div>
+    <div class="opt"><input type="checkbox" id="o_der" checked disabled>
+      <div><label class="t" for="o_der">DER against node count, full range and zoom</label>
+        <span class="tag now">always</span>
+      <div class="d">One curve per scenario, the threshold, and where each crosses it.</div></div></div>
+    <div class="opt"><input type="checkbox" id="o_delivered" class="o_fig" value="delivered">
+      <div><label class="t" for="o_delivered">Messages delivered per hour</label>
+      <div class="d">Packets transmitted times DER, scaled to an hour, against the
+        traffic offered. A circle marks each scenario's capacity.</div></div></div>
+    <div class="opt"><input type="checkbox" id="o_energy" class="o_fig" value="energy">
+      <div><label class="t" for="o_energy">Energy per delivered message</label>
+      <div class="d">Transmit energy per message that arrives, from the node
+        radio's current table. Sleep current is not in it, so it is not a battery life.</div>
+      <div class="why" id="o_energy_why"></div></div></div>
+    <div class="opt"><input type="checkbox" id="o_losses" class="o_fig" value="losses">
+      <div><label class="t" for="o_losses">Where packets are lost</label>
+      <div class="d">Weak signal, collision and no free demodulator, as shares of
+        the packets sent, one panel per scenario.</div></div></div>
+
+    <div class="adv" id="adv_fig" data-name="advanced figure settings"><div class="advbody">
+    <div class="grid" style="margin-top:6px">
+      <div><div class="grp">Formats</div><div class="inline" id="o_formats">
+        <label><input type="checkbox" class="o_fmt" id="o_fmt_pdf" value="pdf"> PDF</label>
+        <label><input type="checkbox" class="o_fmt" id="o_fmt_svg" value="svg"> SVG</label>
+        <label><input type="checkbox" class="o_fmt" id="o_fmt_png" value="png"> PNG</label></div></div>
+      <div><label for="o_dpi">PNG resolution (dpi)</label><input id="o_dpi" type="number" step="1"></div>
+      <div><label for="o_size">Size</label><select id="o_size">
+        <option value="">each figure's own size</option>
+        <option value="custom">width and height of my own</option></select></div>
+      <div><label for="o_base">File name</label><input id="o_base"></div>
+    </div>
+    <div class="grid" id="o_sizebox" style="display:none;margin-top:10px">
+      <div><label for="o_w">Width (in)</label><input id="o_w" type="number" step="any"></div>
+      <div><label for="o_h">Height (in)</label><input id="o_h" type="number" step="any"></div>
+    </div>
+    <div class="srcnote" data-for="o_size"><b>Size.</b> The journal decides the
+      width, one column or two, and its author guidelines give it in inches or
+      millimetres. Each figure keeps its own size until you set one here.</div>
+    <div class="grid" style="margin-top:12px">
+      <div><div class="grp">Style</div><div class="inline">
+        <label><input type="radio" name="o_style" id="o_colour" value="colour" checked> colour</label>
+        <label><input type="radio" name="o_style" id="o_grey" value="grey"> greyscale, for print</label></div></div>
+      <div><label for="o_hl">Highlighted scenario colour</label><input id="o_hl" type="color" style="height:36px;width:72px;padding:3px"></div>
+    </div>
+    <div class="grp" style="margin-top:14px">Axes of the DER figure <span style="font-weight:400;color:var(--muted)">(empty means automatic)</span></div>
+    <div class="grid">
+      <div><label for="o_fx1">Full view, nodes from</label><input id="o_fx1" type="number" step="any" placeholder="automatic"></div>
+      <div><label for="o_fx2">to</label><input id="o_fx2" type="number" step="any" placeholder="automatic"></div>
+      <div><label for="o_zx1">Zoom, nodes from</label><input id="o_zx1" type="number" step="any" placeholder="around the crossings"></div>
+      <div><label for="o_zx2">to</label><input id="o_zx2" type="number" step="any" placeholder="around the crossings"></div>
+      <div><label for="o_zy1">Zoom, DER from</label><input id="o_zy1" type="number" step="any"></div>
+      <div><label for="o_zy2">to</label><input id="o_zy2" type="number" step="any"></div>
+    </div>
+    </div></div>
+  </div>
+
+  <div class="card">
+    <h2>Data files</h2>
+    <p class="hint">The numbers are the same whatever is chosen here. This only
+       decides which files present them.</p>
+    <div class="adv" id="adv_data" data-name="advanced data file settings"><div class="advbody">
+    <div class="opt"><input type="checkbox" id="o_json" checked disabled>
+      <div><label class="t" for="o_json">results.json and capacity.json</label> <span class="tag now">always</span>
+      <div class="d">Every point, every run and the configuration it ran with. Every other file is made from these.</div></div></div>
+    <div class="opt"><input type="checkbox" id="o_csv" class="o_data" value="csv">
+      <div><label class="t" for="o_csv">results.csv</label>
+      <div class="d">One row per scenario and node count, for a spreadsheet.</div></div></div>
+    <div class="opt"><input type="checkbox" id="o_md" class="o_data" value="md">
+      <div><label class="t" for="o_md">Capacity table, Markdown</label>
+      <div class="d">Capacity and 95% interval per scenario, with the receiver rule and threshold it depends on.</div></div></div>
+    <div class="opt"><input type="checkbox" id="o_tex" class="o_data" value="latex">
+      <div><label class="t" for="o_tex">Capacity table, LaTeX</label>
+      <div class="d">The same table, ready to paste into a manuscript.</div></div></div>
+    </div></div>
+  </div>
+
+  <div class="card">
+    <h2>Download</h2>
+    <p class="hint">Results are always written to <code>studies/&lt;name&gt;/outputs/</code>,
+       where <code>run.py plot</code>, <code>capacity</code> and <code>reproduce</code>
+       find them. The download is a copy, with the study's <code>study.py</code>.</p>
+    <div class="row"><button class="primary" id="o_download" disabled>Download everything (.zip)</button></div>
+    <div class="why" id="o_dlwhy" style="margin-top:8px">Available once the simulation has run.</div>
+  </div>
+</div>
+
+<div class="side">
+  <div class="card" style="position:sticky;top:16px">
+    <h2>Files this run will write</h2>
+    <p class="hint">Updated as you choose. Under <code id="o_dir">studies/&lt;name&gt;/outputs/</code>:</p>
+    <div class="files" id="o_files"></div>
+    <div id="o_checks" style="margin-top:10px"></div>
+  </div>
+</div>
+</div>
+</div>
+
 <p class="foot">Everything here goes through the same engine as
   <code>python3 run.py</code>. Values and sources are recorded in the generated
   <code>study.py</code>, and results carry their configuration in
@@ -331,6 +525,13 @@ const FIELDS={
   inter_sf_rejection:['f_isf','Rejection between SFs'], lock_survival:['f_lsurv','Locked packet survival'],
   header_recapture:['f_hrec','Header recapture'], scenarios:['scenbox','Scenarios'],
   highlight_scenario:['f_hl','Highlighted scenario'],
+  radio:['f_radio','Node radio'], tx_current_ma:['f_radio','Node radio'],
+  extra_figures:['o_delivered','Which figures'], figure_formats:['o_fmt_pdf','Formats'],
+  figure_dpi:['o_dpi','PNG resolution (dpi)'], figure_size_in:['o_w','Width (in)'],
+  figure_basename:['o_base','File name'], data_files:['o_csv','Data files'],
+  highlight_color:['o_hl','Highlighted scenario colour'],
+  plot_full_xlim:['o_fx1','Full view, nodes'], plot_zoom_xlim:['o_zx1','Zoom, nodes'],
+  plot_zoom_ylim:['o_zy1','Zoom, DER'],
 };
 // A study.py name with an underscore cannot be an ordinary word, so it is
 // matched anywhere. A one-word name (site, region, ...) is matched only where
@@ -340,9 +541,13 @@ const LONG_KEYS=Object.keys(FIELDS).filter(k=>k.includes('_')).sort((a,b)=>b.len
 const SHORT_KEYS=Object.keys(FIELDS).filter(k=>!k.includes('_'));
 const FIELD_RE=new RegExp('\\b('+LONG_KEYS.join('|')+')\\b|\\b('+SHORT_KEYS.join('|')+')\\b(?=\\s?=)','g');
 const TOUCHED_IDS=new Set();
+const OUTPUT_KEYS=['extra_figures','figure_formats','figure_dpi','figure_size_in',
+  'figure_basename','data_files','highlight_color','plot_full_xlim',
+  'plot_zoom_xlim','plot_zoom_ylim'];
 // How the propagation model was arrived at. It decides what the result means:
 // a fitted model supports a capacity figure, an assumed one supports a range.
-let ORIGIN='manual', TERRAIN=null;
+// 'unset' until the user fits, picks an environment or types a value.
+let ORIGIN='unset', TERRAIN=null;
 
 const $ = id => document.getElementById(id);
 const num = (id,d) => { const v=parseFloat($(id).value); return isNaN(v)?d:v; };
@@ -360,7 +565,163 @@ function msg(kind, text){
 }
 
 /* ---------- bootstrap ---------- */
+/* ---------- terms ---------- */
+// Every abbreviation the page uses, written out. Definitions follow the
+// README and the notes on this page. The glossary under the header lists
+// them, and each use in the page is marked with <abbr> so the definition is
+// one hover away and a screen reader can expand it (WCAG 2.2, 3.1.4).
+const TERMS={
+  DER:'data extraction rate: the share of transmitted packets the gateway receives',
+  'Fleet DER':'DER counting the nodes no data rate reaches as lost traffic',
+  SF:'spreading factor: higher reaches farther and takes longer on air',
+  DR:'data rate: the LoRaWAN index of one spreading factor and bandwidth in a regional plan',
+  ADR:'adaptive data rate: each node on the fastest data rate its link supports with a margin, at reduced power',
+  MULTI:'every node on the fastest spreading factor its link reaches, with no margin and full power: a bound, not a network',
+  CR:'coding rate: the share of each coded block that is data, 4/5 in LoRaWAN',
+  RSSI:'received signal strength indicator: received power in dBm, as the gateway reports it',
+  SIR:'signal-to-interference ratio: the wanted packet\'s power over the interferer\'s, in dB',
+  KML:'Keyhole Markup Language: the file format Google Earth exports',
+  CSV:'comma-separated values: a plain-text table',
+  CI:'confidence interval, here a 95% bootstrap interval on the capacity',
+  Tx:'transmit',
+  dBm:'power in decibels relative to one milliwatt',
+  dBi:'antenna gain in decibels relative to an isotropic antenna',
+  dpi:'dots per inch: the resolution of a PNG figure',
+};
+const TERM_RE=/\b(DER|DR|ADR|CR|RSSI|SIR|KML|CSV|CI|Tx|dBm|dBi|dpi)\b|\bSF(?=\d|\b)/g;
+const NO_TERMS='ABBR,CODE,PRE,SCRIPT,STYLE,OPTION,SELECT,TEXTAREA,BUTTON,SUMMARY,DT';
+function buildTerms(){
+  const dl=$('terms_list');
+  Object.keys(TERMS).forEach(k=>{
+    const dt=document.createElement('dt'); dt.textContent=k;
+    const dd=document.createElement('dd'); dd.textContent=TERMS[k];
+    dl.append(dt, dd);
+  });
+}
+function markTerms(root){
+  const walker=document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {acceptNode:n=>{
+    for(let p=n.parentElement; p && p!==root.parentElement; p=p.parentElement)
+      if(NO_TERMS.includes(p.tagName) || p.hasAttribute('data-noterms'))
+        return NodeFilter.FILTER_REJECT;
+    TERM_RE.lastIndex=0;
+    return TERM_RE.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+  }});
+  const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(n=>{
+    const frag=document.createDocumentFragment(), t=n.nodeValue; let last=0;
+    t.replace(TERM_RE, (m, _g, at)=>{
+      frag.append(t.slice(last, at));
+      const a=document.createElement('abbr'); a.title=TERMS[m]; a.textContent=m;
+      frag.append(a); last=at+m.length; return m;
+    });
+    frag.append(t.slice(last)); n.replaceWith(frag);
+  });
+}
+// Notes and checks are rebuilt as the form changes, so new text is marked as
+// it arrives. The <abbr> elements this adds are skipped, so it settles.
+function watchTerms(){
+  ['view_setup','view_output'].forEach(id=>{
+    markTerms($(id));
+    new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{
+      if(n.nodeType===1 && !NO_TERMS.includes(n.tagName)) markTerms(n);
+      else if(n.nodeType===3 && n.parentElement && !NO_TERMS.includes(n.parentElement.tagName))
+        markTerms(n.parentElement);
+    }))).observe($(id), {childList:true, subtree:true});
+  });
+}
+
+/* ---------- output ---------- */
+function showView(id){
+  document.querySelectorAll('.mtab').forEach(x=>x.classList.toggle('on', x.dataset.view===id));
+  document.querySelectorAll('.view').forEach(v=>v.style.display=(v.id===id)?'':'none');
+}
+function buildRadios(){
+  const sel=$('f_radio');
+  const n=document.createElement('option'); n.value=''; n.textContent='none (no energy figures)';
+  sel.appendChild(n);
+  (BOOT.radios||[]).forEach(r=>{
+    const o=document.createElement('option'); o.value=r.value; o.textContent=r.value;
+    sel.appendChild(o);
+  });
+  sel.addEventListener('change', ()=>{ radioNote(); energyAvailable(); outputFiles(); });
+  radioNote();
+}
+function radioNote(){
+  const v=$('f_radio').value, box=$('radionote'); box.innerHTML='';
+  const b=document.createElement('b'); b.textContent='Node radio. '; box.appendChild(b);
+  if(!v){
+    box.append('None: no energy figures. Energy needs the node radio\'s transmit '
+      +'current, and a guessed one would read as a measured result.');
+    return;
+  }
+  const r=BOOT.radios.find(x=>x.value===v);
+  linkify(box, 'Transmit current tabulated from '+r.low_dbm+' to '+r.high_dbm
+    +' dBm. '+r.source);
+}
+function energyAvailable(){
+  const ok=!!$('f_radio').value, cb=$('o_energy');
+  cb.disabled=!ok; if(!ok) cb.checked=false;
+  $('o_energy_why').textContent = ok ? '' : 'Needs a node radio, so the current '
+    +'comes from a table with a source. Choose one in 2. Radio, advanced radio settings.';
+}
+function sizeBox(){ $('o_sizebox').style.display = $('o_size').value==='custom' ? '' : 'none'; }
+function buildOutput(){
+  const d=BOOT.output_defaults;
+  document.querySelectorAll('.o_fmt').forEach(i=>i.checked=d.figure_formats.includes(i.value));
+  $('o_dpi').value=d.figure_dpi; $('o_base').value=d.figure_basename;
+  $('o_hl').value=d.highlight_color;
+  $('o_zy1').value=d.plot_zoom_ylim[0]; $('o_zy2').value=d.plot_zoom_ylim[1];
+  $('o_grey').checked=d.figure_greyscale; $('o_colour').checked=!d.figure_greyscale;
+  document.querySelectorAll('.o_fig').forEach(i=>i.checked=d.extra_figures.includes(i.value));
+  document.querySelectorAll('.o_data').forEach(i=>i.checked=d.data_files.includes(i.value));
+  if(d.figure_size_in){ $('o_size').value='custom';
+    $('o_w').value=d.figure_size_in[0]; $('o_h').value=d.figure_size_in[1]; }
+  $('o_size').addEventListener('change', sizeBox); sizeBox();
+  // In greyscale the highlighted scenario is drawn in black, so its colour
+  // has nothing to do and is shown as such.
+  const greyHl=()=>{ $('o_hl').disabled=$('o_grey').checked; };
+  $('o_grey').addEventListener('change', greyHl); $('o_colour').addEventListener('change', greyHl);
+  greyHl();
+  $('o_download').onclick=()=>{
+    if(CREATED) window.location.href='/download/'+encodeURIComponent(CREATED)+'.zip'; };
+  document.querySelectorAll('#view_output input, #view_output select').forEach(i=>{
+    i.addEventListener('change', outputFiles); i.addEventListener('input', outputFiles); });
+  $('f_name').addEventListener('input', outputFiles);
+  energyAvailable(); outputFiles();
+}
+// The Output tab as study.py fields. A pair of axis limits is sent as soon
+// as either end is typed, so one end left empty is reported by the checks
+// instead of being dropped without a word.
+function outputValues(){
+  const pick=sel=>[...document.querySelectorAll(sel)].filter(i=>i.checked&&!i.disabled).map(i=>i.value);
+  const v={
+    extra_figures:pick('.o_fig'), figure_formats:pick('.o_fmt'),
+    figure_dpi:Math.round(num('o_dpi',200)), figure_greyscale:$('o_grey').checked,
+    highlight_color:$('o_hl').value, figure_basename:$('o_base').value.trim()||'capacity',
+    data_files:pick('.o_data'), plot_zoom_ylim:[num('o_zy1',null), num('o_zy2',null)],
+  };
+  if($('o_size').value==='custom') v.figure_size_in=[num('o_w',null), num('o_h',null)];
+  const pair=(a,b)=>($(a).value!==''||$(b).value!=='')?[num(a,null),num(b,null)]:null;
+  const fx=pair('o_fx1','o_fx2'), zx=pair('o_zx1','o_zx2');
+  if(fx) v.plot_full_xlim=fx;
+  if(zx) v.plot_zoom_xlim=zx;
+  return v;
+}
+function outputFiles(){
+  if(!BOOT) return;
+  const v=outputValues(), base=v.figure_basename, f=[];
+  const add=n=>v.figure_formats.forEach(x=>f.push(n+'.'+x));
+  add(base); v.extra_figures.forEach(k=>add(base+'_'+k));
+  f.push('results.json','capacity.json');
+  if(v.data_files.includes('csv')) f.push('results.csv');
+  if(v.data_files.includes('md')) f.push('capacity_table.md');
+  if(v.data_files.includes('latex')) f.push('capacity_table.tex');
+  $('o_dir').textContent='studies/'+($('f_name').value.trim()||'<name>')+'/outputs/';
+  $('o_files').textContent=f.join('\n');
+}
+
 async function boot(){
+  document.querySelectorAll('.mtab').forEach(t=>t.onclick=()=>showView(t.dataset.view));
   BOOT = await post('/api/bootstrap');
   const reg=$('f_region');
   Object.keys(BOOT.regions).sort().forEach(r=>{
@@ -381,12 +742,15 @@ async function boot(){
   buildTerrain();
   buildAnchorSf();
   buildReceiver();
+  buildRadios();
+  buildOutput();
+  buildTerms();
   document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
     document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x===t));
     document.querySelectorAll('.pane').forEach(p=>
       p.style.display = (p.id===t.dataset.pane) ? '' : 'none');
   });
-  setOrigin('manual');
+  setOrigin('unset');
   document.querySelectorAll('input,select').forEach(el=>{
     el.addEventListener('input', schedule); el.addEventListener('change', schedule);
     const touch=()=>{ TOUCHED_IDS.add(el.closest('#scenbox')?'scenbox':el.id);
@@ -403,7 +767,144 @@ async function boot(){
     $(id).addEventListener('input', ()=>{ ADOPTED_R2=null; setOrigin('manual'); }));
   $('f_hl').addEventListener('change', ()=>{ HL_TOUCHED=true; });
   buildHints();
+  setupAdvanced();
+  watchTerms();
   validate();
+}
+
+/* ---------- basic and advanced settings ---------- */
+// Progressive disclosure: every advanced setting has a default that serves the
+// usual study, so a first-time user sees only what has no safe default. The
+// one rule that makes this safe: a hidden setting that differs from its
+// default is never hidden silently. Its bar says what changed, with the value
+// and the default, and the checks still cover it.
+const ADV_DEFAULTS=new Map();
+let MODE='basic';
+function advControls(block){
+  return [...block.querySelectorAll('.advbody input, .advbody select')]
+    .filter(el=>!el.disabled && el.type!=='file');
+}
+function ctlState(el){ return (el.type==='checkbox'||el.type==='radio') ? el.checked : el.value; }
+function ctlLabel(el){
+  const l = el.id && document.querySelector('label[for="'+el.id+'"]');
+  if(l) return l.textContent.trim();
+  if(el.closest('label')) return el.closest('label').textContent.trim();
+  const t = el.closest('.opt') && el.closest('.opt').querySelector('.t');
+  return t ? t.firstChild.textContent.trim() : el.id;
+}
+function ctlShow(el, state){
+  if(el.type==='checkbox') return state ? 'on' : 'off';
+  if(el.tagName==='SELECT'){
+    const o=[...el.options].find(o=>o.value===state); return o ? o.textContent : state;
+  }
+  return state==='' ? 'empty' : state;
+}
+// What differs from the default, in words. The highlighted scenario follows
+// the scenarios chosen, so it counts as changed only once picked by hand.
+function advChanges(block){
+  const out=[];
+  advControls(block).forEach(el=>{
+    if(el.id==='f_hl'){ if(HL_TOUCHED) out.push({el, text:ctlLabel(el)+': '+ctlShow(el,el.value)+' (chosen by hand)'}); return; }
+    if(el.type==='radio'){
+      if(el.checked && !ADV_DEFAULTS.get(el)) out.push({el, text:ctlLabel(el)+' chosen'});
+      return;
+    }
+    const d=ADV_DEFAULTS.get(el), s=ctlState(el);
+    if(String(d)!==String(s))
+      out.push({el, text:ctlLabel(el)+' = '+ctlShow(el,s)+' (default '+ctlShow(el,d)+')'});
+  });
+  return out;
+}
+function setOpen(block, open){
+  block.classList.toggle('open', open);
+  block.querySelector('.advbody').hidden=!open;
+  const b=block.querySelector('.advbtn');
+  b.setAttribute('aria-expanded', open);
+  b.textContent=(open?'Hide ':'Show ')+block.dataset.name;
+}
+function refreshAdv(){
+  document.querySelectorAll('.adv').forEach(block=>{
+    const st=block.querySelector('.advstate'), n=advControls(block).length;
+    const ch=advChanges(block), bad=block.querySelectorAll('.advbody .invalid').length;
+    st.innerHTML='';
+    const head=document.createElement('span');
+    // Values written by the fit or the terrain model are not edits by hand,
+    // so the bar says where they came from instead of listing five numbers.
+    if(block.id==='adv_prop' && (ORIGIN==='fit'||ORIGIN==='terrain')){
+      head.innerHTML='<b>'+n+' settings</b>, filled in by the '
+        +(ORIGIN==='fit'?'field fit':'model built from the environment')+'.';
+      st.appendChild(head);
+    }else{
+      head.innerHTML = ch.length
+        ? '<b>'+ch.length+' of '+n+' changed</b> from the default:'
+        : '<b>'+n+' settings</b>, all at their default.';
+      st.appendChild(head);
+      ch.forEach(c=>{ const s=document.createElement('span'); s.className='chg';
+        s.textContent=c.text; st.appendChild(s); });
+    }
+    if(bad){ const p=document.createElement('span'); p.className='pill need';
+      p.textContent=bad+' to fix'; head.appendChild(p); }
+    block.querySelector('.restore').hidden = !ch.length;
+  });
+}
+function restoreBlock(block){
+  advControls(block).forEach(el=>{
+    if(el.id==='f_hl'){ HL_TOUCHED=false; return; }
+    const d=ADV_DEFAULTS.get(el);
+    if(el.type==='checkbox'||el.type==='radio') el.checked=d; else el.value=d;
+    el.dispatchEvent(new Event('input')); el.dispatchEvent(new Event('change'));
+    TOUCHED_IDS.delete(el.id);
+  });
+  if(block.id==='adv_prop'){ ADOPTED_R2=null; setOrigin('manual'); }
+  if(block.id==='adv_exp') buildHighlight();
+  if(typeof outputFiles==='function') outputFiles();
+  refreshAdv(); schedule();
+}
+function setMode(m){
+  MODE=m;
+  $('mode_basic').setAttribute('aria-pressed', m==='basic');
+  $('mode_adv').setAttribute('aria-pressed', m==='advanced');
+  document.querySelectorAll('.adv').forEach(b=>setOpen(b, m==='advanced'));
+  try{ localStorage.setItem('loracap.mode', m); }catch(e){}
+}
+// Opens the block that holds a control, so a check about a hidden field still
+// leads to it.
+function revealControl(el){
+  const block=el && el.closest('.adv');
+  // In Basic mode the propagation values come from the fit or the environment
+  // model, so a check about them leads there rather than into the numbers.
+  if(block && block.id==='adv_prop' && !block.classList.contains('open')){
+    $('tabs').scrollIntoView({behavior:'smooth', block:'center'}); return true; }
+  if(block && !block.classList.contains('open')) setOpen(block, true);
+}
+function hiddenWhere(el){
+  const block=el && el.closest('.adv');
+  if(!block || block.classList.contains('open')) return '';
+  return block.id==='adv_prop'
+    ? ' (comes from building the model in 3. Propagation, or by hand in '+block.dataset.name+')'
+    : ' (in '+block.dataset.name+')';
+}
+function setupAdvanced(){
+  document.querySelectorAll('.adv').forEach(block=>{
+    const bar=document.createElement('div'); bar.className='advbar';
+    const btn=document.createElement('button'); btn.type='button'; btn.className='advbtn';
+    const body=block.querySelector('.advbody');
+    body.id=block.id+'_body'; btn.setAttribute('aria-controls', body.id);
+    btn.onclick=()=>{ setOpen(block, !block.classList.contains('open')); };
+    const st=document.createElement('div'); st.className='advstate'; st.setAttribute('aria-live','polite');
+    const rs=document.createElement('button'); rs.type='button'; rs.className='restore';
+    rs.textContent='Restore defaults'; rs.onclick=()=>restoreBlock(block);
+    bar.append(btn, st, rs); block.insertBefore(bar, body);
+    advControls(block).forEach(el=>{
+      ADV_DEFAULTS.set(el, ctlState(el));
+      el.addEventListener('input', refreshAdv); el.addEventListener('change', refreshAdv);
+    });
+  });
+  $('mode_basic').onclick=()=>setMode('basic');
+  $('mode_adv').onclick=()=>setMode('advanced');
+  let saved='basic'; try{ saved=localStorage.getItem('loracap.mode')||'basic'; }catch(e){}
+  setMode(saved);
+  refreshAdv();
 }
 
 function buildDwell(){
@@ -664,6 +1165,10 @@ function setOrigin(o, terrain){
       + 'sweep across the published exponent range for '+terrain.label
       + ' (' + terrain.low + ' to ' + terrain.high + '), and what you report '
       + 'is the range that comes out of it.'));
+  }else if(o==='unset'){
+    // Nothing chosen yet. Saying "entered by hand" here would describe the
+    // page's defaults as a decision the user made.
+    pill.textContent='not set'; pill.className='pill';
   }else{
     pill.textContent='entered by hand'; pill.className='pill';
     note.appendChild(msg('i','An exponent set by hand is an assumption like any '
@@ -923,9 +1428,17 @@ function values(){
     placement:$('f_place').value,
     scenarios:selectedScenarios(),
     node_counts:BOOT?BOOT.default_node_counts:[3,10,30,100,300],
-    figure_basename:'capacity'
   };
   if($('f_chip').value) v.chip=$('f_chip').value;
+  if($('f_radio').value) v.radio=$('f_radio').value;
+  // Output settings are written to study.py only where they differ from the
+  // defaults, so a study made without touching the Output tab reads as one
+  // written before the tab existed. The file name is always written, as it
+  // always was.
+  const ov=BOOT?outputValues():{}, od=BOOT?BOOT.output_defaults:{};
+  Object.entries(ov).forEach(([k,x])=>{
+    if(!(k in od) || JSON.stringify(x)!==JSON.stringify(od[k])) v[k]=x; });
+  v.figure_basename=ov.figure_basename||'capacity';
   if($('f_dwell').value!=='') v.uplink_dwell_time_ms=parseInt($('f_dwell').value,10);
   if($('f_hl').value) v.highlight_scenario=$('f_hl').value;
   // Left out when orthogonal, so study.py stays as it was written before the
@@ -975,9 +1488,17 @@ async function validate(){
       }
     }
     r.info.forEach(i=>out.appendChild(fieldMsg('i',i)));
+    // Problems with the output settings are also shown on the Output tab,
+    // where the user is when they cause them.
+    const oc=$('o_checks'); oc.innerHTML='';
+    r.errors.forEach((e,i)=>{ if(fieldsIn(e).some(k=>OUTPUT_KEYS.includes(k)))
+      oc.appendChild(fieldMsg(kinds[i],e)); });
+    r.warnings.forEach(w=>{ if(fieldsIn(w).some(k=>OUTPUT_KEYS.includes(k)))
+      oc.appendChild(fieldMsg('w',w)); });
     // The marks above were cleared and redrawn from the server's answer, so
     // the ones the page sets itself from the ranges are drawn again too.
     if(BOOT.limits){ Object.keys(LIMIT_FIELDS).forEach(checkRange); limitsFromTables(); }
+    if(typeof refreshAdv==='function' && ADV_DEFAULTS.size) refreshAdv();
     if(!r.errors.length){
       $('vstamp').textContent='valid'; $('vstamp').className='pill ok';
       $('btn_create').disabled=false; $('createwhy').textContent='';
@@ -1023,11 +1544,18 @@ function fieldMsg(kind, text){
     const w=document.createElement('span'); w.className='where';
     w.textContent=hits.map(k=>FIELDS[k][1]).join(', '); d.appendChild(w);
     d.classList.add('jump'); d.title='Go to the field';
-    const target=$(FIELDS[hits[0]][0]);
+    // Lead to a field the user can see when the check names one, so a check
+    // that pairs a hidden setting with a visible one points at the visible one.
+    const els=hits.map(k=>$(FIELDS[k][0])).filter(Boolean);
+    const target=els.find(e=>!hiddenWhere(e)) || els[0];
     if(kind==='e') hits.forEach(k=>{const el=$(FIELDS[k][0]); if(el) el.classList.add('invalid');});
+    if(els.every(e=>hiddenWhere(e))) w.textContent+=hiddenWhere(target);
     if(kind==='t'){ const t=document.createElement('span'); t.className='where';
       t.textContent='Still to fill in: '+w.textContent; d.replaceChild(t,w); }
     d.onclick=()=>{ if(!target) return;
+      // A field on the other tab is brought into view with its tab.
+      const view=target.closest('.view'); if(view && view.style.display==='none') showView(view.id);
+      if(revealControl(target)) return;
       target.scrollIntoView({behavior:'smooth', block:'center'});
       if(target.focus) target.focus({preventScroll:true}); };
   }
@@ -1085,6 +1613,8 @@ async function pollRun(){
     clearInterval(POLL); POLL=null; $('btn_run').disabled=false;
     const out=$('runout');
     if(s.state==='error'){ out.appendChild(msg('e',s.error)); return; }
+    $('o_download').disabled=false;
+    $('o_dlwhy').textContent='A copy of studies/'+CREATED+'/: study.py and the files of this run.';
     let t='<table><tr><th>Scenario</th><th>Capacity</th><th>95% CI</th></tr>';
     Object.keys(s.capacity).forEach(k=>{
       const c=s.capacity[k];

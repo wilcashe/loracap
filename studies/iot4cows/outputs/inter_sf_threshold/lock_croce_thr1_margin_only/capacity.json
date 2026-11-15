@@ -166,6 +166,18 @@
         1.0
       ],
       "figure_basename": "iot4cows_capacity",
+      "extra_figures": [],
+      "figure_formats": [
+        "pdf",
+        "svg",
+        "png"
+      ],
+      "figure_dpi": 200,
+      "figure_size_in": null,
+      "figure_greyscale": false,
+      "data_files": [
+        "csv"
+      ],
       "resolved_sensitivity_dbm": {
         "7": -126.5,
         "8": -129.0,
@@ -175,8 +187,8 @@
       "net_antenna_gain_db": 9.0
     },
     "loracap_version": "2.0.0",
-    "code_sha256": "f1c5d30e93767762be8b31c4be92dd57c9e0b221f7eaa8bdcf97c7da74fcf92a",
+    "code_sha256": "fe3d1587965c9f63e200bd39cfea9497aa3035bdad697a6c02c98ee1bd7f5350",
     "python": "3.13.18",
-    "generated": "2026-11-03T22:24:26+00:00"
+    "generated": "2026-11-15T19:46:32+00:00"
   }
 }

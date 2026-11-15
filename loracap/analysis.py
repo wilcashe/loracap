@@ -123,6 +123,96 @@ def format_capacity(capacity, threshold, conf=0.95) -> str:
     return "\n".join(lines)
 
 
+CAPACITY_TABLE_MD = "capacity_table.md"
+CAPACITY_TABLE_TEX = "capacity_table.tex"
+
+
+def _table_conditions(study) -> str:
+    """What the capacities are conditional on, said beside them: the
+    receiver rule, the capture threshold and whether spreading factors were
+    treated as orthogonal. A capacity quoted without these cannot be compared
+    with another, because each of them moves it."""
+    rej = study.inter_sf_rejection
+    sf = ("spreading factors treated as orthogonal" if rej is None else
+          f"rejection between spreading factors from {rej}"
+          if isinstance(rej, str) else
+          "rejection between spreading factors from a table in study.py")
+    rule = f"receiver rule {study.receiver_model}"
+    if study.receiver_model == "lock":
+        extra = [x for x in (f"lock survival {study.lock_survival}"
+                             if study.lock_survival else None,
+                             "header recapture" if study.header_recapture else None) if x]
+        if extra:
+            rule += " (" + ", ".join(extra) + ")"
+    return (f"{rule}, capture threshold {study.capture_threshold_db:g} dB, {sf}")
+
+
+def capacity_table_markdown(study, capacity, conf=0.95) -> str:
+    pct = int(round(conf * 100))
+    lines = [f"| Scenario | Capacity (nodes) | {pct}% interval |",
+             "|---|---:|---|"]
+    for scen, c in capacity.items():
+        if c["capacity"] is None:
+            lines.append(f"| {scen} | no crossing | - |")
+            continue
+        ci = (f"[{c['ci_low']:.1f}, {c['ci_high']:.1f}]"
+              if c.get("ci_low") is not None else "-")
+        lines.append(f"| {scen} | {c['capacity']:.1f} | {ci} |")
+    lines += ["",
+              f"Capacity at DER = {study.der_threshold:g}, study `{study.name}`, "
+              f"{study.n_runs} runs per point, {pct}% bootstrap interval. "
+              f"Conditional on the {_table_conditions(study)}. "
+              f"From capacity.json beside this file."]
+    return "\n".join(lines) + "\n"
+
+
+_TEX_ESCAPES = {"\\": r"\textbackslash{}", "_": r"\_", "%": r"\%", "&": r"\&",
+                "#": r"\#", "$": r"\$", "{": r"\{", "}": r"\}",
+                "~": r"\textasciitilde{}", "^": r"\textasciicircum{}"}
+
+
+def _tex(text: str) -> str:
+    """A study name or table name as LaTeX text: one character at a time, so
+    an escape is never itself escaped again."""
+    return "".join(_TEX_ESCAPES.get(ch, ch) for ch in text)
+
+
+def capacity_table_latex(study, capacity, conf=0.95) -> str:
+    """Plain tabular with \\hline, so it compiles without extra packages."""
+    pct = int(round(conf * 100))
+    lines = [r"\begin{table}[t]", r"\centering",
+             rf"\caption{{Capacity at DER = {study.der_threshold:g}, "
+             rf"{_tex(study.name)}, {study.n_runs} runs per point, {pct}\% "
+             rf"bootstrap interval. Conditional on the "
+             rf"{_tex(_table_conditions(study))}.}}",
+             r"\begin{tabular}{lrl}", r"\hline",
+             rf"Scenario & Capacity (nodes) & {pct}\% interval \\", r"\hline"]
+    for scen, c in capacity.items():
+        if c["capacity"] is None:
+            lines.append(rf"{_tex(scen)} & no crossing & -- \\")
+            continue
+        ci = (f"[{c['ci_low']:.1f}, {c['ci_high']:.1f}]"
+              if c.get("ci_low") is not None else "--")
+        lines.append(rf"{_tex(scen)} & {c['capacity']:.1f} & {ci} \\")
+    lines += [r"\hline", r"\end{tabular}", r"\end{table}"]
+    return "\n".join(lines) + "\n"
+
+
+def write_capacity_tables(study, capacity, root=None, out_dir=None) -> list:
+    """The capacity table in each format `study.data_files` asks for."""
+    out = out_dir or output_dir(study.name, root)
+    os.makedirs(out, exist_ok=True)
+    written = []
+    for kind, fname, render in (("md", CAPACITY_TABLE_MD, capacity_table_markdown),
+                                ("latex", CAPACITY_TABLE_TEX, capacity_table_latex)):
+        if kind in study.data_files:
+            path = os.path.join(out, fname)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(render(study, capacity))
+            written.append(path)
+    return written
+
+
 def service_life(row, study, n_nodes=None):
     """Average current and battery service life for one node, from a result row.
 

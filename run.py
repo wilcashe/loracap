@@ -116,9 +116,9 @@ def cmd_run(args):
     print()
     rows = experiment.run_study(s)
     prov = _adhoc(s)
-    csv_path, json_path = experiment.write_results(s, rows, provenance=prov)
-    print(f"Wrote {csv_path}")
-    print(f"Wrote {json_path}")
+    for path in experiment.write_results(s, rows, provenance=prov):
+        if path:
+            print(f"Wrote {path}")
 
     cap = analysis.capacity_with_ci(rows, threshold=s.der_threshold,
                                     n_boot=args.bootstrap)
@@ -128,6 +128,8 @@ def cmd_run(args):
         [dict(r, der_mean=r["der_fleet_mean"], der_runs=r["der_fleet_runs"])
          for r in rows], threshold=s.der_threshold, n_boot=args.bootstrap)
     print(f"\nWrote {analysis.write_capacity(s.name, cap, s.der_threshold, provenance=prov, fleet_capacity=fcap)}")
+    for path in analysis.write_capacity_tables(s, cap):
+        print(f"Wrote {path}")
 
     _report_energy(s, rows, cap)
 
@@ -167,11 +169,12 @@ def cmd_plot(args):
     s = _load(args.name)
     drew = False
     try:
-        rows = experiment.load_results(s.name)
+        payload = experiment.load_payload(s.name)
     except FileNotFoundError:
-        rows = None
-    if rows is not None:
-        for p in plotting.plot_study(s, rows):
+        payload = None
+    if payload is not None:
+        for p in plotting.plot_study(experiment.as_run(s, payload),
+                                     payload["results"]):
             print(f"Wrote {p}")
         drew = True
     if reproduce.has_manifest(s.name):
