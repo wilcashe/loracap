@@ -97,8 +97,20 @@ whether the answer means anything: does each spreading factor reach the far
 edge of the site. The receiver model is chosen there too: the receiver
 rule, the capture threshold, whether spreading factors are orthogonal and,
 under the lock rule, its two refinements, each offered with what it rests on, and the page says when the combination
-has left LoRaSim's, since every result then depends on it. When you press the
-button it writes
+has left LoRaSim's, since every result then depends on it. A named table is
+explained where it is chosen, with an example read from the table itself, and
+every DOI is a link.
+
+Each free-entry field shows the range it accepts, or the range published
+measurements span, under the field: the payload ceiling for the spreading
+factors you marked, the bandwidths your region defines, the exponent range
+measured across environments. Those ranges come from the same code `check`
+runs, and a field with no such basis, such as transmit power, shows none. The
+checks name each field as the form labels it, and clicking one leads to the
+field. A problem in a part of the form you have not reached yet is listed as
+still to fill in, and turns red only once you enter a value that is wrong.
+
+When you press the button it writes
 `studies/<name>/study.py` and `site_polygon.py`, shows you the file it wrote,
 and from that point the study is an ordinary one, editable by hand and
 identical to a study set up the long way.
@@ -1221,7 +1233,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-344 checks, about ten seconds, standard library only like the rest of the
+364 checks, about ten seconds, standard library only like the rest of the
 package, so nothing needs installing. They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
 studies take minutes each and nobody runs those on every edit.
@@ -1357,7 +1369,7 @@ tools/
 webui/
     server.py               loopback server behind `run.py serve`
     index.html              the setup form
-tests/                      344 fast checks, `run.py test`
+tests/                      364 fast checks, `run.py test`
 studies/
     _template/              commented starting point, copied by `run.py new`
     iot4cows/               worked example, see below

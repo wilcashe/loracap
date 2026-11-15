@@ -8,7 +8,7 @@
   :root{
     --bg:#f6f5f2; --panel:#fff; --ink:#1b1b1a; --muted:#6b6a66; --line:#dedcd6;
     --accent:#1f6fb2; --ok:#1f7a4d; --warn:#9a6a10; --warnbg:#fdf6e3;
-    --err:#b3261e; --errbg:#fdf0ef; --okbg:#eef6f1;
+    --err:#b3261e; --errbg:#fdf0ef; --okbg:#eef6f1; --note:#45443f;
   }
   *{box-sizing:border-box}
   body{margin:0;font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
@@ -22,7 +22,7 @@
   .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
         padding:18px 20px;margin-bottom:16px}
   .card h2{margin:0 0 4px;font-size:15px;letter-spacing:.01em}
-  .card .hint{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .card .hint{color:var(--note);font-size:13.5px;line-height:1.55;margin:0 0 14px}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:11px}
   label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:3px}
   input,select,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);
@@ -65,7 +65,37 @@
   summary{cursor:pointer;font-size:13px;color:var(--accent)}
   .foot{color:var(--muted);font-size:12.5px;max-width:1320px;margin:0 auto 32px;
         padding:0 24px}
-  .srcnote{font-size:12px;color:var(--muted);margin-top:7px;line-height:1.45}
+  .srcnote{font-size:12.8px;color:var(--note);margin-top:8px;line-height:1.55;
+           padding:7px 11px;border-left:3px solid var(--line);border-radius:0 6px 6px 0;
+           background:#faf9f6}
+  .srcnote.active{background:#eaf2fb;border-left-color:var(--accent);color:var(--ink)}
+  .srcnote a,.msg a{color:var(--accent)}
+  .field-hint{font-size:11.8px;color:var(--muted);margin-top:3px;line-height:1.4}
+  .field-hint a{color:var(--accent)}
+  .field-hint.bad{color:var(--err);font-weight:600}
+  .field-hint.warnhint{color:var(--warn);font-weight:600}
+  .invalid{outline:2px solid var(--err)!important;outline-offset:-1px;border-color:transparent!important}
+  .msg.e.jump,.msg.w.jump{cursor:pointer}
+  .msg .where{display:block;font-weight:600;margin-bottom:2px}
+  .why{font-size:13px;color:var(--muted)}
+  .msg.t{background:#eef3f8;border-color:#cfdbe8;color:#2c4a66}
+  .msg.t.jump{cursor:pointer}
+  .pill.todo{background:#eef3f8;border-color:#cfdbe8;color:#2c4a66}
+  .grp{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px}
+  .notes{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+  .note{font-size:12.8px;line-height:1.55;color:var(--note);padding:7px 11px;
+        border-left:3px solid var(--line);border-radius:0 6px 6px 0;background:#faf9f6}
+  .note b{color:var(--ink);font-weight:600;margin-right:4px}
+  .note.active{background:#eaf2fb;border-left-color:var(--accent);color:var(--ink)}
+  .note .tag{display:inline-block;font-size:11px;padding:0 7px;border-radius:999px;
+        background:var(--warnbg);color:var(--warn);border:1px solid #efe0b8;margin-left:6px}
+  .scenhelp{margin:10px 0 0;padding:0;list-style:none;display:flex;
+        flex-direction:column;gap:7px;font-size:12.8px;line-height:1.55;color:var(--muted)}
+  .scenhelp li{padding-left:11px;border-left:3px solid var(--line)}
+  .scenhelp b{color:var(--ink);font-weight:600}
+  .note a{color:var(--accent)}
+  .note .how{display:block;margin:3px 0 4px;color:var(--ink)}
+  .note .using{display:block;color:var(--ink);font-weight:600;margin-bottom:2px}
   .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-top:4px}
   .tab{border:none;border-bottom:2px solid transparent;border-radius:0;
        background:none;padding:8px 14px;color:var(--muted);font-size:13.5px}
@@ -90,14 +120,14 @@
     <p class="hint">Where the gateway is, and the boundary nodes are spread
        over. Export the boundary from Google Earth as KML.</p>
     <div class="grid">
-      <div><label>Study name</label><input id="f_name" placeholder="mysite"></div>
-      <div><label>Site</label><input id="f_site" placeholder="Where this is"></div>
-      <div><label>Gateway latitude</label><input id="f_lat" type="number" step="any"></div>
-      <div><label>Gateway longitude</label><input id="f_lon" type="number" step="any"></div>
+      <div><label for="f_name">Study name</label><input id="f_name" placeholder="mysite"></div>
+      <div><label for="f_site">Site</label><input id="f_site" placeholder="Where this is"></div>
+      <div><label for="f_lat">Gateway latitude</label><input id="f_lat" type="number" step="any" placeholder="e.g. 3.91915"></div>
+      <div><label for="f_lon">Gateway longitude</label><input id="f_lon" type="number" step="any" placeholder="e.g. -73.82184"></div>
     </div>
     <div class="row">
       <input type="file" id="kmlfile" accept=".kml,.xml" style="display:none">
-      <button onclick="document.getElementById('kmlfile').click()">Choose KML…</button>
+      <button id="kmlbtn" onclick="document.getElementById('kmlfile').click()">Choose KML…</button>
       <span class="name" id="kmlname">no boundary loaded</span>
     </div>
     <div id="kmlout"></div>
@@ -110,24 +140,24 @@
        The chip fills in sensitivity, channels and the demodulation limit from
        its datasheet.</p>
     <div class="grid">
-      <div><label>Region</label><select id="f_region"></select></div>
-      <div><label>Bandwidth (kHz)</label><input id="f_bw" type="number" value="125"></div>
-      <div><label>Gateway chip</label><select id="f_chip"></select></div>
-      <div><label>Gateways</label><input id="f_ngw" type="number" value="1"></div>
+      <div><label for="f_region">Region</label><select id="f_region"></select></div>
+      <div><label for="f_bw">Bandwidth (kHz)</label><input id="f_bw" type="number" value="125"></div>
+      <div><label for="f_chip">Gateway chip</label><select id="f_chip"></select></div>
+      <div><label for="f_ngw">Gateways</label><input id="f_ngw" type="number" value="1"></div>
     </div>
     <div id="dwellbox" style="display:none;margin-top:12px">
-      <label>Uplink dwell time</label>
+      <label for="f_dwell">Uplink dwell time</label>
       <select id="f_dwell"></select>
-      <div class="srcnote">This plan publishes a different payload ceiling for
+      <div class="srcnote" data-for="f_dwell">This plan publishes a different payload ceiling for
         each setting, and at the slow data rates they differ by more than
         tenfold, so there is nothing safe to assume on your behalf.</div>
     </div>
-    <div id="chipnote" class="srcnote"></div>
+    <div id="chipnote" class="srcnote" data-for="f_chip"></div>
     <div class="grid" style="margin-top:12px">
-      <div><label>Node Tx power (dBm)</label><input id="f_tx" type="number" step="any" value="14"></div>
-      <div><label>Node antenna (dBi)</label><input id="f_gtx" type="number" step="any" value="0"></div>
-      <div><label>Gateway antenna (dBi)</label><input id="f_grx" type="number" step="any" value="0"></div>
-      <div><label>Cable losses (dB)</label><input id="f_cable" type="number" step="any" value="0"></div>
+      <div><label for="f_tx">Node Tx power (dBm)</label><input id="f_tx" type="number" step="any" value="14"></div>
+      <div><label for="f_gtx">Node antenna (dBi)</label><input id="f_gtx" type="number" step="any" value="0"></div>
+      <div><label for="f_grx">Gateway antenna (dBi)</label><input id="f_grx" type="number" step="any" value="0"></div>
+      <div><label for="f_cable">Cable losses (dB)</label><input id="f_cable" type="number" step="any" value="0"></div>
     </div>
   </div>
 
@@ -165,9 +195,9 @@
          the one thing you can state without a campaign, which is how far the
          link is expected to work.</p>
       <div class="grid">
-        <div><label>Environment</label><select id="f_terrain"></select></div>
-        <div><label>Expected range (m)</label><input id="f_range" type="number" step="any"></div>
-        <div><label>…at which spreading factor</label><select id="f_anchorsf"></select></div>
+        <div><label for="f_terrain">Environment</label><select id="f_terrain"></select></div>
+        <div><label for="f_range">Expected range (m)</label><input id="f_range" type="number" step="any"></div>
+        <div><label for="f_anchorsf">…at which spreading factor</label><select id="f_anchorsf"></select></div>
       </div>
       <div class="row">
         <button class="primary" onclick="applyTerrain()">Build the model</button>
@@ -177,18 +207,18 @@
     </div>
 
     <div class="grid" style="margin-top:14px">
-      <div><label>Exponent n</label><input id="f_n" type="number" step="any" value="2.0"></div>
-      <div><label>Loss at d₀ (dB)</label><input id="f_ref" type="number" step="any" value="0"></div>
-      <div><label>d₀ (m)</label><input id="f_d0" type="number" step="any" value="100"></div>
-      <div><label>Validity floor (m)</label><input id="f_minv" type="number" step="any" value="30"></div>
-      <div><label>Shadowing σ (dB)</label><input id="f_sigma" type="number" step="any" value="0"></div>
+      <div><label for="f_n">Exponent n</label><input id="f_n" type="number" step="any" value="2.0"></div>
+      <div><label for="f_ref">Loss at d₀ (dB)</label><input id="f_ref" type="number" step="any" value="0"></div>
+      <div><label for="f_d0">d₀ (m)</label><input id="f_d0" type="number" step="any" value="100"></div>
+      <div><label for="f_minv">Validity floor (m)</label><input id="f_minv" type="number" step="any" value="30"></div>
+      <div><label for="f_sigma">Shadowing σ (dB)</label><input id="f_sigma" type="number" step="any" value="0"></div>
     </div>
-    <div class="srcnote">Shadowing is the spread the mean trend does not
+    <div class="srcnote" data-for="f_sigma"><b>Shadowing σ.</b> The spread the mean trend does not
       explain, drawn once per node and fixed: obstruction that belongs to
       where the node is. Leaving it at 0 makes two nodes the same distance
       away receive identical power, which no site does. Adopting a fit fills
       it from that fit's residual.</div>
-    <div style="margin-top:11px"><label>Where this model came from</label>
+    <div style="margin-top:11px"><label for="f_plsrc">Where this model came from</label>
       <input id="f_plsrc" placeholder="Field fit, or a published model you are citing"></div>
     <div id="assumednote"></div>
   </div>
@@ -199,39 +229,45 @@
     <p class="hint">Use the shortest reporting interval the deployment can
        produce: capacity measured at the worst case is a bound you can defend.</p>
     <div class="grid">
-      <div><label>Payload (bytes)</label><input id="f_pl" type="number" value="32"></div>
-      <div><label>Coding rate index</label><input id="f_cr" type="number" value="1"></div>
-      <div><label>Send interval (s)</label><input id="f_int" type="number" step="any" value="60"></div>
-      <div><label>Simulated time (s)</label><input id="f_time" type="number" value="3600"></div>
-      <div><label>Runs per point</label><input id="f_runs" type="number" value="30"></div>
-      <div><label>DER threshold</label><input id="f_th" type="number" step="any" value="0.9"></div>
-      <div><label>Random seed</label><input id="f_seed" type="number" value="99"></div>
-      <div><label>Placement</label><select id="f_place">
+      <div><label for="f_pl">Payload (bytes)</label><input id="f_pl" type="number" value="32"></div>
+      <div><label for="f_cr">Coding rate</label><select id="f_cr">
+        <option value="1">4/5 (LoRaWAN)</option><option value="2">4/6</option>
+        <option value="3">4/7</option><option value="4">4/8</option></select></div>
+      <div><label for="f_int">Send interval (s)</label><input id="f_int" type="number" step="any" value="60"></div>
+      <div><label for="f_time">Simulated time (s)</label><input id="f_time" type="number" value="3600"></div>
+      <div><label for="f_runs">Runs per point</label><input id="f_runs" type="number" value="30"></div>
+      <div><label for="f_th">DER threshold</label><input id="f_th" type="number" step="any" value="0.9"></div>
+      <div><label for="f_seed">Random seed</label><input id="f_seed" type="number" value="99"></div>
+      <div><label for="f_place">Placement</label><select id="f_place">
         <option value="polygon">polygon (the real site)</option>
         <option value="disc">disc (theoretical coverage)</option></select></div>
     </div>
-    <div style="margin-top:12px"><label>Receiver model</label>
+    <div style="margin-top:12px"><div class="grp">Receiver model</div>
       <div class="grid" style="margin-top:2px">
-        <div><label>Receiver rule</label><select id="f_rx"></select></div>
-        <div><label>Capture threshold (dB)</label>
+        <div><label for="f_rx">Receiver rule</label><select id="f_rx"></select></div>
+        <div><label for="f_capthr">Capture threshold (dB)</label>
           <input id="f_capthr" type="number" step="any"></div>
-        <div><label>Spreading factors</label><select id="f_isf"></select></div>
-        <div><label>Locked packet survival</label><select id="f_lsurv"></select></div>
-        <div><label>Header recapture</label>
+        <div><label for="f_isf">Rejection between SFs</label><select id="f_isf"></select></div>
+        <div><label for="f_lsurv">Locked packet survival</label><select id="f_lsurv"></select></div>
+        <div><label for="f_hrec">Header recapture</label>
           <select id="f_hrec"><option value="">off (default)</option>
             <option value="1">on</option></select></div>
       </div>
-      <div id="rxnote" class="srcnote"></div></div>
-    <div style="margin-top:12px"><label>Scenarios</label>
+      <div id="rxnote" class="notes"></div></div>
+    <div style="margin-top:12px"><div class="grp">Scenarios</div>
       <div id="scenbox" class="row" style="margin-top:2px"></div>
-      <div class="srcnote">MULTI gives every node the fastest spreading factor
-        its link reaches: ideal, instantly converged assignment with no margin
-        and full power, so it is a bound rather than a network. ADR is what a
-        converged real network settles into, keeping a link margin and
-        reducing transmit power. Running both shows what the idealisation is
-        worth.</div></div>
-    <div style="margin-top:10px"><label>Highlighted scenario, drawn in colour</label>
-      <select id="f_hl"></select></div>
+      <ul class="scenhelp">
+        <li><b id="sfrange">Fixed SF</b>. Every node on that one spreading factor.</li>
+        <li><b>MULTI.</b> Every node on the fastest spreading factor its link
+          reaches: ideal, instantly converged assignment with no margin and
+          full power, so it is a bound rather than a network.</li>
+        <li><b>ADR.</b> What a converged real network settles into, keeping a
+          link margin and reducing transmit power.</li>
+        <li>Running MULTI and ADR together shows what the idealisation is
+          worth.</li>
+      </ul></div>
+    <div style="margin-top:12px;max-width:320px"><div><label for="f_hl">Highlighted scenario, drawn in colour</label>
+      <select id="f_hl"></select></div></div>
   </div>
 
   <!-- 5. create and run -->
@@ -246,6 +282,7 @@
       <label style="display:inline-flex;gap:6px;align-items:center;margin:0;color:var(--muted)">
         <input type="checkbox" id="f_over" style="width:auto"> overwrite if it exists</label>
     </div>
+    <div id="createwhy" class="why" style="margin-top:8px"></div>
     <div id="createout"></div>
     <div id="runout"></div>
   </div>
@@ -257,7 +294,8 @@
   <div class="card" style="position:sticky;top:16px">
     <h2>Checks <span id="vstamp" class="pill">waiting</span></h2>
     <p class="hint">Updated as you type. A bad parameter does not make the
-       simulation fail, it makes it return a wrong answer quietly.</p>
+       simulation fail, it makes it return a wrong answer quietly. Click a
+       message to go to its field.</p>
     <div id="vout"></div>
   </div>
 </div>
@@ -270,7 +308,38 @@
 
 <script>
 let BOOT=null, RINGS=null, RING_NAMES=null, LASTFIT=null, CREATED=null, POLL=null;
-let ADOPTED_R2=null, HL_TOUCHED=false;
+let ADOPTED_R2=null, HL_TOUCHED=false, TOUCHED=false;
+// Study fields as the checks name them, mapped to the control a person sees,
+// so a message can name the field the way the form labels it and lead to it.
+const FIELDS={
+  name:['f_name','Study name'], site:['f_site','Site'], region:['f_region','Region'],
+  bw_khz:['f_bw','Bandwidth (kHz)'], chip:['f_chip','Gateway chip'],
+  sensitivity_dbm:['f_chip','Gateway chip'], n_gateways:['f_ngw','Gateways'],
+  tx_power_dbm:['f_tx','Node Tx power (dBm)'], tx_antenna_gain_db:['f_gtx','Node antenna (dBi)'],
+  rx_antenna_gain_db:['f_grx','Gateway antenna (dBi)'], cable_loss_db:['f_cable','Cable losses (dB)'],
+  uplink_dwell_time_ms:['f_dwell','Uplink dwell time'],
+  path_loss_exponent:['f_n','Exponent n'], path_loss_ref_db:['f_ref','Loss at d\u2080 (dB)'],
+  path_loss_ref_distance_m:['f_d0','d\u2080 (m)'], min_valid_distance_m:['f_minv','Validity floor (m)'],
+  shadowing_sigma_db:['f_sigma','Shadowing \u03c3 (dB)'],
+  path_loss_source:['f_plsrc','Where this model came from'],
+  payload_bytes:['f_pl','Payload (bytes)'], coding_rate:['f_cr','Coding rate'],
+  send_interval_s:['f_int','Send interval (s)'], sim_time_s:['f_time','Simulated time (s)'],
+  n_runs:['f_runs','Runs per point'], der_threshold:['f_th','DER threshold'],
+  base_seed:['f_seed','Random seed'], placement:['f_place','Placement'],
+  polygons_m:['kmlbtn','Site boundary (KML)'],
+  receiver_model:['f_rx','Receiver rule'], capture_threshold_db:['f_capthr','Capture threshold (dB)'],
+  inter_sf_rejection:['f_isf','Rejection between SFs'], lock_survival:['f_lsurv','Locked packet survival'],
+  header_recapture:['f_hrec','Header recapture'], scenarios:['scenbox','Scenarios'],
+  highlight_scenario:['f_hl','Highlighted scenario'],
+};
+// A study.py name with an underscore cannot be an ordinary word, so it is
+// matched anywhere. A one-word name (site, region, ...) is matched only where
+// a check states its value, "placement='polygon'", so the word "site" in
+// "site-specific" is left alone.
+const LONG_KEYS=Object.keys(FIELDS).filter(k=>k.includes('_')).sort((a,b)=>b.length-a.length);
+const SHORT_KEYS=Object.keys(FIELDS).filter(k=>!k.includes('_'));
+const FIELD_RE=new RegExp('\\b('+LONG_KEYS.join('|')+')\\b|\\b('+SHORT_KEYS.join('|')+')\\b(?=\\s?=)','g');
+const TOUCHED_IDS=new Set();
 // How the propagation model was arrived at. It decides what the result means:
 // a fitted model supports a capacity figure, an assumed one supports a range.
 let ORIGIN='manual', TERRAIN=null;
@@ -296,7 +365,8 @@ async function boot(){
   const reg=$('f_region');
   Object.keys(BOOT.regions).sort().forEach(r=>{
     const o=document.createElement('option'); o.value=r;
-    o.textContent=r+'  (SF'+BOOT.regions[r].join(', SF')+')';
+    const sf=BOOT.regions[r];
+    o.textContent=r+' (SF'+sf[0]+' to SF'+sf[sf.length-1]+')';
     if(r==='US915') o.selected=true; reg.appendChild(o);
   });
   const chip=$('f_chip');
@@ -319,12 +389,20 @@ async function boot(){
   setOrigin('manual');
   document.querySelectorAll('input,select').forEach(el=>{
     el.addEventListener('input', schedule); el.addEventListener('change', schedule);
+    const touch=()=>{ TOUCHED_IDS.add(el.closest('#scenbox')?'scenbox':el.id);
+      if(!TOUCHED){ TOUCHED=true; schedule(); } };
+    el.addEventListener('input', touch); el.addEventListener('change', touch);
+    el.addEventListener('input', ()=>el.classList.remove('invalid'));
+    // The note that explains a control lights up while that control is in use.
+    el.addEventListener('focus', ()=>document.querySelectorAll('.srcnote[data-for]')
+      .forEach(n=>n.classList.toggle('active', n.dataset.for===el.id)));
   });
   // Typing a propagation parameter by hand detaches it from the fit, so the
   // recorded R^2 would no longer describe the model written into study.py.
   ['f_n','f_ref','f_d0'].forEach(id=>
     $(id).addEventListener('input', ()=>{ ADOPTED_R2=null; setOrigin('manual'); }));
   $('f_hl').addEventListener('change', ()=>{ HL_TOUCHED=true; });
+  buildHints();
   validate();
 }
 
@@ -347,12 +425,14 @@ function buildDwell(){
 
 function chipNote(){
   const c=$('f_chip').value, box=$('chipnote');
+  box.innerHTML='';
   if(!c){ box.textContent='No chip selected, so you must supply sensitivity values yourself in study.py.'; return; }
   const d=BOOT.chip_detail[c];
   const s=Object.keys(d.sensitivity).sort((a,b)=>a-b)
           .map(k=>'SF'+k+' '+d.sensitivity[k]).join(' · ');
-  box.textContent=c+': '+s+' dBm · '+d.channels+' channels · '
-                 +d.max_demod+' simultaneous demodulations. Source: '+d.source;
+  const b=document.createElement('b'); b.textContent=c+'. '; box.appendChild(b);
+  linkify(box, 'Sensitivity '+s+' dBm · '+d.channels+' channels · '
+                 +d.max_demod+' simultaneous demodulations. Source: '+d.source);
 }
 
 function buildScenarios(){
@@ -366,9 +446,14 @@ function buildScenarios(){
     w.innerHTML='<input type="checkbox" id="'+id+'" value="'+name+'" style="width:auto">'+name;
     box.appendChild(w);
     const cb=w.querySelector('input');
-    cb.checked = prev.size ? prev.has(name) : (sf===sfs[0]||sf===sfs[sfs.length-1]);
-    cb.addEventListener('change', ()=>{buildHighlight();schedule();});
+    // Only the fastest SF to start with: the slowest one cannot carry a
+    // typical payload in every region, and a page that opens with an error
+    // the user did not cause teaches them to ignore the checks.
+    cb.checked = prev.size ? prev.has(name) : sf===sfs[0];
+    cb.addEventListener('change', ()=>{buildHighlight();schedule();
+      if(BOOT.limits) limitsFromTables();});
   });
+  if(sfs.length) $('sfrange').textContent='SF'+sfs[0]+' to SF'+sfs[sfs.length-1];
   buildHighlight();
 }
 function selectedScenarios(){
@@ -388,6 +473,7 @@ function buildHighlight(){
 /* ---------- KML ---------- */
 $('kmlfile').onchange = async e=>{
   const f=e.target.files[0]; if(!f) return;
+  TOUCHED_IDS.add('kmlbtn'); TOUCHED=true;
   $('kmlname').textContent=f.name;
   const out=$('kmlout'); out.innerHTML='';
   if($('f_lat').value===''||$('f_lon').value===''){
@@ -502,10 +588,11 @@ function buildTerrain(){
   });
   sel.onchange=showTerrainInfo;
   const note=document.createElement('div'); note.className='srcnote';
-  note.textContent='Ranges pooled from published LoRa measurement campaigns: '
+  note.dataset.for='f_terrain';
+  linkify(note, 'Ranges pooled from published LoRa measurement campaigns: '
     + BOOT.terrain_source + '. The labels are the review’s, not a '
     + 'classification of your site. If none describes it, set the exponent by '
-    + 'hand and say where it came from.';
+    + 'hand and say where it came from.');
   $('pane_terrain').appendChild(note);
 }
 
@@ -620,50 +707,196 @@ function buildReceiver(){
   orth.textContent='orthogonal (default)'; isf.appendChild(orth);
   BOOT.inter_sf_tables.forEach(t=>{
     const o=document.createElement('option'); o.value=t.value;
-    o.textContent=t.value; isf.appendChild(o);
+    o.textContent=t.short; o.title=t.label; isf.appendChild(o);
   });
   isf.value='';
   const ls=$('f_lsurv');
   const capt=document.createElement('option'); capt.value='';
-  capt.textContent='capture threshold (default)'; ls.appendChild(capt);
+  capt.textContent='threshold (default)'; ls.appendChild(capt);
   BOOT.lock_survival_tables.forEach(t=>{
     const o=document.createElement('option'); o.value=t.value;
-    o.textContent=t.value; ls.appendChild(o);
+    o.textContent=t.short; o.title=t.label; ls.appendChild(o);
   });
   ls.value='';
   ['f_rx','f_capthr','f_isf','f_lsurv','f_hrec'].forEach(id=>{
     $(id).addEventListener('input', receiverNote);
     $(id).addEventListener('change', receiverNote);
+    $(id).addEventListener('focus', receiverNote);
   });
   receiverNote();
 }
 
-function receiverNote(){
+// DOIs in a source become links to doi.org, built as elements rather than
+// HTML so no text from a source can inject markup.
+function linkify(el, text){
+  const re=/doi:\s?(10\.\d{4,9}\/[^\s,;]*[^\s,;.)])/g; let last=0, m;
+  while((m=re.exec(text))){
+    el.appendChild(document.createTextNode(text.slice(last, m.index)));
+    const a=document.createElement('a'); a.href='https://doi.org/'+m[1];
+    a.target='_blank'; a.rel='noopener noreferrer'; a.textContent=m[0];
+    el.appendChild(a); last=re.lastIndex;
+  }
+  el.appendChild(document.createTextNode(text.slice(last)));
+}
+// How a table is applied, with an example read from the table itself, so
+// the reader does not need the paper to know what choosing it does.
+function rejectionHow(db){
+  const sfs=Object.keys(db).map(Number).sort((a,b)=>a-b);
+  const lo=sfs[0], hi=sfs[sfs.length-1];
+  const nxt=Object.keys(db[lo]).map(Number).sort((a,b)=>a-b)[0];
+  const ex=(r,i)=>'a packet on SF'+r+' is lost when an overlapping SF'+i
+    +' packet arrives more than '+(-db[r][i])+' dB stronger';
+  return 'How it is applied: two packets on different spreading factors that '
+    +'overlap by at least one symbol can now destroy each other. Each is lost '
+    +'if the other is stronger by more than the value this table gives for '
+    +'that pair. For example, '+ex(lo,nxt)+', and '+ex(hi,lo)+'.';
+}
+function survivalHow(db){
+  const sfs=Object.keys(db).map(Number).sort((a,b)=>a-b);
+  const lo=sfs[0], hi=sfs[sfs.length-1];
+  const ex=sf=>db[sf]===0 ? 'on SF'+sf+' it survives a later packet of equal '
+    +'power' : 'on SF'+sf+' it must be at least '+db[sf]+' dB stronger';
+  return 'How it is applied: the packet the receiver locked onto survives a '
+    +'later one only if it is stronger by at least the value this table '
+    +'gives for its spreading factor. For example, '+ex(lo)+', and '+ex(hi)+'.';
+}
+let rxActive=null;
+function receiverNote(ev){
+  if(ev && ev.target) rxActive=ev.target.id;
   const note=$('rxnote'); note.innerHTML='';
   const rule=BOOT.receiver_models.find(m=>m.value===$('f_rx').value);
   const thr=num('f_capthr', BOOT.default_capture_threshold_db);
   const table=BOOT.inter_sf_tables.find(t=>t.value===$('f_isf').value);
-  const p=t=>{const d=document.createElement('div'); d.textContent=t; note.appendChild(d);};
-  if(rule) p('Rule: '+rule.note);
-  p('Threshold: '+BOOT.capture_threshold_note);
-  p('Spreading factors: '+(table ? 'measured rejection between spreading '
-    + 'factors, from '+table.source+' Results are conditional on this table. '
-    + 'See "Spreading factors that are not orthogonal" in the README.'
-    : BOOT.orthogonal_note));
-  // The two refinements exist only under the lock rule, so they are greyed
-  // out otherwise and not sent, which keeps `check` from refusing the study.
+  const p=(id,label,text,changed,using,how)=>{const d=document.createElement('div');
+    d.className='note'+(id===rxActive?' active':'');
+    const b=document.createElement('b'); b.textContent=label; d.appendChild(b);
+    if(using){const u=document.createElement('span'); u.className='using';
+      u.textContent=using; d.appendChild(u);}
+    if(how){const h=document.createElement('span'); h.className='how';
+      h.textContent=how; d.appendChild(h);}
+    linkify(d, text);
+    if(changed){const t=document.createElement('span'); t.className='tag';
+      t.textContent='not the default'; d.appendChild(t);}
+    note.appendChild(d);};
+  if(rule) p('f_rx','Receiver rule.',' '+rule.note,$('f_rx').value!==BOOT.default_receiver_model);
+  p('f_capthr','Capture threshold.',' '+BOOT.capture_threshold_note,thr!==BOOT.default_capture_threshold_db);
+  p('f_isf','Rejection between SFs.',(table ? 'Source: '+table.source
+    + ' Results are conditional on this table. See "Spreading factors that '
+    + 'are not orthogonal" in the README.'
+    : ' '+BOOT.orthogonal_note),!!table,
+    table ? 'Using the table of '+table.label+'.' : null,
+    table ? rejectionHow(table.db) : null);
   const isLock = $('f_rx').value==='lock';
   $('f_lsurv').disabled=!isLock; $('f_hrec').disabled=!isLock;
   if(isLock){
     const surv=BOOT.lock_survival_tables.find(t=>t.value===$('f_lsurv').value);
-    p('Locked packet survival: '+(surv ? 'per spreading factor, from '
-      + surv.source : BOOT.lock_survival_default_note));
-    if($('f_hrec').value) p('Header recapture: '+BOOT.header_recapture_note);
+    p('f_lsurv','Locked packet survival.',(surv ? 'Source: '+surv.source
+      : ' '+BOOT.lock_survival_default_note),!!surv,
+      surv ? 'Using the per-SF table of '+surv.label+'.' : null,
+      surv ? survivalHow(surv.db) : null);
+    if($('f_hrec').value) p('f_hrec','Header recapture.',' '+BOOT.header_recapture_note,true);
   }
   const departs = $('f_rx').value!==BOOT.default_receiver_model
     || thr!==BOOT.default_capture_threshold_db || !!table;
   if(departs) note.appendChild(msg('w','This receiver model departs from '
     + 'LoRaSim\'s. Report it with every result, since capacity depends on it.'));
+}
+
+/* ---------- ranges under the fields ---------- */
+// Which control each range in BOOT.limits belongs to. The ranges themselves
+// come from the server, which takes them from the code that enforces them.
+const LIMIT_FIELDS={der_threshold:'f_th', n_gateways:'f_ngw',
+  path_loss_ref_db:'f_ref', shadowing_sigma_db:'f_sigma', lat:'f_lat',
+  lon:'f_lon', n_runs:'f_runs', sim_time_s:'f_time',
+  path_loss_exponent:'f_n', capture_threshold_db:'f_capthr'};
+
+function hintFor(id){
+  let h=$('hint_'+id);
+  if(!h){ h=document.createElement('div'); h.className='field-hint';
+    h.id='hint_'+id; $(id).insertAdjacentElement('afterend', h); }
+  return h;
+}
+
+function buildHints(){
+  Object.entries(LIMIT_FIELDS).forEach(([k,id])=>{
+    const lim=BOOT.limits[k]; if(!lim) return;
+    const h=hintFor(id); h.innerHTML=''; linkify(h, lim.text);
+    $(id).addEventListener('input', ()=>checkRange(k));
+  });
+  ['f_region','f_bw','f_dwell'].forEach(id=>$(id).addEventListener('change', limitsFromTables));
+  $('f_pl').addEventListener('input', limitsFromTables);
+  $('f_d0').addEventListener('input', limitsFromTables);
+  $('f_minv').addEventListener('input', limitsFromTables);
+  limitsFromTables();
+}
+
+// A value outside a bound `check` enforces is marked at once, before the
+// round trip to the server; one outside a recommended range only warns.
+function checkRange(k){
+  const lim=BOOT.limits[k], id=LIMIT_FIELDS[k], el=$(id), h=hintFor(id);
+  const v=parseFloat(el.value);
+  let bad=false, warn=false;
+  if(!isNaN(v)){
+    bad = (lim.gt!==undefined && !(v>lim.gt)) || (lim.lt!==undefined && !(v<lim.lt))
+       || (lim.ge!==undefined && v<lim.ge) || (lim.le!==undefined && v>lim.le);
+    warn = (lim.warn_gt!==undefined && v>lim.warn_gt)
+        || (lim.warn_lt!==undefined && v<lim.warn_lt);
+  }
+  // Red only for a value the user entered: a default nobody has touched yet
+  // is still to do, as it is in the checks panel.
+  const mine=TOUCHED_IDS.has(id);
+  el.classList.toggle('invalid', bad && mine);
+  h.classList.toggle('bad', bad && mine);
+  h.classList.toggle('warnhint', mine && !bad && warn);
+}
+
+// Payload, bandwidth and the validity floor depend on other fields, so their
+// ranges are worked out from the regional tables each time those change.
+function limitsFromTables(){
+  const region=$('f_region').value, bw=Math.round(num('f_bw',125));
+  const rows=(BOOT.payload_ceilings||{})[region]||[];
+  const dwellNeeded=BOOT.dwell_time_regions.includes(region);
+  const dwell=$('f_dwell').value===''?null:parseInt($('f_dwell').value,10);
+  // Bandwidth: which bandwidths the plan defines, and for which SFs.
+  const byBw={};
+  rows.filter(r=>r.dwell===rows[0].dwell).forEach(r=>{(byBw[r.bw]=byBw[r.bw]||[]).push(r.sf);});
+  const bwText=Object.keys(byBw).map(Number).sort((a,b)=>a-b).map(b=>{
+    const sf=byBw[b].sort((x,y)=>x-y);
+    return b+' kHz ('+(sf.length>1?'SF'+sf[0]+' to SF'+sf[sf.length-1]:'SF'+sf[0])+')';
+  }).join(', ');
+  const hb=hintFor('f_bw'); hb.textContent = bwText ? region+' defines '+bwText : '';
+  const bwBad = bwText && !byBw[bw] && TOUCHED_IDS.has('f_bw');
+  $('f_bw').classList.toggle('invalid', !!bwBad); hb.classList.toggle('bad', !!bwBad);
+  // Payload: the most restrictive of the marked fixed SFs at this bandwidth.
+  const hp=hintFor('f_pl'); hp.classList.remove('bad');
+  const fixed=selectedScenarios().filter(s=>/^SF\d+$/.test(s)).map(s=>parseInt(s.slice(2),10));
+  if(dwellNeeded && dwell===null){
+    hp.textContent='choose the uplink dwell time to see the limit';
+  }else if(!rows.length){
+    hp.textContent='';
+  }else{
+    const use=rows.filter(r=>r.bw===bw && (!dwellNeeded || r.dwell===dwell));
+    const marked=use.filter(r=>fixed.includes(r.sf) && r.max!==null);
+    if(marked.length){
+      const worst=marked.reduce((a,b)=>b.max<a.max?b:a);
+      hp.textContent = worst.max>0
+        ? '1 to '+worst.max+' bytes (SF'+worst.sf+' at '+bw+' kHz, the most restrictive marked SF)'
+        : 'SF'+worst.sf+' at '+bw+' kHz carries no payload in this plan';
+      const pl=num('f_pl',0);
+      const mine=['f_pl','scenbox','f_bw','f_region','f_dwell'].some(i=>TOUCHED_IDS.has(i));
+      const bad = mine && (pl<1 || pl>worst.max);
+      $('f_pl').classList.toggle('invalid', bad); hp.classList.toggle('bad', bad);
+    }else{
+      const maxAll=Math.max(0,...use.map(r=>r.max||0));
+      hp.textContent = maxAll ? 'up to '+maxAll+' bytes at the fastest data rate; '
+        + 'MULTI and ADR use only the SFs that can carry the payload' : '';
+    }
+  }
+  // Validity floor: recommended no larger than d0.
+  const hv=hintFor('f_minv'), d0=num('f_d0',100);
+  hv.textContent='no more than d\u2080 ('+d0+' m) recommended';
+  hv.classList.toggle('warnhint', num('f_minv',0)>d0
+    && (TOUCHED_IDS.has('f_minv') || TOUCHED_IDS.has('f_d0')));
 }
 
 /* ---------- values and validation ---------- */
@@ -715,8 +948,17 @@ async function validate(){
   try{
     const r = await post('/api/validate',{values:values(),rings:RINGS});
     const out=$('vout'); out.innerHTML='';
-    r.errors.forEach(e=>out.appendChild(msg('e',e)));
-    r.warnings.forEach(w=>out.appendChild(msg('w',w)));
+    document.querySelectorAll('.invalid').forEach(x=>x.classList.remove('invalid'));
+    if(!TOUCHED){
+      out.appendChild(msg('i','Checks appear here as you fill in the form.'));
+      $('vstamp').textContent='waiting'; $('vstamp').className='pill';
+      $('btn_create').disabled=true;
+      $('createwhy').textContent='Fill in the form first. The checks will say what is missing.';
+      return;
+    }
+    const kinds=r.errors.map(errorKind);
+    r.errors.forEach((e,i)=>out.appendChild(fieldMsg(kinds[i],e)));
+    r.warnings.forEach(w=>out.appendChild(fieldMsg('w',w)));
     if(r.reach.length){
       let t='<table><tr><th>Scenario</th><th>Reach</th><th>Covers site</th></tr>';
       r.reach.forEach(x=>{
@@ -732,18 +974,65 @@ async function validate(){
           +'by collisions.'));
       }
     }
-    r.info.forEach(i=>out.appendChild(msg('i',i)));
+    r.info.forEach(i=>out.appendChild(fieldMsg('i',i)));
+    // The marks above were cleared and redrawn from the server's answer, so
+    // the ones the page sets itself from the ranges are drawn again too.
+    if(BOOT.limits){ Object.keys(LIMIT_FIELDS).forEach(checkRange); limitsFromTables(); }
     if(!r.errors.length){
       $('vstamp').textContent='valid'; $('vstamp').className='pill ok';
-      $('btn_create').disabled=false;
+      $('btn_create').disabled=false; $('createwhy').textContent='';
     }else{
-      $('vstamp').textContent=r.errors.length+' error'+(r.errors.length>1?'s':'');
-      $('vstamp').className='pill bad'; $('btn_create').disabled=true;
+      const ne=kinds.filter(k=>k==='e').length, nt=kinds.length-ne;
+      const word = ne ? ne+' error'+(ne>1?'s':'') : nt+' to do';
+      $('vstamp').textContent=word; $('vstamp').className='pill '+(ne?'bad':'todo');
+      $('btn_create').disabled=true;
+      $('createwhy').textContent = ne
+        ? 'Fix the '+word+' listed under Checks first.'
+        : 'Complete the '+nt+' item'+(nt>1?'s':'')+' listed under Checks first.';
     }
+    if($('btn_run').disabled && !CREATED && !n_err(r))
+      $('createwhy').textContent='Run simulation becomes available once the study is written.';
   }catch(e){
     $('vout').innerHTML=''; $('vout').appendChild(msg('e',e.message));
     $('vstamp').textContent='error'; $('vstamp').className='pill bad';
   }
+}
+
+function n_err(r){ return r.errors.length; }
+
+// A check names a field the way study.py does. Shown to a person it names the
+// field the way the form labels it, marks that field, and leads to it.
+function fieldsIn(text){
+  const hits=[]; let m; FIELD_RE.lastIndex=0;
+  while((m=FIELD_RE.exec(text))){ const k=m[1]||m[2]; if(!hits.includes(k)) hits.push(k); }
+  return hits;
+}
+// An error in a part of the form nobody has reached yet is not a mistake but
+// something still to do, and is shown as such: red is kept for what the user
+// has entered.
+function errorKind(text){
+  const hits=fieldsIn(text);
+  return hits.some(k=>TOUCHED_IDS.has(FIELDS[k][0])) ? 'e' : 't';
+}
+function fieldMsg(kind, text){
+  const hits=fieldsIn(text);
+  const shown=text.replace(FIELD_RE, k=>'\u201c'+FIELDS[k][1]+'\u201d')
+                  .replace(/\u201d\s?=\s?/g, '\u201d = ');
+  const d=document.createElement('div'); d.className='msg '+kind;
+  if(hits.length){
+    const w=document.createElement('span'); w.className='where';
+    w.textContent=hits.map(k=>FIELDS[k][1]).join(', '); d.appendChild(w);
+    d.classList.add('jump'); d.title='Go to the field';
+    const target=$(FIELDS[hits[0]][0]);
+    if(kind==='e') hits.forEach(k=>{const el=$(FIELDS[k][0]); if(el) el.classList.add('invalid');});
+    if(kind==='t'){ const t=document.createElement('span'); t.className='where';
+      t.textContent='Still to fill in: '+w.textContent; d.replaceChild(t,w); }
+    d.onclick=()=>{ if(!target) return;
+      target.scrollIntoView({behavior:'smooth', block:'center'});
+      if(target.focus) target.focus({preventScroll:true}); };
+  }
+  linkify(d, shown);
+  return d;
 }
 
 /* ---------- create and run ---------- */
@@ -765,7 +1054,7 @@ async function createStudy(){
     out.appendChild(d);
     out.appendChild(msg('i','From here it behaves like any other study: '
       +'python3 run.py check '+r.name+' · run '+r.name+' · sweep '+r.name));
-    $('btn_run').disabled=false;
+    $('btn_run').disabled=false; $('createwhy').textContent='';
   }catch(e){ out.appendChild(msg('e',e.message)); }
 }
 

@@ -122,6 +122,95 @@ def _study_default(name: str):
 # Endpoint handlers. Each takes the decoded JSON body and returns a dict.
 # ---------------------------------------------------------------------------
 
+# What a table's name means, in the words a reader of the form needs: who
+# measured it and on which radio. The name alone says neither.
+TABLE_LABELS = {
+    "CROCE2020_SX1272": "Croce et al. 2020, measured on an SX1272 node radio",
+    "EIGNER2021_SX1301": "Eigner 2021, measured on an SX1301 gateway",
+}
+# The same in few enough words to read in a closed drop-down.
+TABLE_SHORT = {
+    "CROCE2020_SX1272": "Croce 2020, node radio",
+    "EIGNER2021_SX1301": "Eigner 2021, gateway",
+}
+
+
+# The range of values each free-entry field accepts or that the measurements
+# behind it span, shown under the field. Only what has a basis is here:
+#   "accepted"     a bound `check` enforces as an error,
+#   "recommended"  a bound `check` raises a warning beyond,
+#   "measured"     the span of published measurements, with their source.
+# The accepted and recommended numbers repeat ones written in
+# `study.validate`. tests/test_webui.py runs the validator on both sides of
+# each, so this table cannot drift from the code it describes. Fields with no
+# such basis (transmit power, antenna gains, cable losses, send interval,
+# seed) get no range, because one would have to be invented.
+CAPTURE_THRESHOLD_MEASURED_DB = (0.0, 3.0)   # Eigner 2021, Croce et al. 2020,
+                                             # Fernandes et al. 2019, as cited
+                                             # in CAPTURE_THRESHOLD_NOTE
+
+
+def _short_cite(source: str) -> str:
+    """'Gonzalez-Palacio et al., ..., 2024, doi:10...' becomes
+    'Gonzalez-Palacio et al. 2024, doi:10...', short enough for a field."""
+    author = source.split(",")[0]
+    year = re.search(r"\b(19|20)\d{2}\b", source)
+    doi = re.search(r"doi:\s?10\.\S+?(?=,|\s|$)", source)
+    return " ".join(x for x in (author, year.group(0) if year else None)
+                    if x) + (f", {doi.group(0)}" if doi else "")
+
+
+def field_limits():
+    lows = [t[0] for t in presets.TERRAIN_EXPONENTS.values()]
+    highs = [t[1] for t in presets.TERRAIN_EXPONENTS.values()]
+    lo, hi = CAPTURE_THRESHOLD_MEASURED_DB
+    return {
+        "der_threshold": {"kind": "accepted", "gt": 0, "lt": 1,
+                          "text": "between 0 and 1, both excluded"},
+        "n_gateways": {"kind": "accepted", "ge": 1, "le": 1,
+                       "text": "only 1 is supported"},
+        "path_loss_ref_db": {"kind": "accepted", "gt": 0,
+                             "text": "greater than 0 dB"},
+        "shadowing_sigma_db": {"kind": "accepted", "ge": 0, "warn_gt": 20,
+                               "text": "0 to 20 dB; above 20 is checked"},
+        "lat": {"kind": "accepted", "ge": -90, "le": 90,
+                "text": "decimal degrees, -90 to 90, negative south"},
+        "lon": {"kind": "accepted", "ge": -180, "le": 180,
+                "text": "decimal degrees, -180 to 180, negative west"},
+        "n_runs": {"kind": "recommended", "warn_lt": 20,
+                   "text": "20 or more recommended"},
+        "sim_time_s": {"kind": "recommended", "warn_lt": 600,
+                       "text": "600 s or more recommended"},
+        "path_loss_exponent": {
+            "kind": "measured", "text":
+                f"measured {min(lows)} to {max(highs)} across environments, "
+                f"{_short_cite(presets.TERRAIN_SOURCE)}"},
+        "capture_threshold_db": {
+            "kind": "measured", "text":
+                f"measured {lo:g} to {hi:g} dB; LoRaSim's value is "
+                f"{_study_default('capture_threshold_db'):g} dB"},
+    }
+
+
+def payload_ceilings():
+    """Every uplink data rate per region as (sf, bw, dwell, ceiling), so the
+    page can state the payload limit for whatever SFs are marked. Read from
+    the regional tables, the same ones `check` uses."""
+    out = {}
+    for region, table in presets.DATA_RATES.items():
+        dwells = ([None] if not presets.needs_dwell_time(region)
+                  else sorted(presets.MAX_APP_PAYLOAD_BYTES[region]))
+        rows = []
+        for dwell in dwells:
+            for _dr, (sf, bw) in sorted(table.items()):
+                found = presets.data_rate_for(region, sf, bw, dwell)
+                if found is not None:
+                    rows.append({"sf": sf, "bw": bw, "dwell": dwell,
+                                 "max": found[1]})
+        out[region] = rows
+    return out
+
+
 def api_bootstrap(_):
     """Everything the page needs to populate its menus."""
     return {
@@ -158,17 +247,23 @@ def api_bootstrap(_):
         "default_capture_threshold_db": _study_default("capture_threshold_db"),
         "capture_threshold_note": CAPTURE_THRESHOLD_NOTE,
         "inter_sf_tables": [{"value": name,
-                             "source": presets.INTER_SF_REJECTION_SOURCE[name]}
+                             "label": TABLE_LABELS[name], "short": TABLE_SHORT[name],
+                             "source": presets.INTER_SF_REJECTION_SOURCE[name],
+                             "db": presets.INTER_SF_REJECTION_DB[name]}
                             for name in sorted(presets.INTER_SF_REJECTION_DB)],
         "orthogonal_note": ORTHOGONAL_NOTE,
         # Refinements of the lock rule. The page offers them only while the
         # lock rule is chosen, since `check` refuses them under any other.
         "lock_survival_tables": [{"value": name,
-                                  "source": presets.LOCK_SURVIVAL_SOURCE[name]}
+                                  "label": TABLE_LABELS[name], "short": TABLE_SHORT[name],
+                                  "source": presets.LOCK_SURVIVAL_SOURCE[name],
+                                  "db": presets.LOCK_SURVIVAL_DB[name]}
                                  for name in sorted(presets.LOCK_SURVIVAL_DB)],
         "lock_survival_default_note": LOCK_SURVIVAL_DEFAULT_NOTE,
         "header_recapture_note": HEADER_RECAPTURE_NOTE,
         "default_header_recapture": _study_default("header_recapture"),
+        "limits": field_limits(),
+        "payload_ceilings": payload_ceilings(),
     }
 
 
