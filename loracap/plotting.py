@@ -25,7 +25,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, ScalarFormatter
 
-from .analysis import crossing, group_by_scenario
+from .analysis import crossing, delivered_per_hour, group_by_scenario
 from .study import Study, output_dir
 
 LINESTYLES = ["-", "--", ":", "-.", (0, (3, 1, 1, 1)), (0, (5, 1)), (0, (1, 1))]
@@ -177,6 +177,11 @@ def _nice_log_ticks(lo, hi):
     hard to read when the interesting range spans less than two decades."""
     candidates = [1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 70, 100, 150, 200, 300,
                   500, 700, 1000, 2000, 5000, 10000]
+    # Past two and a half decades those labels run into each other, so a
+    # wide axis gets one tick per half decade. Every figure drawn over 3 to
+    # 300 nodes, the published ones included, keeps its ticks.
+    if hi > 300 * lo:
+        candidates = [1, 3, 10, 30, 100, 300, 1000, 3000, 10000, 30000]
     return [c for c in candidates if lo <= c <= hi]
 
 
@@ -404,18 +409,18 @@ def delivered_figure(study: Study, rows):
     hl_color, _ = _colors(study)
     style = _build_style(scenarios, study.highlight_scenario, hl_color)
     th = study.der_threshold
-    per_hour = 3600.0 / study.sim_time_s
     _rc()
     fig, ax = plt.subplots(figsize=study.figure_size_in or (7.2, 4.6))
     ns_all = sorted({r["n_nodes"] for r in rows})
     ax.plot(ns_all, [n * 3600.0 / study.send_interval_s for n in ns_all],
             color="0.55", linestyle=(0, (2, 2)), linewidth=1.2,
             label="offered: every packet delivered")
-    circles = []
+    circles, top_delivered = [], 0.0
     for scen in scenarios:
         rs = by[scen]
         ns = [r["n_nodes"] for r in rs]
-        y = [r["transmitted_mean"] * r["der_mean"] * per_hour for r in rs]
+        y = [delivered_per_hour(r, study.sim_time_s) for r in rs]
+        top_delivered = max([top_delivered] + y)
         st = style[scen]
         ax.plot(ns, y, color=st["color"], linestyle=st["ls"], marker=st["marker"],
                 markevery=2, markersize=4.5, linewidth=1.7, label=scen)
@@ -436,13 +441,16 @@ def delivered_figure(study: Study, rows):
     # and a circle close to the previous one stacks its label one line higher.
     k, prev = 0, None
     for xc, yc, scen in sorted(circles):
-        k = k + 1 if prev is not None and xc < prev * 1.25 else 0
+        k = k + 1 if prev is not None and xc < prev * 2.5 else 0
         ax.annotate(f"{scen} {xc:.0f}", (xc, yc), textcoords="offset points",
                     xytext=(-7, 7 + 14 * k), ha="right", fontsize=9.5,
                     fontweight="bold", color="0.15")
         prev = xc
-    _log_nodes_axis(ax, ns_all)
-    ax.set_ylim(bottom=0)
+    _log_nodes_axis(ax, ns_all, sparse=True)
+    # Scaled to what is delivered, not to what is offered: the offered line
+    # grows without bound, and on a grid that runs past the peak it would
+    # flatten the delivered curves into the axis. It leaves through the top.
+    ax.set_ylim(0, 1.15 * max(top_delivered, 1.0))
     ax.set_ylabel("Messages delivered per hour")
     ax.yaxis.set_major_formatter(plt.FuncFormatter(
         lambda v, _: f"{v / 1000:g}k" if v >= 1000 else f"{v:g}"))

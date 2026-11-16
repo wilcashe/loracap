@@ -123,6 +123,36 @@ def format_capacity(capacity, threshold, conf=0.95) -> str:
     return "\n".join(lines)
 
 
+def delivered_per_hour(row, sim_time_s) -> float:
+    """Messages that reached the gateway per hour at one node count: the
+    packets the simulation transmitted times their DER, both means over the
+    runs, scaled from the simulated time to an hour. The figure and the
+    saturation table both use this one definition."""
+    return row["transmitted_mean"] * row["der_mean"] * 3600.0 / sim_time_s
+
+
+def delivered_peak(rows, sim_time_s) -> dict:
+    """Where delivered traffic peaks for one scenario's rows.
+
+    The peak is the simulated node count with the most messages delivered
+    per hour, so it is known only to the grid's resolution: the true maximum
+    lies somewhere between the two neighbouring node counts. There is no
+    interval, because transmitted packets are saved as a mean over the runs
+    and not run by run. When the largest node count delivers the most,
+    there is no peak in range, and `in_range` says so rather than calling
+    the edge of the grid a maximum."""
+    rows = sorted(rows, key=lambda r: r["n_nodes"])
+    rates = [delivered_per_hour(r, sim_time_s) for r in rows]
+    i = max(range(len(rows)), key=lambda k: rates[k])
+    return {
+        "n_nodes": rows[i]["n_nodes"],
+        "per_hour": rates[i],
+        "below": rows[i - 1]["n_nodes"] if i > 0 else None,
+        "above": rows[i + 1]["n_nodes"] if i + 1 < len(rows) else None,
+        "in_range": 0 < i < len(rows) - 1,
+    }
+
+
 CAPACITY_TABLE_MD = "capacity_table.md"
 CAPACITY_TABLE_TEX = "capacity_table.tex"
 

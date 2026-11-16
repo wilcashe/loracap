@@ -902,6 +902,55 @@ def table_compare(study_name, exp, root=None) -> str:
     return "\n".join(lines)
 
 
+def table_saturation(study_name, exp, root=None) -> str:
+    """Capacity beside the most traffic the gateway delivers.
+
+    Capacity is where the DER crosses its threshold, a requirement on the
+    share delivered. The peak is where messages delivered per hour stop
+    rising, a property of the gateway. Placing the two side by side shows
+    how far apart they are. The losses at the peak say what stops the
+    traffic rising there, and the share lost to no free demodulator at the
+    largest node count what takes over past it."""
+    data = _run_variant_data(study_name, exp, root)
+    multi = len(data) > 1
+    head = (["Configuration"] if multi else []) + [
+        "Scenario", f"Capacity at DER = {_threshold(data)}", "95% CI",
+        "Most delivered per hour", "At N", "Collided at the peak",
+        "No free demodulator at the peak", "No free demodulator at N max"]
+    lines = [_md_row(head), _md_rule(len(head))]
+
+    def share(row, key):
+        tx = row["transmitted_mean"] or float("nan")
+        return f"{100 * (row.get(key) or 0.0) / tx:.1f}%"
+
+    for v, rows, cap in data:
+        for scen, c in cap["capacity"].items():
+            pool = [r for r in rows if r["scenario"] == scen]
+            peak = analysis.delivered_peak(pool, exp.sim_time_s)
+            at_peak = next(r for r in pool if r["n_nodes"] == peak["n_nodes"])
+            top = max(pool, key=lambda r: r["n_nodes"])
+            if peak["in_range"]:
+                at = f"{peak['n_nodes']} ({peak['below']} to {peak['above']})"
+            else:
+                at = f"{peak['n_nodes']}, edge of the grid: no peak in range"
+            lines.append(_md_row(([v.label] if multi else []) + [
+                scen, _fmt(c["capacity"]), _ci(c), f"{peak['per_hour']:,.0f}",
+                at, share(at_peak, "collided_mean"),
+                share(at_peak, "lost_capacity_mean"),
+                f"{share(top, 'lost_capacity_mean')} (N = {top['n_nodes']})"]))
+    lines.append("")
+    lines.append("Delivered per hour is packets transmitted times DER, both "
+                 "means over the runs, scaled from the simulated time to an "
+                 "hour. The peak is the simulated node count that delivers "
+                 "the most, so the true maximum lies between the neighbouring "
+                 "node counts given in brackets. It carries no interval, "
+                 "because transmitted packets are saved as a mean and not "
+                 "run by run. Losses are shares of the packets transmitted. "
+                 "A packet refused for want of a demodulator is counted there "
+                 "only, never also as collided.")
+    return "\n".join(lines)
+
+
 def _threshold(data):
     return data[0][2].get("der_threshold", 0.9)
 
@@ -921,6 +970,7 @@ RENDERERS = {
     "fleet": table_fleet,
     "losses": table_losses,
     "energy": table_energy,
+    "saturation": table_saturation,
     "sweep": table_sweep,
     "intercept": table_intercept,
     "validation": table_validation,

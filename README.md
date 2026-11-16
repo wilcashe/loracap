@@ -886,6 +886,52 @@ payload, because a network server would not either. In US915 with 32 bytes
 that silently removes SF10, whose DR0 ceiling is eleven bytes, and `check`
 says so.
 
+## Past the threshold: where the gateway saturates
+
+Capacity is where the DER falls below the threshold, a requirement on the
+share of messages delivered. It is not the most traffic the gateway can
+carry. Past the threshold each node added still raises the messages
+delivered per hour, for a while. The traffic peaks only when losses grow
+faster than the traffic offered, and then falls.
+
+The `saturation` experiment carries the study's grid on from 300 to 3000
+nodes at the same step, under the study's own receiver rule, capture
+threshold and orthogonal spreading factors, and reads the peak off the
+saved results:
+
+| Scenario | Capacity at DER = 0.9 | 95% CI | Most delivered per hour | At N | Collided at the peak | No free demodulator at the peak | No free demodulator at N max |
+|---|---|---|---|---|---|---|---|
+| SF8 | 61.8 | [61.1, 62.7] | 52,682 | 579 (491 to 683) | 54.4% | 7.8% | 71.5% (N = 3000) |
+| MULTI | 114.9 | [113.9, 115.9] | 97,612 | 949 (805 to 1118) | 52.1% | 5.0% | 50.2% (N = 3000) |
+| ADR | 145.1 | [143.1, 147.5] | 105,739 | 949 (805 to 1118) | 41.7% | 11.9% | 60.5% (N = 3000) |
+
+Delivered per hour is packets transmitted times DER, both means over the runs, scaled from the simulated time to an hour. The peak is the simulated node count that delivers the most, so the true maximum lies between the neighbouring node counts given in brackets. It carries no interval, because transmitted packets are saved as a mean and not run by run. Losses are shares of the packets transmitted. A packet refused for want of a demodulator is counted there only, never also as collided.
+
+*Source: experiment `saturation` of `studies/iot4cows/experiments.py`, 30 runs per point, 41 node counts from 3 to 3000, 3600 s simulated, seed 99, 2000 bootstrap replicates. Data in `studies/iot4cows/outputs/saturation/`. Regenerate with `python3 run.py reproduce iot4cows --only saturation`.*
+
+Every scenario keeps delivering more past its capacity: SF8 peaks at 579
+nodes and MULTI and ADR at 949, six to nine times the node counts where
+their DER crossed 0.9. The capacities are the ones the `receiver` experiment
+gives under the same rule, since the first 27 points are the same runs. Only
+the intervals can move in the last decimal, because the bootstrap draws over
+more points.
+
+The peak is not where the network is still usable. More than half of the
+packets sent are lost there, most of them to collisions. The limit of eight
+simultaneous demodulations in the SX1301 is a minor cause at the peak and
+takes over well past it: at 3000 nodes it refuses between half and three
+quarters of the packets sent. `extra_figures` draws both views, messages
+delivered per hour with the offered traffic, and the losses by cause.
+
+So the threshold, not the gateway, sets the capacity this tool reports. A
+deployment that can live with a lower DER can add several times more nodes
+before the traffic delivered stops rising, and the losses columns say what
+each of its nodes would be paying. All of it is
+conditional on the study's own model: LoRaSim's receiver rule, a 6 dB
+capture threshold, spreading factors treated as orthogonal and the SX1301's
+eight demodulators. Each of those moves the peak, and none has been checked
+against a real network loaded this far.
+
 ## The receiver rule
 
 When two packets on the same channel and spreading factor overlap, something
@@ -1308,7 +1354,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-413 checks, about fifteen seconds, standard library only like the rest of the
+428 checks, about fifteen seconds, standard library only like the rest of the
 package, so nothing needs installing. They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
 studies take minutes each and nobody runs those on every edit.
@@ -1445,7 +1491,7 @@ tools/
 webui/
     server.py               loopback server behind `run.py serve`, and the zip download
     index.html              the setup form: basic and advanced modes, Output tab
-tests/                      413 fast checks, `run.py test`
+tests/                      428 fast checks, `run.py test`
 studies/
     _template/              commented starting point, copied by `run.py new`
     iot4cows/               worked example, see below
@@ -1549,9 +1595,10 @@ rather than drawn at the edge.
 All the worked example's experiments share one configuration, the study's
 own: 30 runs per point, the 27-point grid from 3 to 300 nodes, 3600 s and
 seed 99. So SF8 with no shadowing is 61.8 wherever it appears, and a
-difference between two rows of a table comes from what the rows change.
-Regenerating every study, `python3 run.py reproduce all`, takes a little
-over an hour on one core.
+difference between two rows of a table comes from what the rows change. The
+one exception is `saturation`, which carries the same grid on to 3000 nodes.
+Regenerating every study, `python3 run.py reproduce all`, takes about an hour and a half
+on one core.
 
 ## Known limitations
 

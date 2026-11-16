@@ -16,8 +16,9 @@ configuration it is one number wherever it appears, and a difference
 between two rows of a table can be attributed to what the rows change.
 
 The exceptions are stated where they occur: the propagation sweep finds
-capacity by bisection rather than on the grid, and the validation ladder and
-the intercept check evaluate a few fixed node counts.
+capacity by bisection rather than on the grid, the validation ladder and
+the intercept check evaluate a few fixed node counts, and the saturation
+experiment carries the grid on to 3000 nodes.
 """
 from loracap.reproduce import Experiment, Variant
 
@@ -30,6 +31,13 @@ CANONICAL = dict(
 )
 GRID = (3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 23, 28, 33, 39, 46,
         54, 65, 77, 91, 108, 128, 152, 180, 213, 253, 300)
+# GRID carried on from 300 to 3000 nodes in 14 steps of a constant ratio,
+# 1.18, the step GRID itself takes at its top end. A pilot with one run per
+# point found the delivered traffic of every scenario peaking and falling
+# inside this range, so it brackets the peak without simulating nodes past
+# the point where nothing more is learnt.
+SATURATION_TAIL = (354, 417, 491, 579, 683, 805, 949, 1118, 1318, 1554,
+                   1832, 2159, 2545, 3000)
 
 EXPERIMENTS = [
     Experiment(
@@ -333,6 +341,24 @@ EXPERIMENTS = [
                      "down onto exp(-2G)."),
         node_counts=(10, 30, 60, 100, 200),
         options=dict(scenario="SF8"),
+        figure=True,
+        **CANONICAL,
+    ),
+    Experiment(
+        name="saturation",
+        kind="run",
+        description=("Where the gateway stops delivering more traffic. "
+                     "Capacity is where the DER falls below the threshold, a "
+                     "requirement on the share delivered. Past it the "
+                     "network still delivers more messages per hour for a "
+                     "while, until losses grow faster than the traffic "
+                     "offered. The grid is carried on to 3000 nodes to find "
+                     "that peak, under the study's own receiver rule, "
+                     "capture threshold and orthogonal spreading factors."),
+        node_counts=GRID + SATURATION_TAIL,
+        scenarios=("SF8", "MULTI", "ADR"),
+        overrides={"extra_figures": ("delivered", "losses")},
+        tables=("saturation",),
         figure=True,
         **CANONICAL,
     ),
