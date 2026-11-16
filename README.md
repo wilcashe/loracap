@@ -130,6 +130,19 @@ will write. Once the run is done it offers them, with `study.py`, as one zip
 to download. The files themselves stay in `outputs/`, where `plot`,
 `capacity` and `reproduce` look for them.
 
+The page reads in English or in Spanish, chosen with the **English |
+Español** switch in its corner (design item 27). It starts in the browser's
+language and remembers the choice. Only the page is translated. The
+simulator, `study.py`, the figures and every file a run writes stay in
+English, and so does whatever the simulator itself says: the checks, the
+warnings of a fit, the text of a sweep and the source of each table. On the
+Spanish page that text is marked as English, so a screen reader reads it as
+English, and the checks panel says why it is in English. Abbreviations,
+numbers and units are the same in both languages, with a decimal point in
+both. The Spanish lives in `webui/i18n_es.json`, keyed by the page's own
+English, and `tests/test_webui_i18n.py` fails when a text on the page has no
+Spanish or an entry no longer matches any text on the page.
+
 When you press the button it writes
 `studies/<name>/study.py` and `site_polygon.py`, shows you the file it wrote,
 and from that point the study is an ordinary one, editable by hand and
@@ -1354,7 +1367,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-428 checks, about fifteen seconds, standard library only like the rest of the
+456 checks, about fifteen seconds, standard library only like the rest of the
 package, so nothing needs installing. They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
 studies take minutes each and nobody runs those on every edit.
@@ -1491,7 +1504,8 @@ tools/
 webui/
     server.py               loopback server behind `run.py serve`, and the zip download
     index.html              the setup form: basic and advanced modes, Output tab
-tests/                      428 fast checks, `run.py test`
+    i18n_es.json            the form in Spanish, keyed by its English
+tests/                      456 fast checks, `run.py test`
 studies/
     _template/              commented starting point, copied by `run.py new`
     iot4cows/               worked example, see below

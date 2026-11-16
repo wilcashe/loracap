@@ -437,7 +437,7 @@ def _page():
 
 
 def _label(html, control_id):
-    m = re.search(r'<label for="%s">(.*?)</label>' % re.escape(control_id), html, re.S)
+    m = re.search(r'<label for="%s"[^>]*>(.*?)</label>' % re.escape(control_id), html, re.S)
     return m.group(1) if m else None
 
 

@@ -122,10 +122,14 @@
   .tab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
   /* basic and advanced settings */
   .modesw{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
-  .modesw .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
-  .modesw .seg button{border:none;border-radius:0;padding:6px 14px;font-size:13.5px;color:var(--muted)}
-  .modesw .seg button+button{border-left:1px solid var(--line)}
-  .modesw .seg button[aria-pressed=true]{background:#eaf2fb;color:var(--accent);font-weight:600}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+  .seg button{border:none;border-radius:0;padding:6px 14px;font-size:13.5px;color:var(--muted)}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button[aria-pressed=true]{background:#eaf2fb;color:var(--accent);font-weight:600}
+  /* language */
+  .hdr{display:flex;align-items:center;gap:12px}
+  .langsw{margin-left:auto}
+  .langsw button{padding:5px 12px;font-size:13px}
   .adv{margin-top:14px;border:1px dashed #cfdbe8;border-radius:8px;background:#fbfcfe}
   .adv.open{border-style:solid}
   .advbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 12px}
@@ -151,28 +155,39 @@
 </style>
 </head>
 <body>
+<!-- Translation (design item 27). An element marked data-i18n holds text and
+     inline markup only, and its English innerHTML is its key in
+     i18n_es.json. data-i18n-attr names the attributes translated the same
+     way. Elements the script writes into are not marked: the script
+     translates what it writes. -->
 <header>
-  <h1>LoRaCAP</h1>
-  <p>Set up a capacity study. This writes a <code>study.py</code> and runs it
+  <div class="hdr">
+    <h1>LoRaCAP</h1>
+    <div class="langsw seg" role="group" aria-label="Language / Idioma">
+      <button type="button" id="lang_en" lang="en" aria-pressed="true">English</button>
+      <button type="button" id="lang_es" lang="es" aria-pressed="false">Español</button>
+    </div>
+  </div>
+  <p data-i18n>Set up a capacity study. This writes a <code>study.py</code> and runs it
      through the same code as the command line, so what you get here stays
      reproducible.</p>
-  <details class="terms" id="terms"><summary>Terms used on this page</summary>
+  <details class="terms" id="terms"><summary data-i18n>Terms used on this page</summary>
     <dl id="terms_list"></dl></details>
 </header>
 
 <nav class="maintabs">
-  <button class="mtab on" data-view="view_setup">Study setup (1 to 5)</button>
-  <button class="mtab" data-view="view_output">6. Output</button>
-  <div class="modesw" role="group" aria-label="Settings shown">
-    <span>Settings shown</span>
+  <button class="mtab on" data-view="view_setup" data-i18n>Study setup (1 to 5)</button>
+  <button class="mtab" data-view="view_output" data-i18n>6. Output</button>
+  <div class="modesw" role="group" aria-label="Settings shown" data-i18n-attr="aria-label">
+    <span data-i18n>Settings shown</span>
     <span class="seg">
-      <button type="button" id="mode_basic" aria-pressed="true">Basic</button>
-      <button type="button" id="mode_adv" aria-pressed="false">Advanced</button>
+      <button type="button" id="mode_basic" aria-pressed="true" data-i18n>Basic</button>
+      <button type="button" id="mode_adv" aria-pressed="false" data-i18n>Advanced</button>
     </span>
   </div>
 </nav>
 <div class="view" id="view_setup">
-<p class="reqnote"><span class="req" aria-hidden="true">*</span> Required: there is
+<p class="reqnote" data-i18n><span class="req" aria-hidden="true">*</span> Required: there is
    no default for these, so they must be filled in. Every other field starts at a
    value you can keep.</p>
 <div class="wrap">
@@ -180,55 +195,55 @@
 
   <!-- 1. site -->
   <div class="card">
-    <h2>1. Site</h2>
-    <p class="hint">Where the gateway is, and the boundary nodes are spread
+    <h2 data-i18n>1. Site</h2>
+    <p class="hint" data-i18n>Where the gateway is, and the boundary nodes are spread
        over. Export the boundary from Google Earth as a KML (Keyhole Markup
        Language) file.</p>
     <div class="grid">
-      <div><label for="f_name">Study name<span class="req" aria-hidden="true">*</span></label><input id="f_name" placeholder="mysite" aria-required="true">
-        <div class="field-hint">letters, digits, hyphen or underscore</div></div>
-      <div><label for="f_site">Site</label><input id="f_site" placeholder="e.g. Ames, Iowa, USA">
-        <div class="field-hint" id="hint_f_site">optional, free text for the report: town, region, country</div></div>
-      <div><label for="f_lat">Gateway latitude<span class="req" aria-hidden="true">*</span></label><input id="f_lat" type="number" step="any" placeholder="e.g. 42.0347" aria-required="true"></div>
-      <div><label for="f_lon">Gateway longitude<span class="req" aria-hidden="true">*</span></label><input id="f_lon" type="number" step="any" placeholder="e.g. -93.6199" aria-required="true"></div>
+      <div><label for="f_name" data-i18n>Study name<span class="req" aria-hidden="true">*</span></label><input id="f_name" placeholder="mysite" aria-required="true" data-i18n-attr="placeholder">
+        <div class="field-hint" data-i18n>letters, digits, hyphen or underscore</div></div>
+      <div><label for="f_site" data-i18n>Site</label><input id="f_site" placeholder="e.g. Ames, Iowa, USA" data-i18n-attr="placeholder">
+        <div class="field-hint" id="hint_f_site" data-i18n>optional, free text for the report: town, region, country</div></div>
+      <div><label for="f_lat" data-i18n>Gateway latitude<span class="req" aria-hidden="true">*</span></label><input id="f_lat" type="number" step="any" placeholder="e.g. 42.0347" aria-required="true" data-i18n-attr="placeholder"></div>
+      <div><label for="f_lon" data-i18n>Gateway longitude<span class="req" aria-hidden="true">*</span></label><input id="f_lon" type="number" step="any" placeholder="e.g. -93.6199" aria-required="true" data-i18n-attr="placeholder"></div>
     </div>
-    <div class="grp" style="margin-top:12px">Site boundary (KML)<span class="req" aria-hidden="true">*</span>
+    <div class="grp" style="margin-top:12px" data-i18n>Site boundary (KML)<span class="req" aria-hidden="true">*</span>
       <span style="font-weight:400;color:var(--muted)">needed for polygon placement, the default</span></div>
     <div class="row" style="margin-top:4px">
       <input type="file" id="kmlfile" accept=".kml,.xml" style="display:none">
-      <button id="kmlbtn" onclick="document.getElementById('kmlfile').click()">Choose KML…</button>
-      <span class="name" id="kmlname">no boundary loaded</span>
+      <button id="kmlbtn" onclick="document.getElementById('kmlfile').click()" data-i18n>Choose KML…</button>
+      <span class="name" id="kmlname"></span>
     </div>
     <div id="kmlout"></div>
   </div>
 
   <!-- 2. radio -->
   <div class="card">
-    <h2>2. Radio</h2>
-    <p class="hint">The band decides which spreading factors (SF) exist on uplink.
+    <h2 data-i18n>2. Radio</h2>
+    <p class="hint" data-i18n>The band decides which spreading factors (SF) exist on uplink.
        The chip fills in sensitivity, channels and the demodulation limit from
        its datasheet.</p>
     <div class="grid">
-      <div><label for="f_region">Region</label><select id="f_region"></select></div>
-      <div><label for="f_tx">Node Tx power (dBm)</label><input id="f_tx" type="number" step="any" value="14"></div>
+      <div><label for="f_region" data-i18n>Region</label><select id="f_region"></select></div>
+      <div><label for="f_tx" data-i18n>Node Tx power (dBm)</label><input id="f_tx" type="number" step="any" value="14"></div>
     </div>
     <!-- One gateway by design: kept for the checks, shown in neither mode. -->
-    <div style="display:none"><label for="f_ngw">Gateways</label><input id="f_ngw" type="number" value="1"></div>
+    <div style="display:none"><label for="f_ngw" data-i18n>Gateways</label><input id="f_ngw" type="number" value="1"></div>
     <div id="dwellbox" style="display:none;margin-top:12px">
-      <label for="f_dwell">Uplink dwell time<span class="req" aria-hidden="true">*</span></label>
+      <label for="f_dwell" data-i18n>Uplink dwell time<span class="req" aria-hidden="true">*</span></label>
       <select id="f_dwell"></select>
-      <div class="srcnote" data-for="f_dwell">This plan publishes a different payload ceiling for
+      <div class="srcnote" data-for="f_dwell" data-i18n>This plan publishes a different payload ceiling for
         each setting, and at the slow data rates they differ by more than
         tenfold, so there is nothing safe to assume on your behalf.</div>
     </div>
-    <div class="adv" id="adv_radio" data-name="advanced radio settings"><div class="advbody">
+    <div class="adv" id="adv_radio" data-name="advanced radio settings" data-i18n-attr="data-name"><div class="advbody">
       <div class="grid">
-        <div><label for="f_bw">Bandwidth (kHz)</label><input id="f_bw" type="number" value="125"></div>
-        <div><label for="f_chip">Gateway chip</label><select id="f_chip"></select></div>
-        <div><label for="f_gtx">Node antenna (dBi)</label><input id="f_gtx" type="number" step="any" value="0"></div>
-        <div><label for="f_grx">Gateway antenna (dBi)</label><input id="f_grx" type="number" step="any" value="0"></div>
-        <div><label for="f_cable">Cable losses (dB)</label><input id="f_cable" type="number" step="any" value="0"></div>
-        <div><label for="f_radio">Node radio</label><select id="f_radio"></select></div>
+        <div><label for="f_bw" data-i18n>Bandwidth (kHz)</label><input id="f_bw" type="number" value="125"></div>
+        <div><label for="f_chip" data-i18n>Gateway chip</label><select id="f_chip"></select></div>
+        <div><label for="f_gtx" data-i18n>Node antenna (dBi)</label><input id="f_gtx" type="number" step="any" value="0"></div>
+        <div><label for="f_grx" data-i18n>Gateway antenna (dBi)</label><input id="f_grx" type="number" step="any" value="0"></div>
+        <div><label for="f_cable" data-i18n>Cable losses (dB)</label><input id="f_cable" type="number" step="any" value="0"></div>
+        <div><label for="f_radio" data-i18n>Node radio</label><select id="f_radio"></select></div>
       </div>
       <div id="chipnote" class="srcnote" data-for="f_chip"></div>
       <div id="radionote" class="srcnote" data-for="f_radio"></div>
@@ -237,33 +252,33 @@
 
   <!-- 3. propagation -->
   <div class="card">
-    <h2>3. Propagation <span id="origin" class="pill">not set</span></h2>
-    <p class="hint">The one thing that cannot be borrowed from another site.
+    <h2><span data-i18n>3. Propagation</span> <span id="origin" class="pill"></span></h2>
+    <p class="hint" data-i18n>The one thing that cannot be borrowed from another site.
        Everything downstream rests on it, so how you arrived at it is recorded
        in <code>study.py</code> alongside the numbers.</p>
 
-    <div class="grp">Propagation model<span class="req" aria-hidden="true">*</span>
+    <div class="grp" data-i18n>Propagation model<span class="req" aria-hidden="true">*</span>
       <span style="font-weight:400;color:var(--muted)">from field measurements, or from the environment</span></div>
     <div class="tabs" id="tabs">
-      <button class="tab on" data-pane="pane_fit">I have field measurements</button>
-      <button class="tab" data-pane="pane_terrain">I have none</button>
+      <button class="tab on" data-pane="pane_fit" data-i18n>I have field measurements</button>
+      <button class="tab" data-pane="pane_terrain" data-i18n>I have none</button>
     </div>
 
     <div id="pane_fit" class="pane">
-      <p class="hint" style="margin-top:12px">A CSV (comma-separated values)
+      <p class="hint" style="margin-top:12px" data-i18n>A CSV (comma-separated values)
          file of received messages with the received signal strength (RSSI),
          latitude and longitude. Filter it first to one spreading factor
          and one gateway.</p>
       <div class="row">
         <input type="file" id="csvfile" accept=".csv,.tsv,.txt" style="display:none">
-        <button onclick="document.getElementById('csvfile').click()">Choose measurements CSV…</button>
-        <span class="name" id="csvname">none</span>
+        <button onclick="document.getElementById('csvfile').click()" data-i18n>Choose measurements CSV…</button>
+        <span class="name" id="csvname"></span>
       </div>
       <div id="fitout"></div>
     </div>
 
     <div id="pane_terrain" class="pane" style="display:none">
-      <p class="hint" style="margin-top:12px">Published measurements give the
+      <p class="hint" style="margin-top:12px" data-i18n>Published measurements give the
          exponent for a comparable environment. They do not give the intercept,
          and free-space loss is not a usable stand-in: on the one deployment
          here with field data it is about 59&nbsp;dB optimistic at 100&nbsp;m,
@@ -272,86 +287,86 @@
          the one thing you can state without a campaign, which is how far the
          link is expected to work.</p>
       <div class="grid">
-        <div><label for="f_terrain">Environment</label><select id="f_terrain"></select></div>
-        <div><label for="f_range">Expected range (m)</label><input id="f_range" type="number" step="any"></div>
-        <div><label for="f_anchorsf">…at which spreading factor</label><select id="f_anchorsf"></select></div>
+        <div><label for="f_terrain" data-i18n>Environment</label><select id="f_terrain"></select></div>
+        <div><label for="f_range" data-i18n>Expected range (m)</label><input id="f_range" type="number" step="any"></div>
+        <div><label for="f_anchorsf" data-i18n>…at which spreading factor</label><select id="f_anchorsf"></select></div>
       </div>
       <div class="row">
-        <button class="primary" onclick="applyTerrain()">Build the model</button>
-        <span class="name">sets the exponent and derives the intercept</span>
+        <button class="primary" onclick="applyTerrain()" data-i18n>Build the model</button>
+        <span class="name" data-i18n>sets the exponent and derives the intercept</span>
       </div>
       <div id="terrainout"></div>
     </div>
 
     <div id="assumednote"></div>
-    <div class="adv" id="adv_prop" data-name="advanced propagation settings"><div class="advbody">
+    <div class="adv" id="adv_prop" data-name="advanced propagation settings" data-i18n-attr="data-name"><div class="advbody">
     <div class="grid">
-      <div><label for="f_n">Exponent n</label><input id="f_n" type="number" step="any" value="2.0"></div>
-      <div><label for="f_ref">Loss at d₀ (dB)</label><input id="f_ref" type="number" step="any" value="0"></div>
-      <div><label for="f_d0">d₀ (m)</label><input id="f_d0" type="number" step="any" value="100"></div>
-      <div><label for="f_minv">Validity floor (m)</label><input id="f_minv" type="number" step="any" value="30"></div>
-      <div><label for="f_sigma">Shadowing σ (dB)</label><input id="f_sigma" type="number" step="any" value="0"></div>
+      <div><label for="f_n" data-i18n>Exponent n</label><input id="f_n" type="number" step="any" value="2.0"></div>
+      <div><label for="f_ref" data-i18n>Loss at d₀ (dB)</label><input id="f_ref" type="number" step="any" value="0"></div>
+      <div><label for="f_d0" data-i18n>d₀ (m)</label><input id="f_d0" type="number" step="any" value="100"></div>
+      <div><label for="f_minv" data-i18n>Validity floor (m)</label><input id="f_minv" type="number" step="any" value="30"></div>
+      <div><label for="f_sigma" data-i18n>Shadowing σ (dB)</label><input id="f_sigma" type="number" step="any" value="0"></div>
     </div>
-    <div class="srcnote" data-for="f_sigma"><b>Shadowing σ.</b> The spread the mean trend does not
+    <div class="srcnote" data-for="f_sigma" data-i18n><b>Shadowing σ.</b> The spread the mean trend does not
       explain, drawn once per node and fixed: obstruction that belongs to
       where the node is. Leaving it at 0 makes two nodes the same distance
       away receive identical power, which no site does. Adopting a fit fills
       it from that fit's residual.</div>
-    <div style="margin-top:11px"><label for="f_plsrc">Where this model came from</label>
-      <input id="f_plsrc" placeholder="Field fit, or a published model you are citing"></div>
+    <div style="margin-top:11px"><label for="f_plsrc" data-i18n>Where this model came from</label>
+      <input id="f_plsrc" placeholder="Field fit, or a published model you are citing" data-i18n-attr="placeholder"></div>
     </div></div>
   </div>
 
   <!-- 4. traffic and design -->
   <div class="card">
-    <h2>4. Traffic and experiment</h2>
-    <p class="hint">Capacity is the node count at which the data extraction
+    <h2 data-i18n>4. Traffic and experiment</h2>
+    <p class="hint" data-i18n>Capacity is the node count at which the data extraction
        rate (DER), the share of transmitted packets the gateway receives, falls
        below the threshold. Use the shortest reporting interval the deployment
        can produce: capacity measured at the worst case is a bound you can defend.</p>
     <div class="grid">
-      <div><label for="f_pl">Payload (bytes)</label><input id="f_pl" type="number" value="32"></div>
-      <div><label for="f_int">Send interval (s)</label><input id="f_int" type="number" step="any" value="60"></div>
-      <div><label for="f_th">DER threshold</label><input id="f_th" type="number" step="any" value="0.9"></div>
+      <div><label for="f_pl" data-i18n>Payload (bytes)</label><input id="f_pl" type="number" value="32"></div>
+      <div><label for="f_int" data-i18n>Send interval (s)</label><input id="f_int" type="number" step="any" value="60"></div>
+      <div><label for="f_th" data-i18n>DER threshold</label><input id="f_th" type="number" step="any" value="0.9"></div>
     </div>
-    <div style="margin-top:12px"><div class="grp">Scenarios<span class="req" aria-hidden="true">*</span> <span style="font-weight:400;color:var(--muted)">at least one</span></div>
+    <div style="margin-top:12px"><div class="grp" data-i18n>Scenarios<span class="req" aria-hidden="true">*</span> <span style="font-weight:400;color:var(--muted)">at least one</span></div>
       <div id="scenbox" class="row" style="margin-top:2px" data-noterms></div>
       <ul class="scenhelp">
-        <li><b id="sfrange">Fixed SF</b>. Every node on that one spreading factor.</li>
-        <li><b>MULTI.</b> Every node on the fastest spreading factor its link
+        <li><b id="sfrange"></b>. <span data-i18n>Every node on that one spreading factor.</span></li>
+        <li data-i18n><b>MULTI.</b> Every node on the fastest spreading factor its link
           reaches: ideal, instantly converged assignment with no margin and
           full power, so it is a bound rather than a network.</li>
-        <li><b>ADR</b> (adaptive data rate). What a converged real network settles into, keeping a
+        <li data-i18n><b>ADR</b> (adaptive data rate). What a converged real network settles into, keeping a
           link margin and reducing transmit power.</li>
-        <li>Running MULTI and ADR together shows what the idealisation is
+        <li data-i18n>Running MULTI and ADR together shows what the idealisation is
           worth.</li>
       </ul></div>
-    <div class="adv" id="adv_exp" data-name="advanced experiment settings"><div class="advbody">
+    <div class="adv" id="adv_exp" data-name="advanced experiment settings" data-i18n-attr="data-name"><div class="advbody">
     <div class="grid">
-      <div><label for="f_cr">Coding rate</label><select id="f_cr">
+      <div><label for="f_cr" data-i18n>Coding rate</label><select id="f_cr">
         <option value="1">4/5 (LoRaWAN)</option><option value="2">4/6</option>
         <option value="3">4/7</option><option value="4">4/8</option></select></div>
-      <div><label for="f_time">Simulated time (s)</label><input id="f_time" type="number" value="3600"></div>
-      <div><label for="f_runs">Runs per point</label><input id="f_runs" type="number" value="30"></div>
-      <div><label for="f_seed">Random seed</label><input id="f_seed" type="number" value="99"></div>
-      <div><label for="f_place">Placement</label><select id="f_place">
-        <option value="polygon">polygon (the real site)</option>
-        <option value="disc">disc (theoretical coverage)</option></select></div>
-      <div><label for="f_hl">Highlighted scenario, drawn in colour</label>
+      <div><label for="f_time" data-i18n>Simulated time (s)</label><input id="f_time" type="number" value="3600"></div>
+      <div><label for="f_runs" data-i18n>Runs per point</label><input id="f_runs" type="number" value="30"></div>
+      <div><label for="f_seed" data-i18n>Random seed</label><input id="f_seed" type="number" value="99"></div>
+      <div><label for="f_place" data-i18n>Placement</label><select id="f_place">
+        <option value="polygon" data-i18n>polygon (the real site)</option>
+        <option value="disc" data-i18n>disc (theoretical coverage)</option></select></div>
+      <div><label for="f_hl" data-i18n>Highlighted scenario, drawn in colour</label>
       <select id="f_hl"></select></div>
     </div>
     </div></div>
-    <div class="adv" id="adv_rx" data-name="advanced receiver settings"><div class="advbody">
-    <div><div class="grp">Receiver model</div>
+    <div class="adv" id="adv_rx" data-name="advanced receiver settings" data-i18n-attr="data-name"><div class="advbody">
+    <div><div class="grp" data-i18n>Receiver model</div>
       <div class="grid" style="margin-top:2px">
-        <div><label for="f_rx">Receiver rule</label><select id="f_rx"></select></div>
-        <div><label for="f_capthr">Capture threshold (dB)</label>
+        <div><label for="f_rx" data-i18n>Receiver rule</label><select id="f_rx"></select></div>
+        <div><label for="f_capthr" data-i18n>Capture threshold (dB)</label>
           <input id="f_capthr" type="number" step="any"></div>
-        <div><label for="f_isf">Rejection between SFs</label><select id="f_isf"></select></div>
-        <div><label for="f_lsurv">Locked packet survival</label><select id="f_lsurv"></select></div>
-        <div><label for="f_hrec">Header recapture</label>
-          <select id="f_hrec"><option value="">off (default)</option>
-            <option value="1">on</option></select></div>
+        <div><label for="f_isf" data-i18n>Rejection between SFs</label><select id="f_isf"></select></div>
+        <div><label for="f_lsurv" data-i18n>Locked packet survival</label><select id="f_lsurv"></select></div>
+        <div><label for="f_hrec" data-i18n>Header recapture</label>
+          <select id="f_hrec"><option value="" data-i18n>off (default)</option>
+            <option value="1" data-i18n>on</option></select></div>
       </div>
       <div id="rxnote" class="notes"></div></div>
     </div></div>
@@ -359,15 +374,15 @@
 
   <!-- 5. create and run -->
   <div class="card">
-    <h2>5. Create and run</h2>
-    <p class="hint">Writing the study puts <code>study.py</code> and
+    <h2 data-i18n>5. Create and run</h2>
+    <p class="hint" data-i18n>Writing the study puts <code>study.py</code> and
        <code>site_polygon.py</code> in <code>studies/&lt;name&gt;/</code>. From
        there it is an ordinary study, editable by hand.</p>
     <div class="row">
-      <button class="primary" id="btn_create" onclick="createStudy()">Write study.py</button>
-      <button id="btn_run" onclick="runStudy()" disabled>Run simulation</button>
+      <button class="primary" id="btn_create" onclick="createStudy()" data-i18n>Write study.py</button>
+      <button id="btn_run" onclick="runStudy()" disabled data-i18n>Run simulation</button>
       <label style="display:inline-flex;gap:6px;align-items:center;margin:0;color:var(--muted)">
-        <input type="checkbox" id="f_over" style="width:auto"> overwrite if it exists</label>
+        <input type="checkbox" id="f_over" style="width:auto"> <span data-i18n>overwrite if it exists</span></label>
     </div>
     <div id="createwhy" class="why" style="margin-top:8px"></div>
     <div id="createout"></div>
@@ -379,10 +394,14 @@
 <!-- live validation -->
 <div class="side">
   <div class="card" style="position:sticky;top:16px">
-    <h2>Checks <span id="vstamp" class="pill">waiting</span></h2>
-    <p class="hint">Updated as you type. A bad parameter does not make the
+    <h2><span data-i18n>Checks</span> <span id="vstamp" class="pill"></span></h2>
+    <p class="hint" data-i18n>Updated as you type. A bad parameter does not make the
        simulation fail, it makes it return a wrong answer quietly. Click a
        message to go to its field.</p>
+    <!-- Shown in Spanish only. The checks are the simulator's, in English. -->
+    <p class="hint" id="checks_lang" hidden data-i18n>Check messages come from the
+       simulator and are shown in English. Each one names the field it
+       concerns and leads to it with a click.</p>
     <div id="vout"></div>
   </div>
 </div>
@@ -394,100 +413,100 @@
 <div class="wrap">
 <div>
   <div class="card">
-    <h2>Figures</h2>
-    <p class="hint">Recorded in <code>study.py</code> with the rest of the study, so
+    <h2 data-i18n>Figures</h2>
+    <p class="hint" data-i18n>Recorded in <code>study.py</code> with the rest of the study, so
        <code>run.py plot</code> redraws exactly what this page drew. Nothing here
        changes a number, and the defaults draw the figure as it has always been drawn.</p>
-    <div class="grp">Which figures</div>
+    <div class="grp" data-i18n>Which figures</div>
     <div class="opt"><input type="checkbox" id="o_der" checked disabled>
-      <div><label class="t" for="o_der">DER against node count, full range and zoom</label>
-        <span class="tag now">always</span>
-      <div class="d">One curve per scenario, the threshold, and where each crosses it.</div></div></div>
+      <div><label class="t" for="o_der" data-i18n>DER against node count, full range and zoom</label>
+        <span class="tag now" data-i18n>always</span>
+      <div class="d" data-i18n>One curve per scenario, the threshold, and where each crosses it.</div></div></div>
     <div class="opt"><input type="checkbox" id="o_delivered" class="o_fig" value="delivered">
-      <div><label class="t" for="o_delivered">Messages delivered per hour</label>
-      <div class="d">Packets transmitted times DER, scaled to an hour, against the
+      <div><label class="t" for="o_delivered" data-i18n>Messages delivered per hour</label>
+      <div class="d" data-i18n>Packets transmitted times DER, scaled to an hour, against the
         traffic offered. A circle marks each scenario's capacity.</div></div></div>
     <div class="opt"><input type="checkbox" id="o_energy" class="o_fig" value="energy">
-      <div><label class="t" for="o_energy">Energy per delivered message</label>
-      <div class="d">Transmit energy per message that arrives, from the node
+      <div><label class="t" for="o_energy" data-i18n>Energy per delivered message</label>
+      <div class="d" data-i18n>Transmit energy per message that arrives, from the node
         radio's current table. Sleep current is not in it, so it is not a battery life.</div>
       <div class="why" id="o_energy_why"></div></div></div>
     <div class="opt"><input type="checkbox" id="o_losses" class="o_fig" value="losses">
-      <div><label class="t" for="o_losses">Where packets are lost</label>
-      <div class="d">Weak signal, collision and no free demodulator, as shares of
+      <div><label class="t" for="o_losses" data-i18n>Where packets are lost</label>
+      <div class="d" data-i18n>Weak signal, collision and no free demodulator, as shares of
         the packets sent, one panel per scenario.</div></div></div>
 
-    <div class="adv" id="adv_fig" data-name="advanced figure settings"><div class="advbody">
+    <div class="adv" id="adv_fig" data-name="advanced figure settings" data-i18n-attr="data-name"><div class="advbody">
     <div class="grid" style="margin-top:6px">
-      <div><div class="grp">Formats</div><div class="inline" id="o_formats">
+      <div><div class="grp" data-i18n>Formats</div><div class="inline" id="o_formats">
         <label><input type="checkbox" class="o_fmt" id="o_fmt_pdf" value="pdf"> PDF</label>
         <label><input type="checkbox" class="o_fmt" id="o_fmt_svg" value="svg"> SVG</label>
         <label><input type="checkbox" class="o_fmt" id="o_fmt_png" value="png"> PNG</label></div></div>
-      <div><label for="o_dpi">PNG resolution (dpi)</label><input id="o_dpi" type="number" step="1"></div>
-      <div><label for="o_size">Size</label><select id="o_size">
-        <option value="">each figure's own size</option>
-        <option value="custom">width and height of my own</option></select></div>
-      <div><label for="o_base">File name</label><input id="o_base"></div>
+      <div><label for="o_dpi" data-i18n>PNG resolution (dpi)</label><input id="o_dpi" type="number" step="1"></div>
+      <div><label for="o_size" data-i18n>Size</label><select id="o_size">
+        <option value="" data-i18n>each figure's own size</option>
+        <option value="custom" data-i18n>width and height of my own</option></select></div>
+      <div><label for="o_base" data-i18n>File name</label><input id="o_base"></div>
     </div>
     <div class="grid" id="o_sizebox" style="display:none;margin-top:10px">
-      <div><label for="o_w">Width (in)</label><input id="o_w" type="number" step="any"></div>
-      <div><label for="o_h">Height (in)</label><input id="o_h" type="number" step="any"></div>
+      <div><label for="o_w" data-i18n>Width (in)</label><input id="o_w" type="number" step="any"></div>
+      <div><label for="o_h" data-i18n>Height (in)</label><input id="o_h" type="number" step="any"></div>
     </div>
-    <div class="srcnote" data-for="o_size"><b>Size.</b> The journal decides the
+    <div class="srcnote" data-for="o_size" data-i18n><b>Size.</b> The journal decides the
       width, one column or two, and its author guidelines give it in inches or
       millimetres. Each figure keeps its own size until you set one here.</div>
     <div class="grid" style="margin-top:12px">
-      <div><div class="grp">Style</div><div class="inline">
-        <label><input type="radio" name="o_style" id="o_colour" value="colour" checked> colour</label>
-        <label><input type="radio" name="o_style" id="o_grey" value="grey"> greyscale, for print</label></div></div>
-      <div><label for="o_hl">Highlighted scenario colour</label><input id="o_hl" type="color" style="height:36px;width:72px;padding:3px"></div>
+      <div><div class="grp" data-i18n>Style</div><div class="inline">
+        <label><input type="radio" name="o_style" id="o_colour" value="colour" checked> <span data-i18n>colour</span></label>
+        <label><input type="radio" name="o_style" id="o_grey" value="grey"> <span data-i18n>greyscale, for print</span></label></div></div>
+      <div><label for="o_hl" data-i18n>Highlighted scenario colour</label><input id="o_hl" type="color" style="height:36px;width:72px;padding:3px"></div>
     </div>
-    <div class="grp" style="margin-top:14px">Axes of the DER figure <span style="font-weight:400;color:var(--muted)">(empty means automatic)</span></div>
+    <div class="grp" style="margin-top:14px" data-i18n>Axes of the DER figure <span style="font-weight:400;color:var(--muted)">(empty means automatic)</span></div>
     <div class="grid">
-      <div><label for="o_fx1">Full view, nodes from</label><input id="o_fx1" type="number" step="any" placeholder="automatic"></div>
-      <div><label for="o_fx2">to</label><input id="o_fx2" type="number" step="any" placeholder="automatic"></div>
-      <div><label for="o_zx1">Zoom, nodes from</label><input id="o_zx1" type="number" step="any" placeholder="around the crossings"></div>
-      <div><label for="o_zx2">to</label><input id="o_zx2" type="number" step="any" placeholder="around the crossings"></div>
-      <div><label for="o_zy1">Zoom, DER from</label><input id="o_zy1" type="number" step="any"></div>
-      <div><label for="o_zy2">to</label><input id="o_zy2" type="number" step="any"></div>
+      <div><label for="o_fx1" data-i18n>Full view, nodes from</label><input id="o_fx1" type="number" step="any" placeholder="automatic" data-i18n-attr="placeholder"></div>
+      <div><label for="o_fx2" data-i18n>to</label><input id="o_fx2" type="number" step="any" placeholder="automatic" data-i18n-attr="placeholder"></div>
+      <div><label for="o_zx1" data-i18n>Zoom, nodes from</label><input id="o_zx1" type="number" step="any" placeholder="around the crossings" data-i18n-attr="placeholder"></div>
+      <div><label for="o_zx2" data-i18n>to</label><input id="o_zx2" type="number" step="any" placeholder="around the crossings" data-i18n-attr="placeholder"></div>
+      <div><label for="o_zy1" data-i18n>Zoom, DER from</label><input id="o_zy1" type="number" step="any"></div>
+      <div><label for="o_zy2" data-i18n>to</label><input id="o_zy2" type="number" step="any"></div>
     </div>
     </div></div>
   </div>
 
   <div class="card">
-    <h2>Data files</h2>
-    <p class="hint">The numbers are the same whatever is chosen here. This only
+    <h2 data-i18n>Data files</h2>
+    <p class="hint" data-i18n>The numbers are the same whatever is chosen here. This only
        decides which files present them.</p>
-    <div class="adv" id="adv_data" data-name="advanced data file settings"><div class="advbody">
+    <div class="adv" id="adv_data" data-name="advanced data file settings" data-i18n-attr="data-name"><div class="advbody">
     <div class="opt"><input type="checkbox" id="o_json" checked disabled>
-      <div><label class="t" for="o_json">results.json and capacity.json</label> <span class="tag now">always</span>
-      <div class="d">Every point, every run and the configuration it ran with. Every other file is made from these.</div></div></div>
+      <div><label class="t" for="o_json" data-i18n>results.json and capacity.json</label> <span class="tag now" data-i18n>always</span>
+      <div class="d" data-i18n>Every point, every run and the configuration it ran with. Every other file is made from these.</div></div></div>
     <div class="opt"><input type="checkbox" id="o_csv" class="o_data" value="csv">
       <div><label class="t" for="o_csv">results.csv</label>
-      <div class="d">One row per scenario and node count, for a spreadsheet.</div></div></div>
+      <div class="d" data-i18n>One row per scenario and node count, for a spreadsheet.</div></div></div>
     <div class="opt"><input type="checkbox" id="o_md" class="o_data" value="md">
-      <div><label class="t" for="o_md">Capacity table, Markdown</label>
-      <div class="d">Capacity and 95% interval per scenario, with the receiver rule and threshold it depends on.</div></div></div>
+      <div><label class="t" for="o_md" data-i18n>Capacity table, Markdown</label>
+      <div class="d" data-i18n>Capacity and 95% interval per scenario, with the receiver rule and threshold it depends on.</div></div></div>
     <div class="opt"><input type="checkbox" id="o_tex" class="o_data" value="latex">
-      <div><label class="t" for="o_tex">Capacity table, LaTeX</label>
-      <div class="d">The same table, ready to paste into a manuscript.</div></div></div>
+      <div><label class="t" for="o_tex" data-i18n>Capacity table, LaTeX</label>
+      <div class="d" data-i18n>The same table, ready to paste into a manuscript.</div></div></div>
     </div></div>
   </div>
 
   <div class="card">
-    <h2>Download</h2>
-    <p class="hint">Results are always written to <code>studies/&lt;name&gt;/outputs/</code>,
+    <h2 data-i18n>Download</h2>
+    <p class="hint" data-i18n>Results are always written to <code>studies/&lt;name&gt;/outputs/</code>,
        where <code>run.py plot</code>, <code>capacity</code> and <code>reproduce</code>
        find them. The download is a copy, with the study's <code>study.py</code>.</p>
-    <div class="row"><button class="primary" id="o_download" disabled>Download everything (.zip)</button></div>
-    <div class="why" id="o_dlwhy" style="margin-top:8px">Available once the simulation has run.</div>
+    <div class="row"><button class="primary" id="o_download" disabled data-i18n>Download everything (.zip)</button></div>
+    <div class="why" id="o_dlwhy" style="margin-top:8px"></div>
   </div>
 </div>
 
 <div class="side">
   <div class="card" style="position:sticky;top:16px">
-    <h2>Files this run will write</h2>
-    <p class="hint">Updated as you choose. Under <code id="o_dir">studies/&lt;name&gt;/outputs/</code>:</p>
+    <h2 data-i18n>Files this run will write</h2>
+    <p class="hint"><span data-i18n>Updated as you choose. Under</span> <code id="o_dir"></code>:</p>
     <div class="files" id="o_files"></div>
     <div id="o_checks" style="margin-top:10px"></div>
   </div>
@@ -495,7 +514,7 @@
 </div>
 </div>
 
-<p class="foot">Everything here goes through the same engine as
+<p class="foot" data-i18n>Everything here goes through the same engine as
   <code>python3 run.py</code>. Values and sources are recorded in the generated
   <code>study.py</code>, and results carry their configuration in
   <code>results.json</code>.</p>
@@ -556,12 +575,173 @@ async function post(path, body){
   const r = await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},
                              body:JSON.stringify(body||{})});
   const j = await r.json();
-  if(!j.ok) throw new Error(j.error||'request failed');
+  if(!j.ok) throw new Error(j.error||T('request failed'));
   return j.result;
 }
 
 function msg(kind, text){
   const d=document.createElement('div'); d.className='msg '+kind; d.textContent=text; return d;
+}
+
+function mk(tag, cls, text){
+  const e=document.createElement(tag); if(cls) e.className=cls;
+  if(text!==undefined) e.textContent=text; return e;
+}
+
+/* ---------- language (design item 27) ---------- */
+// English is the page's own language and the key of every translation, in
+// the manner of gettext: a text with no Spanish entry falls back to the
+// English it was written in, and is listed in I18N_MISSES for the checks to
+// find. The Spanish strings are in i18n_es.json, which the server sends with
+// the bootstrap. What the simulator says is not translated: check messages,
+// warnings from a fit and the text of a sweep come from loracap/, so they
+// stay in English and are marked lang="en" for a screen reader.
+const I18N_MISSES=new Set();
+let LANG=initialLang(), ES={}, ES_TEMPLATES=[];
+function initialLang(){
+  try{ const s=localStorage.getItem('loracap.lang'); if(s==='en'||s==='es') return s; }catch(e){}
+  const n=(navigator.languages&&navigator.languages[0])||navigator.language||'en';
+  return /^es\b/i.test(n) ? 'es' : 'en';
+}
+// {name} is replaced by vars.name, or by what it returns when it is a
+// function, so a value that is itself worded ("a and b") follows a change of
+// language. In a Spanish string {name|t} also translates the value, for an
+// English word such as an environment's name that arrives in a sentence.
+function fill(tpl, vars){
+  return tpl.replace(/\{(\w+)(\|t)?\}/g, (m, k, t)=>{
+    if(!vars || !(k in vars)) return m;
+    const v=String(typeof vars[k]==='function' ? vars[k]() : vars[k]);
+    return t ? TX(v) : v;
+  });
+}
+// A text the page writes: the key is the English, with {placeholders}.
+function T(key, vars){
+  if(LANG==='en') return fill(key, vars);
+  const es=ES[key];
+  if(es===undefined){ I18N_MISSES.add(key); return fill(key, vars); }
+  return fill(es, vars);
+}
+// The same with the values escaped, for a string that carries markup.
+function htmlT(key, vars){
+  const esc={}; Object.keys(vars||{}).forEach(k=>esc[k]=String(vars[k])
+    .replace(/[<>&"]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])));
+  return T(key, esc);
+}
+// A text that arrives at run time: a note, a range or an error the server
+// wrote. An entry with {placeholders} matches a text built from it, so
+// "A study called 'x' already exists" finds its translation. hit is false for
+// text the dictionary does not know, which is the simulator's, in English.
+function TXr(text){
+  if(LANG==='en' || text===null || text===undefined || text==='') return {text, hit:true};
+  if(ES[text]!==undefined) return {text:ES[text], hit:true};
+  for(const t of ES_TEMPLATES){
+    const m=t.re.exec(text); if(!m) continue;
+    const vars={}; t.names.forEach((n,i)=>vars[n]=m[i+1]);
+    return {text:fill(ES[t.key], vars), hit:true};
+  }
+  return {text, hit:false};
+}
+function TX(text){ return TXr(text).text; }
+function compileTemplates(){
+  // Longest first, so the most specific entry wins.
+  ES_TEMPLATES=Object.keys(ES).filter(k=>/\{\w+\}/.test(k))
+    .sort((a,b)=>b.length-a.length).map(k=>{
+      const names=[];
+      const src=k.split(/(\{\w+\})/).map(p=>{
+        const m=/^\{(\w+)\}$/.exec(p);
+        if(m){ names.push(m[1]); return '([\\s\\S]+?)'; }
+        return p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }).join('');
+      return {key:k, names, re:new RegExp('^'+src+'$')};
+    });
+}
+
+// The page's own markup. Its English is captured before anything else
+// touches it (the glossary marks abbreviations later), so the key is the
+// markup as written.
+const I18N_ORIG=new WeakMap(), I18N_ORIG_ATTR=new WeakMap();
+const i18nKey=html=>html.replace(/\s+/g,' ').trim();
+document.querySelectorAll('[data-i18n]').forEach(el=>I18N_ORIG.set(el, el.innerHTML));
+document.querySelectorAll('[data-i18n-attr]').forEach(el=>{
+  const a={}; el.dataset.i18nAttr.split(',').forEach(n=>a[n]=el.getAttribute(n));
+  I18N_ORIG_ATTR.set(el, a);
+});
+function staticT(en){
+  if(LANG==='en') return en;
+  const k=i18nKey(en), es=ES[k];
+  if(es===undefined){ I18N_MISSES.add(k); return en; }
+  return es;
+}
+function renderStatic(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const en=I18N_ORIG.get(el); if(en!==undefined) el.innerHTML=staticT(en); });
+  document.querySelectorAll('[data-i18n-attr]').forEach(el=>{
+    const a=I18N_ORIG_ATTR.get(el)||{};
+    Object.keys(a).forEach(n=>el.setAttribute(n, staticT(a[n])));
+  });
+}
+
+// Text the script writes once and leaves in place (an option, a result) is
+// registered with the element, so a change of language rewrites it where it
+// stands. Text a builder writes afresh on every change is not: the builder
+// runs again instead (see setLang). The registry is a WeakMap, so an element
+// that leaves the page takes its entry with it.
+const TK=new WeakMap();
+function treg(el, slot, entry){
+  let m=TK.get(el); if(!m){ m={}; TK.set(el, m); }
+  m[slot]=entry; el.setAttribute('data-tk',''); trender(el); return el;
+}
+// key is a literal, so the tests can find every one.
+function tset(el, key, vars, opts){ opts=opts||{}; return treg(el, opts.attr||'', {key, vars, opts, x:false}); }
+// text arrives at run time and is looked up as it is.
+function tsetx(el, text, opts){ opts=opts||{}; return treg(el, opts.attr||'', {key:text, opts, x:true}); }
+function trender(el){
+  const m=TK.get(el); if(!m) return;
+  Object.keys(m).forEach(slot=>{
+    const s=m[slot]; let text, hit=true;
+    if(s.x){ const r=TXr(s.key); text=r.text; hit=r.hit; } else text=T(s.key, s.vars);
+    if(slot){ el.setAttribute(slot, text); return; }
+    if(s.opts.link){ el.textContent=''; linkify(el, text); } else el.textContent=text;
+    if(s.x){ if(hit || LANG==='en') el.removeAttribute('lang'); else el.lang='en'; }
+  });
+}
+// A source is a citation kept in loracap/ and stays as written, in English.
+function sourceSpan(text){
+  const s=document.createElement('span'); if(LANG!=='en') s.lang='en';
+  linkify(s, text); return s;
+}
+// A name the user chose, a file name: shown as it is in either language.
+function tplain(el, text){ TK.delete(el); el.removeAttribute('data-tk'); el.textContent=text; }
+function msgT(kind, key, vars){ return tset(msg(kind,''), key, vars); }
+function msgX(kind, text){ return tsetx(msg(kind,''), text, {link:true}); }
+// Text the simulator wrote, in English whatever the page's language.
+function msgEn(kind, text){ const d=msg(kind,''); d.lang='en'; linkify(d, text); return d; }
+// "a and b", "a, b and c".
+function andList(items){
+  if(items.length<2) return items.join('');
+  return T('{first} and {last}', {first:items.slice(0,-1).join(', '), last:items[items.length-1]});
+}
+
+function setLang(l, opening){
+  LANG=l; document.documentElement.lang=l;
+  // Remembered only once chosen: the browser's language is a guess.
+  if(!opening){ try{ localStorage.setItem('loracap.lang', l); }catch(e){} }
+  $('lang_en').setAttribute('aria-pressed', l==='en');
+  $('lang_es').setAttribute('aria-pressed', l==='es');
+  $('checks_lang').hidden = l==='en';
+  if(opening){ if(l!=='en') renderStatic(); return; }
+  renderStatic();
+  document.querySelectorAll('[data-tk]').forEach(trender);
+  // Abbreviations outside the text just rewritten keep their element, so
+  // only their definition changes.
+  document.querySelectorAll('abbr').forEach(a=>{
+    if(TERMS[a.textContent]) a.title=TX(TERMS[a.textContent]); });
+  if(!BOOT) return;
+  // The builders that write afresh on every change run again in the new
+  // language, from the state the page is in.
+  document.querySelectorAll('.adv').forEach(b=>{ if(b.querySelector('.advbtn')) setOpen(b, b.classList.contains('open')); });
+  chipNote(); radioNote(); energyAvailable(); outputFiles(); receiverNote();
+  hintTexts(); limitsFromTables(); setOrigin(ORIGIN, TERRAIN); refreshAdv(); validate();
 }
 
 /* ---------- bootstrap ---------- */
@@ -593,8 +773,8 @@ const NO_TERMS='ABBR,CODE,PRE,SCRIPT,STYLE,OPTION,SELECT,TEXTAREA,BUTTON,SUMMARY
 function buildTerms(){
   const dl=$('terms_list');
   Object.keys(TERMS).forEach(k=>{
-    const dt=document.createElement('dt'); dt.textContent=k;
-    const dd=document.createElement('dd'); dd.textContent=TERMS[k];
+    const dt=tsetx(document.createElement('dt'), k);
+    const dd=tsetx(document.createElement('dd'), TERMS[k]);
     dl.append(dt, dd);
   });
 }
@@ -611,7 +791,7 @@ function markTerms(root){
     const frag=document.createDocumentFragment(), t=n.nodeValue; let last=0;
     t.replace(TERM_RE, (m, _g, at)=>{
       frag.append(t.slice(last, at));
-      const a=document.createElement('abbr'); a.title=TERMS[m]; a.textContent=m;
+      const a=document.createElement('abbr'); a.title=TX(TERMS[m]); a.textContent=m;
       frag.append(a); last=at+m.length; return m;
     });
     frag.append(t.slice(last)); n.replaceWith(frag);
@@ -637,7 +817,7 @@ function showView(id){
 }
 function buildRadios(){
   const sel=$('f_radio');
-  const n=document.createElement('option'); n.value=''; n.textContent='none (no energy figures)';
+  const n=tset(document.createElement('option'), 'none (no energy figures)'); n.value='';
   sel.appendChild(n);
   (BOOT.radios||[]).forEach(r=>{
     const o=document.createElement('option'); o.value=r.value; o.textContent=r.value;
@@ -648,21 +828,21 @@ function buildRadios(){
 }
 function radioNote(){
   const v=$('f_radio').value, box=$('radionote'); box.innerHTML='';
-  const b=document.createElement('b'); b.textContent='Node radio. '; box.appendChild(b);
+  const b=document.createElement('b'); b.textContent=T('Node radio.')+' '; box.appendChild(b);
   if(!v){
-    box.append('None: no energy figures. Energy needs the node radio\'s transmit '
-      +'current, and a guessed one would read as a measured result.');
+    box.append(T('None: no energy figures. Energy needs the node radio\'s transmit '
+      +'current, and a guessed one would read as a measured result.'));
     return;
   }
   const r=BOOT.radios.find(x=>x.value===v);
-  linkify(box, 'Transmit current tabulated from '+r.low_dbm+' to '+r.high_dbm
-    +' dBm. '+r.source);
+  box.append(T('Transmit current tabulated from {low} to {high} dBm. Source:',
+    {low:r.low_dbm, high:r.high_dbm})+' ', sourceSpan(r.source));
 }
 function energyAvailable(){
   const ok=!!$('f_radio').value, cb=$('o_energy');
   cb.disabled=!ok; if(!ok) cb.checked=false;
-  $('o_energy_why').textContent = ok ? '' : 'Needs a node radio, so the current '
-    +'comes from a table with a source. Choose one in 2. Radio, advanced radio settings.';
+  $('o_energy_why').textContent = ok ? '' : T('Needs a node radio, so the current '
+    +'comes from a table with a source. Choose one in 2. Radio, advanced radio settings.');
 }
 function sizeBox(){ $('o_sizebox').style.display = $('o_size').value==='custom' ? '' : 'none'; }
 function buildOutput(){
@@ -716,23 +896,30 @@ function outputFiles(){
   if(v.data_files.includes('csv')) f.push('results.csv');
   if(v.data_files.includes('md')) f.push('capacity_table.md');
   if(v.data_files.includes('latex')) f.push('capacity_table.tex');
-  $('o_dir').textContent='studies/'+($('f_name').value.trim()||'<name>')+'/outputs/';
+  $('o_dir').textContent='studies/'+($('f_name').value.trim()||T('<name>'))+'/outputs/';
   $('o_files').textContent=f.join('\n');
 }
 
 async function boot(){
   document.querySelectorAll('.mtab').forEach(t=>t.onclick=()=>showView(t.dataset.view));
   BOOT = await post('/api/bootstrap');
+  ES=(BOOT.translations||{}).es||{}; compileTemplates();
+  $('lang_en').onclick=()=>setLang('en'); $('lang_es').onclick=()=>setLang('es');
+  // The markup is put in the page's language first, since the builders
+  // below read it: a block's name, a control's label.
+  setLang(LANG, true);
+  tset($('kmlname'), 'no boundary loaded'); tset($('csvname'), 'none');
+  tset($('o_dlwhy'), 'Available once the simulation has run.');
   const reg=$('f_region');
   Object.keys(BOOT.regions).sort().forEach(r=>{
-    const o=document.createElement('option'); o.value=r;
     const sf=BOOT.regions[r];
-    o.textContent=r+' (SF'+sf[0]+' to SF'+sf[sf.length-1]+')';
-    if(r==='US915') o.selected=true; reg.appendChild(o);
+    const o=tset(document.createElement('option'), '{region} (SF{low} to SF{high})',
+      {region:r, low:sf[0], high:sf[sf.length-1]});
+    o.value=r; if(r==='US915') o.selected=true; reg.appendChild(o);
   });
   const chip=$('f_chip');
-  const none=document.createElement('option'); none.value='';
-  none.textContent='none — enter sensitivity by hand'; chip.appendChild(none);
+  const none=tset(document.createElement('option'), 'none — enter sensitivity by hand');
+  none.value=''; chip.appendChild(none);
   BOOT.chips.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;chip.appendChild(o);});
   chip.value = BOOT.chips[0]||'';
   chip.onchange = chipNote; chipNote();
@@ -793,25 +980,27 @@ function ctlLabel(el){
   return t ? t.firstChild.textContent.trim() : el.id;
 }
 function ctlShow(el, state){
-  if(el.type==='checkbox') return state ? 'on' : 'off';
+  if(el.type==='checkbox') return state ? T('on') : T('off');
   if(el.tagName==='SELECT'){
     const o=[...el.options].find(o=>o.value===state); return o ? o.textContent : state;
   }
-  return state==='' ? 'empty' : state;
+  return state==='' ? T('empty') : state;
 }
 // What differs from the default, in words. The highlighted scenario follows
 // the scenarios chosen, so it counts as changed only once picked by hand.
 function advChanges(block){
   const out=[];
   advControls(block).forEach(el=>{
-    if(el.id==='f_hl'){ if(HL_TOUCHED) out.push({el, text:ctlLabel(el)+': '+ctlShow(el,el.value)+' (chosen by hand)'}); return; }
+    if(el.id==='f_hl'){ if(HL_TOUCHED) out.push({el, text:T('{label}: {value} (chosen by hand)',
+      {label:ctlLabel(el), value:ctlShow(el,el.value)})}); return; }
     if(el.type==='radio'){
-      if(el.checked && !ADV_DEFAULTS.get(el)) out.push({el, text:ctlLabel(el)+' chosen'});
+      if(el.checked && !ADV_DEFAULTS.get(el)) out.push({el, text:T('{label} chosen', {label:ctlLabel(el)})});
       return;
     }
     const d=ADV_DEFAULTS.get(el), s=ctlState(el);
     if(String(d)!==String(s))
-      out.push({el, text:ctlLabel(el)+' = '+ctlShow(el,s)+' (default '+ctlShow(el,d)+')'});
+      out.push({el, text:T('{label} = {value} (default {default})',
+        {label:ctlLabel(el), value:ctlShow(el,s), default:ctlShow(el,d)})});
   });
   return out;
 }
@@ -820,7 +1009,8 @@ function setOpen(block, open){
   block.querySelector('.advbody').hidden=!open;
   const b=block.querySelector('.advbtn');
   b.setAttribute('aria-expanded', open);
-  b.textContent=(open?'Hide ':'Show ')+block.dataset.name;
+  b.textContent=open ? T('Hide {settings}', {settings:block.dataset.name})
+                     : T('Show {settings}', {settings:block.dataset.name});
 }
 function refreshAdv(){
   document.querySelectorAll('.adv').forEach(block=>{
@@ -831,19 +1021,20 @@ function refreshAdv(){
     // Values written by the fit or the terrain model are not edits by hand,
     // so the bar says where they came from instead of listing five numbers.
     if(block.id==='adv_prop' && (ORIGIN==='fit'||ORIGIN==='terrain')){
-      head.innerHTML='<b>'+n+' settings</b>, filled in by the '
-        +(ORIGIN==='fit'?'field fit':'model built from the environment')+'.';
+      head.innerHTML = ORIGIN==='fit'
+        ? htmlT('<b>{n} settings</b>, filled in by the field fit.', {n})
+        : htmlT('<b>{n} settings</b>, filled in by the model built from the environment.', {n});
       st.appendChild(head);
     }else{
       head.innerHTML = ch.length
-        ? '<b>'+ch.length+' of '+n+' changed</b> from the default:'
-        : '<b>'+n+' settings</b>, all at their default.';
+        ? htmlT('<b>{changed} of {n} changed</b> from the default:', {changed:ch.length, n})
+        : htmlT('<b>{n} settings</b>, all at their default.', {n});
       st.appendChild(head);
       ch.forEach(c=>{ const s=document.createElement('span'); s.className='chg';
         s.textContent=c.text; st.appendChild(s); });
     }
     if(bad){ const p=document.createElement('span'); p.className='pill need';
-      p.textContent=bad+' to fix'; head.appendChild(p); }
+      p.textContent=T('{n} to fix', {n:bad}); head.appendChild(p); }
     block.querySelector('.restore').hidden = !ch.length;
   });
 }
@@ -881,8 +1072,8 @@ function hiddenWhere(el){
   const block=el && el.closest('.adv');
   if(!block || block.classList.contains('open')) return '';
   return block.id==='adv_prop'
-    ? ' (comes from building the model in 3. Propagation, or by hand in '+block.dataset.name+')'
-    : ' (in '+block.dataset.name+')';
+    ? ' '+T('(comes from building the model in 3. Propagation, or by hand in {settings})', {settings:block.dataset.name})
+    : ' '+T('(in {settings})', {settings:block.dataset.name});
 }
 function setupAdvanced(){
   document.querySelectorAll('.adv').forEach(block=>{
@@ -892,8 +1083,8 @@ function setupAdvanced(){
     body.id=block.id+'_body'; btn.setAttribute('aria-controls', body.id);
     btn.onclick=()=>{ setOpen(block, !block.classList.contains('open')); };
     const st=document.createElement('div'); st.className='advstate'; st.setAttribute('aria-live','polite');
-    const rs=document.createElement('button'); rs.type='button'; rs.className='restore';
-    rs.textContent='Restore defaults'; rs.onclick=()=>restoreBlock(block);
+    const rs=tset(document.createElement('button'), 'Restore defaults'); rs.type='button';
+    rs.className='restore'; rs.onclick=()=>restoreBlock(block);
     bar.append(btn, st, rs); block.insertBefore(bar, body);
     advControls(block).forEach(el=>{
       ADV_DEFAULTS.set(el, ctlState(el));
@@ -913,12 +1104,12 @@ function buildDwell(){
   if(!opts){ box.style.display='none'; return; }
   box.style.display='';
   const cur=sel.value; sel.innerHTML='';
-  const n=document.createElement('option'); n.value=''; n.textContent='choose…';
+  const n=tset(document.createElement('option'), 'choose…'); n.value='';
   sel.appendChild(n);
   opts.forEach(ms=>{
-    const o=document.createElement('option'); o.value=ms;
-    o.textContent = ms===0 ? 'no dwell limit' : ms+' ms limit';
-    sel.appendChild(o);
+    const o = ms===0 ? tset(document.createElement('option'), 'no dwell limit')
+                     : tset(document.createElement('option'), '{ms} ms limit', {ms});
+    o.value=ms; sel.appendChild(o);
   });
   if(Array.from(sel.options).some(o=>o.value===cur)) sel.value=cur;
   sel.onchange=schedule;
@@ -927,13 +1118,13 @@ function buildDwell(){
 function chipNote(){
   const c=$('f_chip').value, box=$('chipnote');
   box.innerHTML='';
-  if(!c){ box.textContent='No chip selected, so you must supply sensitivity values yourself in study.py.'; return; }
+  if(!c){ box.textContent=T('No chip selected, so you must supply sensitivity values yourself in study.py.'); return; }
   const d=BOOT.chip_detail[c];
   const s=Object.keys(d.sensitivity).sort((a,b)=>a-b)
           .map(k=>'SF'+k+' '+d.sensitivity[k]).join(' · ');
   const b=document.createElement('b'); b.textContent=c+'. '; box.appendChild(b);
-  linkify(box, 'Sensitivity '+s+' dBm · '+d.channels+' channels · '
-                 +d.max_demod+' simultaneous demodulations. Source: '+d.source);
+  box.append(T('Sensitivity {values} dBm · {channels} channels · {demod} simultaneous demodulations. Source:',
+    {values:s, channels:d.channels, demod:d.max_demod})+' ', sourceSpan(d.source));
 }
 
 function buildScenarios(){
@@ -954,7 +1145,8 @@ function buildScenarios(){
     cb.addEventListener('change', ()=>{buildHighlight();schedule();
       if(BOOT.limits) limitsFromTables();});
   });
-  if(sfs.length) $('sfrange').textContent='SF'+sfs[0]+' to SF'+sfs[sfs.length-1];
+  if(sfs.length) tset($('sfrange'), 'SF{low} to SF{high}', {low:sfs[0], high:sfs[sfs.length-1]});
+  else tset($('sfrange'), 'Fixed SF');
   buildHighlight();
 }
 function selectedScenarios(){
@@ -962,7 +1154,7 @@ function selectedScenarios(){
 }
 function buildHighlight(){
   const sel=$('f_hl'), cur=sel.value; sel.innerHTML='';
-  const n=document.createElement('option'); n.value=''; n.textContent='none'; sel.appendChild(n);
+  const n=tset(document.createElement('option'), 'none'); n.value=''; sel.appendChild(n);
   selectedScenarios().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
   // Default to the first scenario rather than "none": a figure with no
   // highlighted curve is a quietly worse figure, not a neutral choice. Once
@@ -975,10 +1167,10 @@ function buildHighlight(){
 $('kmlfile').onchange = async e=>{
   const f=e.target.files[0]; if(!f) return;
   TOUCHED_IDS.add('kmlbtn'); TOUCHED=true;
-  $('kmlname').textContent=f.name;
+  tplain($('kmlname'), f.name);
   const out=$('kmlout'); out.innerHTML='';
   if($('f_lat').value===''||$('f_lon').value===''){
-    out.appendChild(msg('e','Enter the gateway latitude and longitude first: the boundary is projected relative to it.'));
+    out.appendChild(msgT('e','Enter the gateway latitude and longitude first: the boundary is projected relative to it.'));
     return;
   }
   try{
@@ -988,25 +1180,28 @@ $('kmlfile').onchange = async e=>{
     // deployment works at all, so it is the sensible starting anchor.
     if(!$('f_range').value) $('f_range').value = Math.round(r.max_radius_m);
     schedule();
-  }catch(err){ out.appendChild(msg('e',err.message)); RINGS=null; }
+  }catch(err){ out.appendChild(msgX('e',err.message)); RINGS=null; }
 };
 
 function showKml(r){
   const out=$('kmlout'); out.innerHTML='';
-  let t='<table><tr><th>Polygon</th><th>Area (ha)</th><th>Vertices</th></tr>';
-  r.polygons.forEach(p=>{t+='<tr><td>'+p.name+'</td><td class="num">'+p.area_ha.toFixed(2)
-    +'</td><td class="num">'+p.vertices+'</td></tr>';});
-  t+='<tr><td><b>Total</b></td><td class="num"><b>'+r.total_area_ha.toFixed(2)
-    +'</b></td><td></td></tr></table>';
-  out.innerHTML=t;
-  out.appendChild(msg(r.gateway_inside?'s':'e',
-    r.gateway_inside ? 'Gateway falls inside the boundary. Farthest point '
-        + r.max_radius_m.toFixed(0)+' m away.'
-      : 'The gateway falls OUTSIDE every polygon. Usually that means the coordinates are wrong.'));
+  const t=mk('table'), head=mk('tr');
+  head.append(tset(mk('th'),'Polygon'), tset(mk('th'),'Area (ha)'), tset(mk('th'),'Vertices'));
+  t.appendChild(head);
+  // A polygon's name comes from the file, so it is written as text.
+  r.polygons.forEach(p=>{ const tr=mk('tr');
+    tr.append(mk('td','',p.name), mk('td','num',p.area_ha.toFixed(2)), mk('td','num',String(p.vertices)));
+    t.appendChild(tr); });
+  const tot=mk('tr'), c1=mk('td'), c2=mk('td','num');
+  c1.appendChild(tset(mk('b'),'Total')); c2.appendChild(mk('b','',r.total_area_ha.toFixed(2)));
+  tot.append(c1, c2, mk('td')); t.appendChild(tot);
+  out.appendChild(t);
+  out.appendChild(r.gateway_inside
+    ? msgT('s','Gateway falls inside the boundary. Farthest point {d} m away.', {d:r.max_radius_m.toFixed(0)})
+    : msgT('e','The gateway falls OUTSIDE every polygon. Usually that means the coordinates are wrong.'));
   if(r.overlaps.length){
-    out.appendChild(msg('w','Polygons overlap by about '
-      + r.overlaps.map(o=>o.a+'/'+o.b+' '+o.area_ha.toFixed(2)+' ha').join(', ')
-      + '. The total above double-counts it, and nodes would concentrate there.'));
+    out.appendChild(msgT('w','Polygons overlap by about {overlaps}. The total above double-counts it, and nodes would concentrate there.',
+      {overlaps:r.overlaps.map(o=>o.a+'/'+o.b+' '+o.area_ha.toFixed(2)+' ha').join(', ')}));
   }
   out.appendChild(drawPoly(r));
 }
@@ -1036,10 +1231,10 @@ function drawPoly(r){
 /* ---------- path loss ---------- */
 $('csvfile').onchange = async e=>{
   const f=e.target.files[0]; if(!f) return;
-  $('csvname').textContent=f.name;
-  const out=$('fitout'); out.innerHTML=''; out.appendChild(msg('i','Fitting…'));
+  tplain($('csvname'), f.name);
+  const out=$('fitout'); out.innerHTML=''; out.appendChild(msgT('i','Fitting…'));
   if($('f_lat').value===''||$('f_lon').value===''){
-    out.innerHTML=''; out.appendChild(msg('e','Enter the gateway position first.')); return;
+    out.innerHTML=''; out.appendChild(msgT('e','Enter the gateway position first.')); return;
   }
   try{
     const netGain = num('f_gtx',0)+num('f_grx',0)-num('f_cable',0);
@@ -1047,53 +1242,55 @@ $('csvfile').onchange = async e=>{
       tx_power_dbm:num('f_tx'),net_gain_db:netGain,d0_m:num('f_d0',100),
       min_distance_m:num('f_minv',30)});
     LASTFIT=r; showFit(r);
-  }catch(err){ out.innerHTML=''; out.appendChild(msg('e',err.message)); }
+  }catch(err){ out.innerHTML=''; out.appendChild(msgX('e',err.message)); }
 };
 
 function showFit(r){
   const out=$('fitout'); out.innerHTML='';
-  out.appendChild(msg('i', r.n_usable+' usable rows, '+r.n_kept+' beyond the '
-    + r.fits[0].min_distance_m.toFixed(0)+' m floor, spanning '
-    + r.distance_min_m.toFixed(0)+'–'+r.distance_max_m.toFixed(0)+' m'));
-  r.warnings.forEach(w=>out.appendChild(msg('w',w.message)));
-  let t='<table><tr><th>Fit</th><th>n</th><th>R²</th><th>σ (dB)</th><th>L(d₀)</th><th>Points</th><th></th></tr>';
+  out.appendChild(msgT('i', '{usable} usable rows, {kept} beyond the {floor} m floor, spanning {from}–{to} m',
+    {usable:r.n_usable, kept:r.n_kept, floor:r.fits[0].min_distance_m.toFixed(0),
+     from:r.distance_min_m.toFixed(0), to:r.distance_max_m.toFixed(0)}));
+  // The fit's warnings are the simulator's, in English.
+  r.warnings.forEach(w=>out.appendChild(msgEn('w',w.message)));
+  const t=mk('table'), head=mk('tr');
+  head.append(tset(mk('th'),'Fit'), mk('th','','n'), mk('th','','R²'), mk('th','','σ (dB)'),
+              mk('th','','L(d₀)'), tset(mk('th'),'Points'), mk('th'));
+  t.appendChild(head);
+  const two=x=>(x!==undefined&&x!==null)?x.toFixed(2):'—';
   r.fits.forEach((f,i)=>{
-    t+='<tr><td>'+f.label+'</td><td class="num">'+f.path_loss_exponent.toFixed(3)
-      +'</td><td class="num">'+f.r_squared.toFixed(3)+'</td><td class="num">'
-      +(f.shadowing_sigma_db!==undefined?f.shadowing_sigma_db.toFixed(2):'—')
-      +'</td><td class="num">'
-      +(f.path_loss_ref_db!==undefined?f.path_loss_ref_db.toFixed(2):'—')
-      +'</td><td class="num">'+f.n_points+'</td>'
-      +'<td><button onclick="useFit('+i+')">Use</button></td></tr>';
+    const tr=mk('tr'), use=tset(mk('button'),'Use'), cell=mk('td');
+    use.onclick=()=>useFit(i); cell.appendChild(use);
+    // The fit's own label ("unbinned") is shown translated. study.py keeps
+    // the English, as every file does.
+    tr.append(tsetx(mk('td'), f.label), mk('td','num',f.path_loss_exponent.toFixed(3)),
+      mk('td','num',f.r_squared.toFixed(3)), mk('td','num',two(f.shadowing_sigma_db)),
+      mk('td','num',two(f.path_loss_ref_db)), mk('td','num',String(f.n_points)), cell);
+    t.appendChild(tr);
   });
-  out.innerHTML += t+'</table>';
-  const d=document.createElement('div'); d.className='srcnote';
-  d.textContent='Binned averages each distance band once, so uneven sampling does '
+  out.appendChild(t);
+  out.appendChild(tset(mk('div','srcnote'), 'Binned averages each distance band once, so uneven sampling does '
     +'not dominate. Unbinned is the usual choice in the literature. They can differ '
     +'enough to matter, so pick deliberately and say which you used. For σ take '
     +'the unbinned value: binning averages away the very scatter σ measures, so '
-    +'the binned figure understates shadowing, often by half.';
-  out.appendChild(d);
+    +'the binned figure understates shadowing, often by half.'));
 }
 
 /* ---------- terrain, for a site with no measurements ---------- */
 function buildTerrain(){
   const sel=$('f_terrain'); sel.innerHTML='';
-  const n=document.createElement('option'); n.value=''; n.textContent='choose…';
+  const n=tset(document.createElement('option'), 'choose…'); n.value='';
   sel.appendChild(n);
   Object.keys(BOOT.terrains).forEach(k=>{
-    const t=BOOT.terrains[k], o=document.createElement('option');
-    o.value=k;
-    o.textContent=k+'  (n = '+t.low+' to '+t.high+', median '+t.median+')';
-    sel.appendChild(o);
+    const t=BOOT.terrains[k];
+    const o=tset(document.createElement('option'), '{env}  (n = {low} to {high}, median {median})',
+      {env:k, low:t.low, high:t.high, median:t.median});
+    o.value=k; sel.appendChild(o);
   });
   sel.onchange=showTerrainInfo;
-  const note=document.createElement('div'); note.className='srcnote';
-  note.dataset.for='f_terrain';
-  linkify(note, 'Ranges pooled from published LoRa measurement campaigns: '
-    + BOOT.terrain_source + '. The labels are the review’s, not a '
-    + 'classification of your site. If none describes it, set the exponent by '
-    + 'hand and say where it came from.');
+  const note=mk('div','srcnote'); note.dataset.for='f_terrain';
+  tset(note, 'Ranges pooled from published LoRa measurement campaigns: {source}. The labels '
+    + 'are the review’s, not a classification of your site. If none describes it, set '
+    + 'the exponent by hand and say where it came from.', {source:BOOT.terrain_source}, {link:true});
   $('pane_terrain').appendChild(note);
 }
 
@@ -1111,18 +1308,17 @@ function showTerrainInfo(){
   const k=$('f_terrain').value, out=$('terrainout'); out.innerHTML='';
   if(!k) return;
   const t=BOOT.terrains[k];
-  out.appendChild(msg('i', k+': '+t.n_studies+' studies, measured at '
-    + t.freqs.join(', ')+' MHz. Exponent from '+t.low+' to '+t.high
-    + ', median '+t.median+'.'));
+  out.appendChild(msgT('i', '{env}: {n} studies, measured at {freqs} MHz. Exponent from {low} to {high}, median {median}.',
+    {env:k, n:t.n_studies, freqs:t.freqs.join(', '), low:t.low, high:t.high, median:t.median}));
 }
 
 async function applyTerrain(){
   const out=$('terrainout'); out.innerHTML='';
   const k=$('f_terrain').value;
-  if(!k){ out.appendChild(msg('e','Choose an environment first.')); return; }
+  if(!k){ out.appendChild(msgT('e','Choose an environment first.')); return; }
   const rng=num('f_range');
   if(!rng || rng<=0){
-    out.appendChild(msg('e','Enter roughly how far the link is expected to '
+    out.appendChild(msgT('e','Enter roughly how far the link is expected to '
       +'work. If you have no idea at all, the site’s own radius is the '
       +'minimum assumption under which the deployment works, and the checks '
       +'panel shows that radius.'));
@@ -1143,13 +1339,12 @@ async function applyTerrain(){
     ADOPTED_R2=null;
     setOrigin('terrain', {low:a.low, high:a.high, label:k});
     out.innerHTML='';
-    out.appendChild(msg('s','n = '+a.exponent.toFixed(2)+', L(d₀) = '
-      + a.ref_db.toFixed(1)+' dB. Across the published range the same anchor '
-      + 'gives L(d₀) from '+a.ref_db_high.toFixed(1)+' to '
-      + a.ref_db_low.toFixed(1)+' dB.'));
-    a.warnings.forEach(w=>out.appendChild(msg('w',w)));
+    out.appendChild(msgT('s','n = {n}, L(d₀) = {ref} dB. Across the published range the same anchor '
+      + 'gives L(d₀) from {from} to {to} dB.',
+      {n:a.exponent.toFixed(2), ref:a.ref_db.toFixed(1), from:a.ref_db_high.toFixed(1), to:a.ref_db_low.toFixed(1)}));
+    a.warnings.forEach(w=>out.appendChild(msgX('w',w)));
     schedule();
-  }catch(e){ out.appendChild(msg('e',e.message)); }
+  }catch(e){ out.appendChild(msgX('e',e.message)); }
 }
 
 function setOrigin(o, terrain){
@@ -1157,21 +1352,21 @@ function setOrigin(o, terrain){
   const pill=$('origin'), note=$('assumednote');
   note.innerHTML='';
   if(o==='fit'){
-    pill.textContent='fitted'; pill.className='pill ok';
+    pill.textContent=T('fitted'); pill.className='pill ok';
   }else if(o==='terrain'){
-    pill.textContent='assumed'; pill.className='pill';
-    note.appendChild(msg('w','This model is assumed, not measured. A single '
+    pill.textContent=T('assumed'); pill.className='pill';
+    note.appendChild(msgT('w','This model is assumed, not measured. A single '
       + 'capacity figure would misrepresent it, so the run is followed by a '
-      + 'sweep across the published exponent range for '+terrain.label
-      + ' (' + terrain.low + ' to ' + terrain.high + '), and what you report '
-      + 'is the range that comes out of it.'));
+      + 'sweep across the published exponent range for {env} ({low} to {high}), '
+      + 'and what you report is the range that comes out of it.',
+      {env:terrain.label, low:terrain.low, high:terrain.high}));
   }else if(o==='unset'){
     // Nothing chosen yet. Saying "entered by hand" here would describe the
     // page's defaults as a decision the user made.
-    pill.textContent='not set'; pill.className='pill';
+    pill.textContent=T('not set'); pill.className='pill';
   }else{
-    pill.textContent='entered by hand'; pill.className='pill';
-    note.appendChild(msg('i','An exponent set by hand is an assumption like any '
+    pill.textContent=T('entered by hand'); pill.className='pill';
+    note.appendChild(msgT('i','An exponent set by hand is an assumption like any '
       + 'other. Say where it came from in the field above, and check with a '
       + 'sweep how much the answer depends on it.'));
   }
@@ -1200,27 +1395,29 @@ function useFit(i){
 // has left LoRaSim's, because every result then depends on that choice.
 function buildReceiver(){
   const rx=$('f_rx');
+  // A rule is offered by its study.py name, as a field value is.
   BOOT.receiver_models.forEach(m=>{
-    const o=document.createElement('option'); o.value=m.value;
-    o.textContent = m.value + (m.value===BOOT.default_receiver_model ? ' (default)' : '');
-    rx.appendChild(o);
+    const o = m.value===BOOT.default_receiver_model
+      ? tset(document.createElement('option'), '{rule} (default)', {rule:m.value})
+      : mk('option','',m.value);
+    o.value=m.value; rx.appendChild(o);
   });
   rx.value=BOOT.default_receiver_model;
   $('f_capthr').value=BOOT.default_capture_threshold_db;
   const isf=$('f_isf');
-  const orth=document.createElement('option'); orth.value='';
-  orth.textContent='orthogonal (default)'; isf.appendChild(orth);
+  const orth=tset(document.createElement('option'), 'orthogonal (default)');
+  orth.value=''; isf.appendChild(orth);
   BOOT.inter_sf_tables.forEach(t=>{
-    const o=document.createElement('option'); o.value=t.value;
-    o.textContent=t.short; o.title=t.label; isf.appendChild(o);
+    const o=tsetx(document.createElement('option'), t.short); tsetx(o, t.label, {attr:'title'});
+    o.value=t.value; isf.appendChild(o);
   });
   isf.value='';
   const ls=$('f_lsurv');
-  const capt=document.createElement('option'); capt.value='';
-  capt.textContent='threshold (default)'; ls.appendChild(capt);
+  const capt=tset(document.createElement('option'), 'threshold (default)');
+  capt.value=''; ls.appendChild(capt);
   BOOT.lock_survival_tables.forEach(t=>{
-    const o=document.createElement('option'); o.value=t.value;
-    o.textContent=t.short; o.title=t.label; ls.appendChild(o);
+    const o=tsetx(document.createElement('option'), t.short); tsetx(o, t.label, {attr:'title'});
+    o.value=t.value; ls.appendChild(o);
   });
   ls.value='';
   ['f_rx','f_capthr','f_isf','f_lsurv','f_hrec'].forEach(id=>{
@@ -1249,21 +1446,23 @@ function rejectionHow(db){
   const sfs=Object.keys(db).map(Number).sort((a,b)=>a-b);
   const lo=sfs[0], hi=sfs[sfs.length-1];
   const nxt=Object.keys(db[lo]).map(Number).sort((a,b)=>a-b)[0];
-  const ex=(r,i)=>'a packet on SF'+r+' is lost when an overlapping SF'+i
-    +' packet arrives more than '+(-db[r][i])+' dB stronger';
-  return 'How it is applied: two packets on different spreading factors that '
+  const ex=(r,i)=>T('a packet on SF{wanted} is lost when an overlapping SF{other} '
+    +'packet arrives more than {db} dB stronger', {wanted:r, other:i, db:-db[r][i]});
+  return T('How it is applied: two packets on different spreading factors that '
     +'overlap by at least one symbol can now destroy each other. Each is lost '
     +'if the other is stronger by more than the value this table gives for '
-    +'that pair. For example, '+ex(lo,nxt)+', and '+ex(hi,lo)+'.';
+    +'that pair. For example, {first}, and {second}.', {first:ex(lo,nxt), second:ex(hi,lo)});
 }
 function survivalHow(db){
   const sfs=Object.keys(db).map(Number).sort((a,b)=>a-b);
   const lo=sfs[0], hi=sfs[sfs.length-1];
-  const ex=sf=>db[sf]===0 ? 'on SF'+sf+' it survives a later packet of equal '
-    +'power' : 'on SF'+sf+' it must be at least '+db[sf]+' dB stronger';
-  return 'How it is applied: the packet the receiver locked onto survives a '
+  const ex=sf=>db[sf]===0
+    ? T('on SF{sf} it survives a later packet of equal power', {sf})
+    : T('on SF{sf} it must be at least {db} dB stronger', {sf, db:db[sf]});
+  return T('How it is applied: the packet the receiver locked onto survives a '
     +'later one only if it is stronger by at least the value this table '
-    +'gives for its spreading factor. For example, '+ex(lo)+', and '+ex(hi)+'.';
+    +'gives for its spreading factor. For example, {first}, and {second}.',
+    {first:ex(lo), second:ex(hi)});
 }
 let rxActive=null;
 function receiverNote(ev){
@@ -1272,38 +1471,41 @@ function receiverNote(ev){
   const rule=BOOT.receiver_models.find(m=>m.value===$('f_rx').value);
   const thr=num('f_capthr', BOOT.default_capture_threshold_db);
   const table=BOOT.inter_sf_tables.find(t=>t.value===$('f_isf').value);
-  const p=(id,label,text,changed,using,how)=>{const d=document.createElement('div');
+  // A note is its label, what is in use and how it works, then the text,
+  // which is a note from the server or a source kept in English.
+  const p=(id,label,parts,changed,using,how)=>{const d=document.createElement('div');
     d.className='note'+(id===rxActive?' active':'');
     const b=document.createElement('b'); b.textContent=label; d.appendChild(b);
     if(using){const u=document.createElement('span'); u.className='using';
       u.textContent=using; d.appendChild(u);}
     if(how){const h=document.createElement('span'); h.className='how';
       h.textContent=how; d.appendChild(h);}
-    linkify(d, text);
+    parts.forEach(x=>{ if(typeof x==='string') linkify(d, x); else d.appendChild(x); });
     if(changed){const t=document.createElement('span'); t.className='tag';
-      t.textContent='not the default'; d.appendChild(t);}
+      t.textContent=T('not the default'); d.appendChild(t);}
     note.appendChild(d);};
-  if(rule) p('f_rx','Receiver rule.',' '+rule.note,$('f_rx').value!==BOOT.default_receiver_model);
-  p('f_capthr','Capture threshold.',' '+BOOT.capture_threshold_note,thr!==BOOT.default_capture_threshold_db);
-  p('f_isf','Rejection between SFs.',(table ? 'Source: '+table.source
-    + ' Results are conditional on this table. See "Spreading factors that '
-    + 'are not orthogonal" in the README.'
-    : ' '+BOOT.orthogonal_note),!!table,
-    table ? 'Using the table of '+table.label+'.' : null,
+  const sourced=(src, after)=>[T('Source:')+' ', sourceSpan(src)].concat(after ? [' '+after] : []);
+  if(rule) p('f_rx',T('Receiver rule.'),[' '+TX(rule.note)],$('f_rx').value!==BOOT.default_receiver_model);
+  p('f_capthr',T('Capture threshold.'),[' '+TX(BOOT.capture_threshold_note)],thr!==BOOT.default_capture_threshold_db);
+  p('f_isf',T('Rejection between SFs.'),(table ? sourced(table.source,
+      T('Results are conditional on this table. See "Spreading factors that '
+      + 'are not orthogonal" in the README.'))
+    : [' '+TX(BOOT.orthogonal_note)]),!!table,
+    table ? T('Using the table of {table}.', {table:table.label}) : null,
     table ? rejectionHow(table.db) : null);
   const isLock = $('f_rx').value==='lock';
   $('f_lsurv').disabled=!isLock; $('f_hrec').disabled=!isLock;
   if(isLock){
     const surv=BOOT.lock_survival_tables.find(t=>t.value===$('f_lsurv').value);
-    p('f_lsurv','Locked packet survival.',(surv ? 'Source: '+surv.source
-      : ' '+BOOT.lock_survival_default_note),!!surv,
-      surv ? 'Using the per-SF table of '+surv.label+'.' : null,
+    p('f_lsurv',T('Locked packet survival.'),(surv ? sourced(surv.source)
+      : [' '+TX(BOOT.lock_survival_default_note)]),!!surv,
+      surv ? T('Using the per-SF table of {table}.', {table:surv.label}) : null,
       surv ? survivalHow(surv.db) : null);
-    if($('f_hrec').value) p('f_hrec','Header recapture.',' '+BOOT.header_recapture_note,true);
+    if($('f_hrec').value) p('f_hrec',T('Header recapture.'),[' '+TX(BOOT.header_recapture_note)],true);
   }
   const departs = $('f_rx').value!==BOOT.default_receiver_model
     || thr!==BOOT.default_capture_threshold_db || !!table;
-  if(departs) note.appendChild(msg('w','This receiver model departs from '
+  if(departs) note.appendChild(msgT('w','This receiver model departs from '
     + 'LoRaSim\'s. Report it with every result, since capacity depends on it.'));
 }
 
@@ -1322,12 +1524,17 @@ function hintFor(id){
   return h;
 }
 
-function buildHints(){
+// The ranges are the server's sentences, translated as they arrive.
+function hintTexts(){
   Object.entries(LIMIT_FIELDS).forEach(([k,id])=>{
     const lim=BOOT.limits[k]; if(!lim) return;
-    const h=hintFor(id); h.innerHTML=''; linkify(h, lim.text);
-    $(id).addEventListener('input', ()=>checkRange(k));
+    const h=hintFor(id); h.innerHTML=''; linkify(h, TX(lim.text));
   });
+}
+function buildHints(){
+  hintTexts();
+  Object.keys(LIMIT_FIELDS).forEach(k=>{
+    if(BOOT.limits[k]) $(LIMIT_FIELDS[k]).addEventListener('input', ()=>checkRange(k)); });
   ['f_region','f_bw','f_dwell'].forEach(id=>$(id).addEventListener('change', limitsFromTables));
   $('f_pl').addEventListener('input', limitsFromTables);
   $('f_d0').addEventListener('input', limitsFromTables);
@@ -1367,16 +1574,18 @@ function limitsFromTables(){
   rows.filter(r=>r.dwell===rows[0].dwell).forEach(r=>{(byBw[r.bw]=byBw[r.bw]||[]).push(r.sf);});
   const bwText=Object.keys(byBw).map(Number).sort((a,b)=>a-b).map(b=>{
     const sf=byBw[b].sort((x,y)=>x-y);
-    return b+' kHz ('+(sf.length>1?'SF'+sf[0]+' to SF'+sf[sf.length-1]:'SF'+sf[0])+')';
+    return b+' kHz ('+(sf.length>1 ? T('SF{low} to SF{high}', {low:sf[0], high:sf[sf.length-1]})
+                                   : 'SF'+sf[0])+')';
   }).join(', ');
-  const hb=hintFor('f_bw'); hb.textContent = bwText ? region+' defines '+bwText : '';
+  const hb=hintFor('f_bw');
+  hb.textContent = bwText ? T('{region} defines {bandwidths}', {region, bandwidths:bwText}) : '';
   const bwBad = bwText && !byBw[bw] && TOUCHED_IDS.has('f_bw');
   $('f_bw').classList.toggle('invalid', !!bwBad); hb.classList.toggle('bad', !!bwBad);
   // Payload: the most restrictive of the marked fixed SFs at this bandwidth.
   const hp=hintFor('f_pl'); hp.classList.remove('bad');
   const fixed=selectedScenarios().filter(s=>/^SF\d+$/.test(s)).map(s=>parseInt(s.slice(2),10));
   if(dwellNeeded && dwell===null){
-    hp.textContent='choose the uplink dwell time to see the limit';
+    hp.textContent=T('choose the uplink dwell time to see the limit');
   }else if(!rows.length){
     hp.textContent='';
   }else{
@@ -1385,21 +1594,21 @@ function limitsFromTables(){
     if(marked.length){
       const worst=marked.reduce((a,b)=>b.max<a.max?b:a);
       hp.textContent = worst.max>0
-        ? '1 to '+worst.max+' bytes (SF'+worst.sf+' at '+bw+' kHz, the most restrictive marked SF)'
-        : 'SF'+worst.sf+' at '+bw+' kHz carries no payload in this plan';
+        ? T('1 to {max} bytes (SF{sf} at {bw} kHz, the most restrictive marked SF)', {max:worst.max, sf:worst.sf, bw})
+        : T('SF{sf} at {bw} kHz carries no payload in this plan', {sf:worst.sf, bw});
       const pl=num('f_pl',0);
       const mine=['f_pl','scenbox','f_bw','f_region','f_dwell'].some(i=>TOUCHED_IDS.has(i));
       const bad = mine && (pl<1 || pl>worst.max);
       $('f_pl').classList.toggle('invalid', bad); hp.classList.toggle('bad', bad);
     }else{
       const maxAll=Math.max(0,...use.map(r=>r.max||0));
-      hp.textContent = maxAll ? 'up to '+maxAll+' bytes at the fastest data rate; '
-        + 'MULTI and ADR use only the SFs that can carry the payload' : '';
+      hp.textContent = maxAll ? T('up to {max} bytes at the fastest data rate; '
+        + 'MULTI and ADR use only the SFs that can carry the payload', {max:maxAll}) : '';
     }
   }
   // Validity floor: recommended no larger than d0.
   const hv=hintFor('f_minv'), d0=num('f_d0',100);
-  hv.textContent='no more than d\u2080 ('+d0+' m) recommended';
+  hv.textContent=T('no more than d\u2080 ({d0} m) recommended', {d0});
   hv.classList.toggle('warnhint', num('f_minv',0)>d0
     && (TOUCHED_IDS.has('f_minv') || TOUCHED_IDS.has('f_d0')));
 }
@@ -1457,32 +1666,35 @@ function schedule(){ clearTimeout(timer); timer=setTimeout(validate,320); }
 
 async function validate(){
   if(!BOOT) return;
-  $('vstamp').textContent='checking…'; $('vstamp').className='pill';
+  $('vstamp').textContent=T('checking…'); $('vstamp').className='pill';
   try{
     const r = await post('/api/validate',{values:values(),rings:RINGS});
     const out=$('vout'); out.innerHTML='';
     document.querySelectorAll('.invalid').forEach(x=>x.classList.remove('invalid'));
     if(!TOUCHED){
-      out.appendChild(msg('i','Checks appear here as you fill in the form.'));
-      $('vstamp').textContent='waiting'; $('vstamp').className='pill';
+      out.appendChild(msgT('i','Checks appear here as you fill in the form.'));
+      $('vstamp').textContent=T('waiting'); $('vstamp').className='pill';
       $('btn_create').disabled=true;
-      $('createwhy').textContent='Fill in the form first. The checks will say what is missing.';
+      $('createwhy').textContent=T('Fill in the form first. The checks will say what is missing.');
       return;
     }
     const kinds=r.errors.map(errorKind);
     r.errors.forEach((e,i)=>out.appendChild(fieldMsg(kinds[i],e)));
     r.warnings.forEach(w=>out.appendChild(fieldMsg('w',w)));
     if(r.reach.length){
-      let t='<table><tr><th>Scenario</th><th>Reach</th><th>Covers site</th></tr>';
+      const t=mk('table'), head=mk('tr');
+      head.append(tset(mk('th'),'Scenario'), tset(mk('th'),'Reach'), tset(mk('th'),'Covers site'));
+      t.appendChild(head);
       r.reach.forEach(x=>{
-        const c = x.covers===null?'—':(x.covers?'<span class="pill ok">yes</span>'
-                                               :'<span class="pill bad">no</span>');
-        t+='<tr><td>'+x.scenario+'</td><td class="num">'+x.reach_m.toFixed(0)
-          +' m</td><td>'+c+'</td></tr>';
+        const tr=mk('tr'), c=mk('td');
+        if(x.covers===null) c.textContent='—';
+        else c.appendChild(x.covers ? tset(mk('span','pill ok'),'yes') : tset(mk('span','pill bad'),'no'));
+        tr.append(mk('td','',x.scenario), mk('td','num',x.reach_m.toFixed(0)+' m'), c);
+        t.appendChild(tr);
       });
-      out.innerHTML += t+'</table>';
+      out.appendChild(t);
       if(r.reach.some(x=>x.covers===false)){
-        out.appendChild(msg('w','Some nodes will sit beyond range, so their packets '
+        out.appendChild(msgT('w','Some nodes will sit beyond range, so their packets '
           +'count as weak-signal losses. Capacity there is limited by coverage, not '
           +'by collisions.'));
       }
@@ -1500,22 +1712,25 @@ async function validate(){
     if(BOOT.limits){ Object.keys(LIMIT_FIELDS).forEach(checkRange); limitsFromTables(); }
     if(typeof refreshAdv==='function' && ADV_DEFAULTS.size) refreshAdv();
     if(!r.errors.length){
-      $('vstamp').textContent='valid'; $('vstamp').className='pill ok';
+      $('vstamp').textContent=T('valid'); $('vstamp').className='pill ok';
       $('btn_create').disabled=false; $('createwhy').textContent='';
     }else{
       const ne=kinds.filter(k=>k==='e').length, nt=kinds.length-ne;
-      const word = ne ? ne+' error'+(ne>1?'s':'') : nt+' to do';
-      $('vstamp').textContent=word; $('vstamp').className='pill '+(ne?'bad':'todo');
+      $('vstamp').textContent = ne ? (ne>1 ? T('{n} errors', {n:ne}) : T('{n} error', {n:ne}))
+                                   : T('{n} to do', {n:nt});
+      $('vstamp').className='pill '+(ne?'bad':'todo');
       $('btn_create').disabled=true;
       $('createwhy').textContent = ne
-        ? 'Fix the '+word+' listed under Checks first.'
-        : 'Complete the '+nt+' item'+(nt>1?'s':'')+' listed under Checks first.';
+        ? (ne>1 ? T('Fix the {n} errors listed under Checks first.', {n:ne})
+                : T('Fix the error listed under Checks first.'))
+        : (nt>1 ? T('Complete the {n} items listed under Checks first.', {n:nt})
+                : T('Complete the item listed under Checks first.'));
     }
     if($('btn_run').disabled && !CREATED && !n_err(r))
-      $('createwhy').textContent='Run simulation becomes available once the study is written.';
+      $('createwhy').textContent=T('Run simulation becomes available once the study is written.');
   }catch(e){
-    $('vout').innerHTML=''; $('vout').appendChild(msg('e',e.message));
-    $('vstamp').textContent='error'; $('vstamp').className='pill bad';
+    $('vout').innerHTML=''; $('vout').appendChild(msgX('e',e.message));
+    $('vstamp').textContent=T('error'); $('vstamp').className='pill bad';
   }
 }
 
@@ -1537,13 +1752,14 @@ function errorKind(text){
 }
 function fieldMsg(kind, text){
   const hits=fieldsIn(text);
-  const shown=text.replace(FIELD_RE, k=>'\u201c'+FIELDS[k][1]+'\u201d')
-                  .replace(/\u201d\s?=\s?/g, '\u201d = ');
+  const label=k=>TX(FIELDS[k][1]);
+  const shown=text.replace(FIELD_RE, k=>'“'+label(k)+'”')
+                  .replace(/”\s?=\s?/g, '” = ');
   const d=document.createElement('div'); d.className='msg '+kind;
   if(hits.length){
     const w=document.createElement('span'); w.className='where';
-    w.textContent=hits.map(k=>FIELDS[k][1]).join(', '); d.appendChild(w);
-    d.classList.add('jump'); d.title='Go to the field';
+    w.textContent=hits.map(label).join(', '); d.appendChild(w);
+    d.classList.add('jump'); d.title=T('Go to the field');
     // Lead to a field the user can see when the check names one, so a check
     // that pairs a hidden setting with a visible one points at the visible one.
     const els=hits.map(k=>$(FIELDS[k][0])).filter(Boolean);
@@ -1551,7 +1767,7 @@ function fieldMsg(kind, text){
     if(kind==='e') hits.forEach(k=>{const el=$(FIELDS[k][0]); if(el) el.classList.add('invalid');});
     if(els.every(e=>hiddenWhere(e))) w.textContent+=hiddenWhere(target);
     if(kind==='t'){ const t=document.createElement('span'); t.className='where';
-      t.textContent='Still to fill in: '+w.textContent; d.replaceChild(t,w); }
+      t.textContent=T('Still to fill in: {fields}', {fields:w.textContent}); d.replaceChild(t,w); }
     d.onclick=()=>{ if(!target) return;
       // A field on the other tab is brought into view with its tab.
       const view=target.closest('.view'); if(view && view.style.display==='none') showView(view.id);
@@ -1559,7 +1775,10 @@ function fieldMsg(kind, text){
       target.scrollIntoView({behavior:'smooth', block:'center'});
       if(target.focus) target.focus({preventScroll:true}); };
   }
-  linkify(d, shown);
+  // The check itself is the simulator's sentence, in English, with the
+  // fields it names written as the form labels them.
+  const body=document.createElement('span'); body.lang='en'; linkify(body, shown);
+  d.appendChild(body);
   return d;
 }
 
@@ -1567,23 +1786,24 @@ function fieldMsg(kind, text){
 async function createStudy(){
   const out=$('createout'); out.innerHTML='';
   const name=$('f_name').value.trim();
-  if(!name){ out.appendChild(msg('e','Give the study a name.')); return; }
+  if(!name){ out.appendChild(msgT('e','Give the study a name.')); return; }
   try{
+    // The note goes into site_polygon.py, a file, so it stays in English.
     const r = await post('/api/create',{values:values(),rings:RINGS,
       ring_names:RING_NAMES,lat:num('f_lat'),lon:num('f_lon'),
       overwrite:$('f_over').checked,
       source_note:'Boundary uploaded through the web interface.'});
     CREATED=r.name;
-    out.appendChild(msg('s','Wrote '+r.written.join(' and ')));
-    r.warnings.forEach(w=>out.appendChild(msg('w',w)));
-    const d=document.createElement('details');
-    d.innerHTML='<summary>Show the generated study.py</summary><pre>'
-      + r.study_py.replace(/[<&]/g,c=>({'<':'&lt;','&':'&amp;'}[c])) + '</pre>';
+    out.appendChild(msgT('s','Wrote {files}', {files:()=>andList(r.written)}));
+    r.warnings.forEach(w=>out.appendChild(msgEn('w',w)));
+    const d=document.createElement('details'), pre=document.createElement('pre');
+    d.appendChild(tset(document.createElement('summary'), 'Show the generated study.py'));
+    pre.lang='en'; pre.textContent=r.study_py; d.appendChild(pre);
     out.appendChild(d);
-    out.appendChild(msg('i','From here it behaves like any other study: '
-      +'python3 run.py check '+r.name+' · run '+r.name+' · sweep '+r.name));
+    out.appendChild(msgT('i','From here it behaves like any other study: {commands}',
+      {commands:'python3 run.py check '+r.name+' · run '+r.name+' · sweep '+r.name}));
     $('btn_run').disabled=false; $('createwhy').textContent='';
-  }catch(e){ out.appendChild(msg('e',e.message)); }
+  }catch(e){ out.appendChild(msgX('e',e.message)); }
 }
 
 async function runStudy(){
@@ -1592,11 +1812,13 @@ async function runStudy(){
   $('btn_run').disabled=true;
   try{
     await post('/api/run',{name:CREATED});
-    out.innerHTML='<div class="bar"><div id="prog"></div></div>'
-      +'<div id="progtext" class="msg i">Starting…</div>'
-      +'<pre id="runlog" style="max-height:170px"></pre>';
+    const bar=mk('div','bar'), prog=mk('div'); prog.id='prog'; bar.appendChild(prog);
+    const pt=msgT('i','Starting…'); pt.id='progtext';
+    // The log is the simulator's, in English.
+    const log=mk('pre'); log.id='runlog'; log.lang='en'; log.style.maxHeight='170px';
+    out.append(bar, pt, log);
     POLL=setInterval(pollRun,700);
-  }catch(e){ out.appendChild(msg('e',e.message)); $('btn_run').disabled=false; }
+  }catch(e){ out.appendChild(msgX('e',e.message)); $('btn_run').disabled=false; }
 }
 
 async function pollRun(){
@@ -1604,29 +1826,37 @@ async function pollRun(){
   const pct = s.total ? Math.round(100*s.done/s.total) : 0;
   const bar=$('prog'); if(bar) bar.style.width=pct+'%';
   const pt=$('progtext');
-  if(pt) pt.textContent = s.state==='running'
-    ? 'Simulating… '+s.done+' of '+s.total+' points ('+pct+'%)'
-    : s.state;
+  if(pt){
+    if(s.state==='running') tset(pt, 'Simulating… {done} of {total} points ({pct}%)',
+      {done:s.done, total:s.total, pct});
+    else if(s.state==='done') tset(pt, 'done');
+    else if(s.state==='error') tset(pt, 'error');
+    else tplain(pt, s.state);
+  }
   const lg=$('runlog');
   if(lg && s.log.length){ lg.textContent=s.log.slice(-40).join('\n'); lg.scrollTop=lg.scrollHeight; }
   if(s.state==='done'||s.state==='error'){
     clearInterval(POLL); POLL=null; $('btn_run').disabled=false;
     const out=$('runout');
-    if(s.state==='error'){ out.appendChild(msg('e',s.error)); return; }
+    // A failed run reports the checks or the traceback, in English.
+    if(s.state==='error'){ out.appendChild(msgEn('e',s.error)); return; }
     $('o_download').disabled=false;
-    $('o_dlwhy').textContent='A copy of studies/'+CREATED+'/: study.py and the files of this run.';
-    let t='<table><tr><th>Scenario</th><th>Capacity</th><th>95% CI</th></tr>';
+    tset($('o_dlwhy'), 'A copy of studies/{name}/: study.py and the files of this run.', {name:CREATED});
+    const t=mk('table'), head=mk('tr');
+    head.append(tset(mk('th'),'Scenario'), tset(mk('th'),'Capacity'), tset(mk('th'),'95% CI'));
+    t.appendChild(head);
     Object.keys(s.capacity).forEach(k=>{
-      const c=s.capacity[k];
-      t+='<tr><td>'+k+'</td><td class="num">'
-        +(c.capacity===null?'no crossing':c.capacity.toFixed(1))+'</td><td class="num">'
-        +(c.ci_low===null||c.ci_low===undefined?'—':
-          '['+c.ci_low.toFixed(1)+', '+c.ci_high.toFixed(1)+']')+'</td></tr>';
+      const c=s.capacity[k], tr=mk('tr');
+      const cap = c.capacity===null ? tset(mk('td','num'),'no crossing')
+                                    : mk('td','num',c.capacity.toFixed(1));
+      tr.append(mk('td','',k), cap, mk('td','num', (c.ci_low===null||c.ci_low===undefined) ? '—'
+        : '['+c.ci_low.toFixed(1)+', '+c.ci_high.toFixed(1)+']'));
+      t.appendChild(tr);
     });
-    const d=document.createElement('div'); d.innerHTML=t+'</table>'; out.appendChild(d);
-    out.appendChild(msg('i','Written to studies/'+CREATED+'/outputs/. Capacity is a '
+    out.appendChild(t);
+    out.appendChild(msgT('i','Written to studies/{name}/outputs/. Capacity is a '
       +'simulation estimate: the field campaign validates coverage and link quality, '
-      +'not capacity.'));
+      +'not capacity.', {name:CREATED}));
     if(ORIGIN!=='fit') offerSweep(out);
     if(s.figure){
       try{
@@ -1651,43 +1881,49 @@ function sweepRange(){
 function offerSweep(out){
   const r=sweepRange();
   const why = TERRAIN
-    ? 'The exponent above is the median of a published range. The figure to '
+    ? msgT('w', 'The exponent above is the median of a published range. The figure to '
       + 'report is not the single capacity in the table but how much it moves '
-      + 'across that range.'
-    : 'The exponent above was entered by hand, so the capacity in the table '
+      + 'across that range.')
+    : msgT('w', 'The exponent above was entered by hand, so the capacity in the table '
       + 'rests on it. Sweeping the usual 2.0 to 3.5 bracket shows whether that '
-      + 'matters here, and the sweep is also where coverage failures show up.';
-  const box=document.createElement('div');
-  box.innerHTML='<div class="msg w">'+why+'</div>'
-    + '<div class="row"><button class="primary" id="btn_sweep">Sweep n from '
-    + (+r.low).toFixed(2)+' to '+(+r.high).toFixed(2)+'</button>'
-    + '<span class="name">bisects for the crossing at each exponent, so it '
-    + 'takes a few minutes</span></div><div id="sweepout"></div>';
+      + 'matters here, and the sweep is also where coverage failures show up.');
+  const box=mk('div'), row=mk('div','row'), so=mk('div');
+  const btn=tset(mk('button','primary'), 'Sweep n from {low} to {high}',
+    {low:(+r.low).toFixed(2), high:(+r.high).toFixed(2)});
+  btn.id='btn_sweep'; btn.onclick=runSweep; so.id='sweepout';
+  row.append(btn, tset(mk('span','name'), 'bisects for the crossing at each exponent, so it '
+    + 'takes a few minutes'));
+  box.append(why, row, so);
   out.appendChild(box);
-  $('btn_sweep').onclick=runSweep;
 }
 
 async function runSweep(){
   const b=$('btn_sweep'), out=$('sweepout');
-  b.disabled=true; out.innerHTML=''; out.appendChild(msg('i','Sweeping…'));
+  b.disabled=true; out.innerHTML=''; out.appendChild(msgT('i','Sweeping…'));
   try{
     const sr = sweepRange();
     const r = await post('/api/sweep',{name:CREATED, low:sr.low,
       high:sr.high, steps:5, scenario:$('f_hl').value||null,
       runs:Math.min(10, Math.round(num('f_runs',30)))});
     out.innerHTML='';
-    (r.warnings||[]).forEach(w=>out.appendChild(msg('w',w)));
-    const pre=document.createElement('pre'); pre.style.maxHeight='none';
+    // The engine's warnings and the sweep's table are the simulator's, in English.
+    (r.warnings||[]).forEach(w=>out.appendChild(msgEn('w',w)));
+    const pre=document.createElement('pre'); pre.style.maxHeight='none'; pre.lang='en';
     pre.textContent=r.text; out.appendChild(pre);
-    out.appendChild(msg('i','Also written to '
-      +'studies/'+CREATED+'/outputs/propagation_sweep.json. Reported with a '
+    out.appendChild(msgT('i','Also written to '
+      +'studies/{name}/outputs/propagation_sweep.json. Reported with a '
       +'reduced run count for speed; re-run it from the command line at the '
-      +'study’s full n_runs before publishing.'));
-  }catch(e){ out.appendChild(msg('e',e.message)); }
+      +'study’s full n_runs before publishing.', {name:CREATED}));
+  }catch(e){ out.appendChild(msgX('e',e.message)); }
   b.disabled=false;
 }
 
-boot().catch(e=>{document.body.innerHTML='<p style="padding:24px">Could not start: '+e.message+'</p>';});
+// The dictionary comes with the bootstrap, so a page that could not start
+// says so in both languages.
+const BOOT_FAILED='Could not start / No se pudo iniciar: ';
+boot().catch(e=>{ const p=document.createElement('p'); p.style.padding='24px';
+  p.textContent=BOOT_FAILED+e.message;
+  document.body.innerHTML=''; document.body.appendChild(p); });
 </script>
 </body>
 </html>

@@ -218,9 +218,21 @@ def payload_ceilings():
     return out
 
 
+# The page's Spanish (design item 27). English is the page's own language and
+# the key of every entry, so English needs no file. Read on each bootstrap,
+# so an edited translation shows on the next reload.
+TRANSLATIONS_ES = os.path.join(HERE, "i18n_es.json")
+
+
+def translations():
+    with open(TRANSLATIONS_ES, encoding="utf-8") as f:
+        return {"es": json.load(f)["strings"]}
+
+
 def api_bootstrap(_):
     """Everything the page needs to populate its menus."""
     return {
+        "translations": translations(),
         "regions": {r: list(sfs) for r, sfs in presets.REGION_UPLINK_SF_125KHZ.items()},
         "region_notes": presets.REGION_NOTES,
         "chips": sorted(presets.SENSITIVITY_DBM),

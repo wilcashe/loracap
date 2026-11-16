@@ -234,8 +234,10 @@ class TestTheSentencesThePageBuilds(unittest.TestCase):
             return re.search(r"(function " + name + r"\(.*?\n\})", html, re.S).group(1)
         consts = re.search(r"(const FIELDS=\{.*?const TOUCHED_IDS=new Set\(\);)",
                            html, re.S).group(1)
-        cls.prelude = "\n".join([consts, fn("fieldsIn"), fn("rejectionHow"),
-                                 fn("survivalHow")])
+        # The sentences go through the page's translation, here in English.
+        i18n = "let LANG='en', ES={}; const I18N_MISSES=new Set();"
+        cls.prelude = "\n".join([consts, i18n, fn("fill"), fn("T"), fn("fieldsIn"),
+                                 fn("rejectionHow"), fn("survivalHow")])
 
     def _run(self, expr):
         code = self.prelude + "\nconsole.log(JSON.stringify(" + expr + "));"
