@@ -36,7 +36,10 @@ abstract: >-
   code that produced it. Written in Python 3 with the standard library only,
   plus matplotlib for figures. Includes tools to convert a KML boundary and to
   fit a log-distance model to field measurements, and a web interface for
-  configuring a study.
+  configuring a study. The lock rule can also take a measured per-SF
+  survival table and a header recapture window. A study chooses the figures
+  and data files a run writes, and the web interface reads in English or
+  Spanish.
 keywords:
   - LoRaWAN
   - LPWAN
@@ -65,3 +68,18 @@ references:
     notes: >-
       Source of the collision model re-implemented in loracap/core.py.
       LoRaSim 0.2.1 is licensed CC BY 4.0.
+  - type: article
+    title: 'IoT4Cows: a LoRaWAN system for cattle monitoring in extensive grazing with network performance evaluation'
+    authors:
+      - given-names: Guillermo
+        family-names: Guzman
+      - given-names: Wilder
+        family-names: Castellanos
+        orcid: 'https://orcid.org/0000-0003-0311-492X'
+    journal: Smart Agricultural Technology
+    volume: 15
+    year: 2026
+    doi: 10.1016/j.atech.2026.102644
+    notes: >-
+      The deployment study LoRaCAP grew out of. Its site is the worked
+      example, studies/iot4cows.
