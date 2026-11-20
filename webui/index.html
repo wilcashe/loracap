@@ -1134,7 +1134,7 @@ function chipNote(){
   const ch = at.channels===1 ? T('1 channel') : T('{n} channels', {n:at.channels});
   box.append(T('At {bw} kHz: sensitivity {values} dBm · {channels} · {demod} simultaneous demodulations. Source:',
     {bw, values:s, channels:ch, demod:at.max_demod})+' ', sourceSpan(d.source));
-  if(at.derived_from) box.append(' '+T('There is no table at {bw} kHz, so these figures were derived from its {base} kHz column by +{db} dB, which understates sensitivity.',
+  if(at.derived_from) box.append(' '+T('This chip has no published figures at {bw} kHz. These were calculated by adding {db} dB to its {base} kHz figures, so they are approximate and somewhat pessimistic: the real receiver is usually better.',
     {bw, base:at.derived_from, db:at.shift_db}));
 }
 

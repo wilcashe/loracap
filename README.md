@@ -113,10 +113,11 @@ still to fill in, and turns red only once you enter a value that is wrong.
 
 Under the gateway chip, a note gives the sensitivity, the number of channels
 and the demodulation limit the simulation will use at the bandwidth entered,
-resolved by the same code a run uses, and says so when a column was derived
-from another bandwidth (design item 29). Only concentrators are offered. Bor
-et al.'s XRange SX1272 is a node radio, so the two studies that reproduce
-them name it in their `study.py` instead.
+resolved by the same code a run uses. When the chip has no published
+figures at that bandwidth, it says they were calculated from another one
+and are somewhat pessimistic (design item 29). Only concentrators are
+offered. Bor et al.'s XRange SX1272 is a node radio, so the two studies that
+reproduce them name it in their `study.py` instead.
 
 The page opens in **basic** mode: only what has no default, or is usually
 changed, is shown. A field marked with an asterisk has no default and must be

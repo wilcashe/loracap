@@ -152,12 +152,15 @@ function note(chip, bw){ els.f_chip.value=chip; els.f_bw.value=bw; chipNote();
         self.assertIn("At 500 kHz: sensitivity SF7 -120.5 ", text)
         self.assertIn("SF12 -133.5 dBm · 1 channel · 8 simultaneous", text)
         self.assertNotIn("-126.5", text)
-        self.assertNotIn("derived", text)
+        self.assertNotIn("calculated", text)
 
-    def test_a_derived_column_is_named_as_derived(self):
+    def test_a_calculated_column_says_so(self):
+        """Worded as calculated rather than published, at the user's request:
+        "derived" read as ambiguous in Spanish."""
         text = self._note("SX1308", 250)
         self.assertIn("SF7 -123.49 ", text)
-        self.assertIn("derived from its 125 kHz column by +3.01 dB", text)
+        self.assertIn("no published figures at 250 kHz. These were calculated "
+                      "by adding 3.01 dB to its 125 kHz figures", text)
 
     def test_a_bandwidth_no_plan_defines(self):
         text = self._note("SX1301", 300)

@@ -51,7 +51,7 @@
   "At {bw} kHz: sensitivity {values} dBm · {channels} · {demod} simultaneous demodulations. Source:": "A {bw} kHz: sensibilidad {values} dBm · {channels} · {demod} demodulaciones simultáneas. Fuente:",
   "1 channel": "1 canal",
   "{n} channels": "{n} canales",
-  "There is no table at {bw} kHz, so these figures were derived from its {base} kHz column by +{db} dB, which understates sensitivity.": "No hay tabla a {bw} kHz, así que estas cifras se derivaron de su columna de {base} kHz con +{db} dB, lo que subestima la sensibilidad.",
+  "This chip has no published figures at {bw} kHz. These were calculated by adding {db} dB to its {base} kHz figures, so they are approximate and somewhat pessimistic: the real receiver is usually better.": "Este chip no tiene valores publicados a {bw} kHz. Estas cifras se calcularon sumando {db} dB a las de {base} kHz, así que son aproximadas y algo pesimistas: el receptor real suele ser mejor.",
   "Its figures depend on the bandwidth, and {bw} kHz is not a LoRaWAN uplink bandwidth.": "Sus cifras dependen del ancho de banda, pero {bw} kHz no es un ancho de banda de uplink en LoRaWAN.",
   "Node antenna (dBi)": "Antena del nodo (dBi)",
   "Gateway antenna (dBi)": "Antena del gateway (dBi)",
