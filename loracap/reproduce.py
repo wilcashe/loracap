@@ -49,7 +49,7 @@ import sys
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from . import __version__, analysis, experiment as experiment_mod
+from . import __version__, analysis, experiment as experiment_mod, sitemap
 from .study import Study, output_dir, study_dir, validate as validate_study
 
 MANIFEST_FILENAME = "experiments.py"
@@ -412,6 +412,16 @@ def run_experiment(study_name: str, exp: Experiment, root=None,
             rows = experiment_mod.run_study(s, progress=False)
             written += [p for p in experiment_mod.write_results(
                 s, rows, out_dir=out, provenance=prov) if p]
+            # The map is the data of a figure, so it is written only where
+            # the experiment draws its own one. A study that asks for the map
+            # would otherwise leave a placement in every experiment it runs.
+            if exp.figure and not exp.figure_panels:
+                site_map, note = sitemap.write_site_map(s, rows, out_dir=out,
+                                                        provenance=prov)
+                if site_map:
+                    written.append(site_map)
+                elif note:
+                    log(f"    {note}")
             cap = analysis.capacity_with_ci(rows, threshold=s.der_threshold,
                                             n_boot=exp.n_bootstrap)
             fleet = analysis.capacity_with_ci(

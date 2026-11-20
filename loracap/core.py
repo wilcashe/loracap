@@ -625,8 +625,15 @@ def polygons_max_radius_m(polygons) -> float:
     return max(math.hypot(x, y) for ring in polygons for (x, y) in ring)
 
 
-def _sample_positions(cfg: SimConfig, n_nodes: int, max_d: float, rng: random.Random):
-    """Returns [(node_id, distance_to_gateway_m), ...]."""
+def _sample_positions(cfg: SimConfig, n_nodes: int, max_d: float,
+                      rng: random.Random, xy: Optional[dict] = None):
+    """Returns [(node_id, distance_to_gateway_m), ...].
+
+    A polygon placement draws (x, y) and keeps only the distance, which is all
+    propagation uses. When `xy` is a dict it also receives each node's (x, y),
+    for the site map (design item 31). Filling it draws nothing, so a run is
+    the same with or without it. A disc placement draws a distance only, and
+    there is no (x, y) to keep."""
     if cfg.placement == "disc":
         return [(i, max_d * math.sqrt(rng.random())) for i in range(n_nodes)]
 
@@ -649,6 +656,8 @@ def _sample_positions(cfg: SimConfig, n_nodes: int, max_d: float, rng: random.Ra
                 "degenerate or vanishingly small relative to its bounding box."
             )
         if point_in_polygons(x, y, cfg.placement_polygons_m):
+            if xy is not None:
+                xy[len(out)] = (x, y)
             out.append((len(out), math.hypot(x, y)))
     return out
 
@@ -793,14 +802,21 @@ def resolve_collisions(cfg: SimConfig, packets) -> dict:
     return out
 
 
-def run_single_sim(cfg: SimConfig, n_nodes: int, sim_time_ms: float,
-                   scenario: str, rng: random.Random) -> dict:
-    """One simulation run. `scenario` is 'SF<n>' for a fixed spreading factor or
-    'MULTI' for adaptive selection by distance."""
+def place_nodes(cfg: SimConfig, n_nodes: int, scenario: str,
+                rng: random.Random, xy: Optional[dict] = None) -> dict:
+    """Where each node is and what it transmits with: the first part of a run.
+
+    Positions are drawn first, then one shadowing draw per node, then each
+    node is given its spreading factor and power, which draws nothing. That
+    order is the engine's and must not change, since every later draw of the
+    run follows from it (tests/test_engine_golden.py). It lives apart from
+    `run_single_sim` so the site map can show the placement of a run's first
+    repetition exactly, by replaying it with the same seed (design item 31).
+    `xy` is passed on to `_sample_positions`."""
     fixed_sf, sf_options = parse_scenario(scenario, cfg)
     max_d = max_distance_m(cfg, min(cfg.sensitivity_dbm[sf] for sf in sf_options))
 
-    positions = _sample_positions(cfg, n_nodes, max_d, rng)
+    positions = _sample_positions(cfg, n_nodes, max_d, rng, xy)
 
     is_adr = scenario_is_adr(scenario)
     node_sf = {}
@@ -836,6 +852,20 @@ def run_single_sim(cfg: SimConfig, n_nodes: int, sim_time_ms: float,
         else:
             node_sf[nid] = fixed_sf
             node_tx[nid] = cfg.tx_power_dbm
+    return {"positions": positions, "node_sf": node_sf, "node_tx": node_tx,
+            "node_shadow": node_shadow, "unreachable": unreachable,
+            "max_d": max_d}
+
+
+def run_single_sim(cfg: SimConfig, n_nodes: int, sim_time_ms: float,
+                   scenario: str, rng: random.Random) -> dict:
+    """One simulation run. `scenario` is 'SF<n>' for a fixed spreading factor or
+    'MULTI' for adaptive selection by distance."""
+    placed = place_nodes(cfg, n_nodes, scenario, rng)
+    positions = placed["positions"]
+    node_sf, node_tx = placed["node_sf"], placed["node_tx"]
+    node_shadow, unreachable = placed["node_shadow"], placed["unreachable"]
+    max_d = placed["max_d"]
     node_dist = dict(positions)
 
     # Poisson traffic per node (exponential inter-arrival times)

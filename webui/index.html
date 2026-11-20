@@ -435,6 +435,13 @@
       <div><label class="t" for="o_losses" data-i18n>Where packets are lost</label>
       <div class="d" data-i18n>Weak signal, collision and no free demodulator, as shares of
         the packets sent, one panel per scenario.</div></div></div>
+    <div class="opt"><input type="checkbox" id="o_site_map" class="o_fig" value="site_map">
+      <div><label class="t" for="o_site_map" data-i18n>Site map</label>
+      <div class="d" data-i18n>Where the nodes of one run sit, coloured by spreading factor,
+        with each spreading factor's median reach. It shows the first repetition of the
+        highlighted scenario at its capacity, or at the node count you give here.</div>
+      <div style="margin-top:6px;max-width:220px"><label for="o_mapn" data-i18n>Nodes on the map</label>
+        <input id="o_mapn" type="number" step="1" min="1" placeholder="its capacity" data-i18n-attr="placeholder"></div></div></div>
 
     <div class="adv" id="adv_fig" data-name="advanced figure settings" data-i18n-attr="data-name"><div class="advbody">
     <div class="grid" style="margin-top:6px">
@@ -545,7 +552,8 @@ const FIELDS={
   header_recapture:['f_hrec','Header recapture'], scenarios:['scenbox','Scenarios'],
   highlight_scenario:['f_hl','Highlighted scenario'],
   radio:['f_radio','Node radio'], tx_current_ma:['f_radio','Node radio'],
-  extra_figures:['o_delivered','Which figures'], figure_formats:['o_fmt_pdf','Formats'],
+  extra_figures:['o_delivered','Which figures'], site_map_nodes:['o_mapn','Nodes on the map'],
+  figure_formats:['o_fmt_pdf','Formats'],
   figure_dpi:['o_dpi','PNG resolution (dpi)'], figure_size_in:['o_w','Width (in)'],
   figure_basename:['o_base','File name'], data_files:['o_csv','Data files'],
   highlight_color:['o_hl','Highlighted scenario colour'],
@@ -560,7 +568,7 @@ const LONG_KEYS=Object.keys(FIELDS).filter(k=>k.includes('_')).sort((a,b)=>b.len
 const SHORT_KEYS=Object.keys(FIELDS).filter(k=>!k.includes('_'));
 const FIELD_RE=new RegExp('\\b('+LONG_KEYS.join('|')+')\\b|\\b('+SHORT_KEYS.join('|')+')\\b(?=\\s?=)','g');
 const TOUCHED_IDS=new Set();
-const OUTPUT_KEYS=['extra_figures','figure_formats','figure_dpi','figure_size_in',
+const OUTPUT_KEYS=['extra_figures','site_map_nodes','figure_formats','figure_dpi','figure_size_in',
   'figure_basename','data_files','highlight_color','plot_full_xlim',
   'plot_zoom_xlim','plot_zoom_ylim'];
 // How the propagation model was arrived at. It decides what the result means:
@@ -853,6 +861,11 @@ function buildOutput(){
   $('o_zy1').value=d.plot_zoom_ylim[0]; $('o_zy2').value=d.plot_zoom_ylim[1];
   $('o_grey').checked=d.figure_greyscale; $('o_colour').checked=!d.figure_greyscale;
   document.querySelectorAll('.o_fig').forEach(i=>i.checked=d.extra_figures.includes(i.value));
+  // The map's node count means nothing without the map, so it is only open
+  // while the map is asked for (design item 31).
+  $('o_mapn').value = d.site_map_nodes===null ? '' : d.site_map_nodes;
+  const mapOn=()=>{ $('o_mapn').disabled=!$('o_site_map').checked; };
+  $('o_site_map').addEventListener('change', mapOn); mapOn();
   document.querySelectorAll('.o_data').forEach(i=>i.checked=d.data_files.includes(i.value));
   if(d.figure_size_in){ $('o_size').value='custom';
     $('o_w').value=d.figure_size_in[0]; $('o_h').value=d.figure_size_in[1]; }
@@ -881,6 +894,9 @@ function outputValues(){
     data_files:pick('.o_data'), plot_zoom_ylim:[num('o_zy1',null), num('o_zy2',null)],
   };
   if($('o_size').value==='custom') v.figure_size_in=[num('o_w',null), num('o_h',null)];
+  // Sent as typed, so a fraction reaches the checks rather than being
+  // rounded into a count nobody chose.
+  if($('o_site_map').checked && $('o_mapn').value!=='') v.site_map_nodes=num('o_mapn',null);
   const pair=(a,b)=>($(a).value!==''||$(b).value!=='')?[num(a,null),num(b,null)]:null;
   const fx=pair('o_fx1','o_fx2'), zx=pair('o_zx1','o_zx2');
   if(fx) v.plot_full_xlim=fx;
@@ -893,6 +909,7 @@ function outputFiles(){
   const add=n=>v.figure_formats.forEach(x=>f.push(n+'.'+x));
   add(base); v.extra_figures.forEach(k=>add(base+'_'+k));
   f.push('results.json','capacity.json');
+  if(v.extra_figures.includes('site_map')) f.push('site_map.json');
   if(v.data_files.includes('csv')) f.push('results.csv');
   if(v.data_files.includes('md')) f.push('capacity_table.md');
   if(v.data_files.includes('latex')) f.push('capacity_table.tex');

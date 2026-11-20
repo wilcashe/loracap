@@ -97,7 +97,10 @@
       1.0
     ],
     "figure_basename": "iot4cows_capacity",
-    "extra_figures": [],
+    "extra_figures": [
+      "site_map"
+    ],
+    "site_map_nodes": null,
     "figure_formats": [
       "pdf",
       "svg",
@@ -2616,7 +2619,10 @@
         1.0
       ],
       "figure_basename": "iot4cows_capacity",
-      "extra_figures": [],
+      "extra_figures": [
+        "site_map"
+      ],
+      "site_map_nodes": null,
       "figure_formats": [
         "pdf",
         "svg",
@@ -2636,9 +2642,9 @@
       },
       "net_antenna_gain_db": 9.0
     },
-    "loracap_version": "2.0.0",
-    "code_sha256": "1393e32f0bd0ed39cc8c65190d89fb12d762f81b37673f701f1c11d9b007a835",
+    "loracap_version": "2.1.0",
+    "code_sha256": "68a2947554dfcbba74a1d9ddd7f99f4b4c9f61324faaa134672dbe9cabcfc5ee",
     "python": "3.13.18",
-    "generated": "2026-11-20T00:50:12+00:00"
+    "generated": "2026-11-20T04:39:06+00:00"
   }
 }

@@ -36,7 +36,7 @@ STUDIES_DIRNAME = "studies"
 #              its node radio, since that is where the current table comes from
 #   losses     where packets are lost: weak signal, collision, no free
 #              demodulator, as shares of the packets sent, one panel per scenario
-FIGURE_KINDS = ("delivered", "energy", "losses")
+FIGURE_KINDS = ("delivered", "energy", "losses", "site_map")
 FIGURE_FORMATS = ("pdf", "svg", "png")
 DATA_FILES = ("csv", "md", "latex")
 
@@ -179,6 +179,11 @@ class Study:
     # FIGURE_KINDS. Empty by default, so a study written before they existed
     # draws exactly what it drew then.
     extra_figures: Sequence[str] = ()
+    # The site map ("site_map" above, design item 31) shows one placement:
+    # the first repetition of the highlighted scenario, or of the first
+    # scenario, at this many nodes. None takes that scenario's capacity,
+    # rounded to the nearest whole node.
+    site_map_nodes: Optional[int] = None
     figure_formats: Sequence[str] = ("pdf", "svg", "png")
     figure_dpi: int = 200                        # PNG only, vector formats ignore it
     # (width, height) in inches for every figure. None keeps each figure's own
@@ -907,6 +912,13 @@ def _output_errors(study: Study) -> list:
             "extra_figures asks for 'energy' but the study declares no radio "
             "or tx_current_ma. Energy needs the node radio's transmit current, "
             "and a guessed one would read as a measured result.")
+    if study.site_map_nodes is not None and (
+            isinstance(study.site_map_nodes, bool)
+            or not isinstance(study.site_map_nodes, int)
+            or study.site_map_nodes < 1):
+        errors.append(f"site_map_nodes must be a whole number of nodes, at "
+                      f"least 1, or None for the capacity, not "
+                      f"{study.site_map_nodes!r}.")
     if not study.figure_formats:
         errors.append("figure_formats is empty, so no figure would be written.")
     bad = [f for f in study.figure_formats if f not in FIGURE_FORMATS]
@@ -980,7 +992,8 @@ STUDY_FIELD_ORDER = [
     ("base_seed", None), ("der_threshold", None),
     ("highlight_scenario", "figure"), ("highlight_color", None),
     ("plot_full_xlim", None), ("plot_zoom_xlim", None), ("plot_zoom_ylim", None),
-    ("figure_basename", None), ("extra_figures", None), ("figure_formats", None),
+    ("figure_basename", None), ("extra_figures", None), ("site_map_nodes", None),
+    ("figure_formats", None),
     ("figure_dpi", None), ("figure_size_in", None), ("figure_greyscale", None),
     ("data_files", None),
 ]

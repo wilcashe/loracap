@@ -1,0 +1,1010 @@
+{
+  "study": "iot4cows",
+  "site_map": {
+    "scenario": "SF8",
+    "n_nodes": 62,
+    "repetition": 0,
+    "seed": 9900000,
+    "placement": "polygon",
+    "angles_for_display_only": false,
+    "disc_radius_m": null,
+    "polygons_m": [
+      [
+        [
+          -664.66,
+          -556.25
+        ],
+        [
+          -486.23,
+          -694.36
+        ],
+        [
+          -318.2,
+          -852.13
+        ],
+        [
+          -123.98,
+          -820.43
+        ],
+        [
+          132.61,
+          -732.02
+        ],
+        [
+          262.61,
+          -762.69
+        ],
+        [
+          392.55,
+          -316.52
+        ],
+        [
+          530.31,
+          41.94
+        ],
+        [
+          431.21,
+          53.0
+        ],
+        [
+          305.87,
+          27.82
+        ],
+        [
+          168.14,
+          100.44
+        ],
+        [
+          -52.8,
+          65.96
+        ],
+        [
+          -78.29,
+          54.33
+        ],
+        [
+          -122.58,
+          -0.65
+        ],
+        [
+          -157.89,
+          -41.82
+        ],
+        [
+          -250.47,
+          -83.71
+        ],
+        [
+          -292.05,
+          -141.99
+        ],
+        [
+          -353.45,
+          -223.49
+        ],
+        [
+          -433.35,
+          -287.27
+        ],
+        [
+          -529.19,
+          -374.8
+        ],
+        [
+          -689.74,
+          -438.82
+        ],
+        [
+          -844.04,
+          -452.16
+        ]
+      ],
+      [
+        [
+          161.31,
+          107.94
+        ],
+        [
+          -104.69,
+          271.62
+        ],
+        [
+          -273.54,
+          183.79
+        ],
+        [
+          -293.41,
+          160.79
+        ],
+        [
+          -410.06,
+          114.13
+        ],
+        [
+          -372.92,
+          56.19
+        ],
+        [
+          -655.78,
+          -213.51
+        ],
+        [
+          -472.95,
+          -288.79
+        ],
+        [
+          -453.58,
+          -284.45
+        ],
+        [
+          -411.62,
+          -256.35
+        ],
+        [
+          -368.6,
+          -221.91
+        ],
+        [
+          -312.86,
+          -147.52
+        ],
+        [
+          -264.86,
+          -81.91
+        ],
+        [
+          -182.35,
+          -40.11
+        ],
+        [
+          -155.56,
+          -24.03
+        ],
+        [
+          -94.85,
+          46.62
+        ],
+        [
+          -78.77,
+          69.1
+        ],
+        [
+          -33.59,
+          82.01
+        ]
+      ],
+      [
+        [
+          -662.7,
+          -223.87
+        ],
+        [
+          -768.65,
+          -287.13
+        ],
+        [
+          -546.16,
+          -367.19
+        ],
+        [
+          -477.49,
+          -296.07
+        ]
+      ]
+    ],
+    "shadowing_sigma_db": 0.0,
+    "reach_m": {
+      "7": 1816.6,
+      "8": 2371.4,
+      "9": 3095.6
+    },
+    "counts": {
+      "per_sf": {
+        "8": 62
+      },
+      "unreachable": 0,
+      "below_sensitivity": 0
+    },
+    "nodes": [
+      {
+        "id": 0,
+        "x_m": 216.08,
+        "y_m": -303.44,
+        "distance_m": 372.52,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 1,
+        "x_m": -754.12,
+        "y_m": -444.96,
+        "distance_m": 875.6,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 2,
+        "x_m": -488.98,
+        "y_m": -347.33,
+        "distance_m": 599.78,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 3,
+        "x_m": 63.81,
+        "y_m": 116.32,
+        "distance_m": 132.67,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 4,
+        "x_m": -57.54,
+        "y_m": -186.44,
+        "distance_m": 195.11,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 5,
+        "x_m": -266.01,
+        "y_m": -714.5,
+        "distance_m": 762.41,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 6,
+        "x_m": -254.32,
+        "y_m": -570.42,
+        "distance_m": 624.55,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 7,
+        "x_m": 107.52,
+        "y_m": 124.93,
+        "distance_m": 164.83,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 8,
+        "x_m": 116.27,
+        "y_m": -334.43,
+        "distance_m": 354.07,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 9,
+        "x_m": 353.3,
+        "y_m": -82.2,
+        "distance_m": 362.74,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 10,
+        "x_m": 66.21,
+        "y_m": 106.2,
+        "distance_m": 125.15,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 11,
+        "x_m": 358.54,
+        "y_m": -190.95,
+        "distance_m": 406.21,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 12,
+        "x_m": 261.45,
+        "y_m": -30.96,
+        "distance_m": 263.28,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 13,
+        "x_m": 44.58,
+        "y_m": 125.62,
+        "distance_m": 133.3,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 14,
+        "x_m": -195.16,
+        "y_m": -619.02,
+        "distance_m": 649.06,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 15,
+        "x_m": 97.7,
+        "y_m": -10.44,
+        "distance_m": 98.26,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 16,
+        "x_m": -561.37,
+        "y_m": -635.12,
+        "distance_m": 847.66,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 17,
+        "x_m": 248.41,
+        "y_m": -413.8,
+        "distance_m": 482.64,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 18,
+        "x_m": -498.23,
+        "y_m": -461.47,
+        "distance_m": 679.11,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 19,
+        "x_m": -471.73,
+        "y_m": -414.18,
+        "distance_m": 627.76,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 20,
+        "x_m": 40.08,
+        "y_m": -566.78,
+        "distance_m": 568.2,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 21,
+        "x_m": -223.4,
+        "y_m": -293.51,
+        "distance_m": 368.86,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 22,
+        "x_m": -318.85,
+        "y_m": -832.09,
+        "distance_m": 891.09,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 23,
+        "x_m": 440.11,
+        "y_m": 8.31,
+        "distance_m": 440.19,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 24,
+        "x_m": 167.88,
+        "y_m": -393.97,
+        "distance_m": 428.25,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 25,
+        "x_m": -339.62,
+        "y_m": -223.79,
+        "distance_m": 406.72,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 26,
+        "x_m": 169.93,
+        "y_m": -699.73,
+        "distance_m": 720.06,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 27,
+        "x_m": -569.0,
+        "y_m": -485.96,
+        "distance_m": 748.28,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 28,
+        "x_m": -152.76,
+        "y_m": -218.38,
+        "distance_m": 266.51,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 29,
+        "x_m": -33.44,
+        "y_m": -85.01,
+        "distance_m": 91.36,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 30,
+        "x_m": 139.8,
+        "y_m": -234.71,
+        "distance_m": 273.19,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 31,
+        "x_m": 33.49,
+        "y_m": 59.54,
+        "distance_m": 68.31,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 32,
+        "x_m": -46.52,
+        "y_m": 196.7,
+        "distance_m": 202.13,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 33,
+        "x_m": -303.8,
+        "y_m": -828.69,
+        "distance_m": 882.62,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 34,
+        "x_m": -282.8,
+        "y_m": -166.08,
+        "distance_m": 327.96,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 35,
+        "x_m": -412.81,
+        "y_m": -221.17,
+        "distance_m": 468.32,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 36,
+        "x_m": -238.39,
+        "y_m": -613.48,
+        "distance_m": 658.17,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 37,
+        "x_m": 68.17,
+        "y_m": -44.24,
+        "distance_m": 81.27,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 38,
+        "x_m": -575.3,
+        "y_m": -332.89,
+        "distance_m": 664.67,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 39,
+        "x_m": -360.03,
+        "y_m": 27.21,
+        "distance_m": 361.05,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 40,
+        "x_m": 381.13,
+        "y_m": -51.64,
+        "distance_m": 384.62,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 41,
+        "x_m": 340.09,
+        "y_m": -139.22,
+        "distance_m": 367.48,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 42,
+        "x_m": 175.32,
+        "y_m": -189.2,
+        "distance_m": 257.94,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 43,
+        "x_m": -166.05,
+        "y_m": -396.02,
+        "distance_m": 429.42,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 44,
+        "x_m": -652.14,
+        "y_m": -271.25,
+        "distance_m": 706.3,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 45,
+        "x_m": -141.92,
+        "y_m": 230.05,
+        "distance_m": 270.31,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 46,
+        "x_m": -307.78,
+        "y_m": -74.05,
+        "distance_m": 316.56,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 47,
+        "x_m": -322.97,
+        "y_m": -594.65,
+        "distance_m": 676.69,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 48,
+        "x_m": -9.64,
+        "y_m": -574.5,
+        "distance_m": 574.58,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 49,
+        "x_m": -19.63,
+        "y_m": 28.65,
+        "distance_m": 34.73,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 50,
+        "x_m": -45.15,
+        "y_m": -466.84,
+        "distance_m": 469.02,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 51,
+        "x_m": 127.96,
+        "y_m": -211.02,
+        "distance_m": 246.79,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 52,
+        "x_m": -133.88,
+        "y_m": -185.69,
+        "distance_m": 228.92,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 53,
+        "x_m": 364.95,
+        "y_m": -213.43,
+        "distance_m": 422.77,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 54,
+        "x_m": -388.96,
+        "y_m": 22.67,
+        "distance_m": 389.62,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 55,
+        "x_m": -240.18,
+        "y_m": -755.19,
+        "distance_m": 792.46,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 56,
+        "x_m": -254.86,
+        "y_m": -29.56,
+        "distance_m": 256.57,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 57,
+        "x_m": 97.75,
+        "y_m": -501.19,
+        "distance_m": 510.63,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 58,
+        "x_m": -271.58,
+        "y_m": -493.72,
+        "distance_m": 563.49,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 59,
+        "x_m": -65.62,
+        "y_m": 53.12,
+        "distance_m": 84.43,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 60,
+        "x_m": -46.74,
+        "y_m": -565.53,
+        "distance_m": 567.46,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      },
+      {
+        "id": 61,
+        "x_m": -373.97,
+        "y_m": -739.08,
+        "distance_m": 828.31,
+        "sf": 8,
+        "tx_power_dbm": 22.0,
+        "shadowing_db": 0.0,
+        "link": "ok"
+      }
+    ],
+    "nodes_from": "capacity",
+    "capacity": 61.842762399272026
+  },
+  "provenance": {
+    "source": "manifest",
+    "manifest": "studies/iot4cows/experiments.py",
+    "experiment": "headline",
+    "kind": "run",
+    "description": "Capacity at the three legal 125 kHz data rates for a 32-byte payload in US915: SF7 optimistic, SF8 deployed, SF9 conservative.",
+    "variant": null,
+    "variant_label": null,
+    "overrides": {},
+    "n_runs": 30,
+    "sim_time_s": 3600.0,
+    "base_seed": 99,
+    "node_counts": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      10,
+      12,
+      14,
+      17,
+      20,
+      23,
+      28,
+      33,
+      39,
+      46,
+      54,
+      65,
+      77,
+      91,
+      108,
+      128,
+      152,
+      180,
+      213,
+      253,
+      300
+    ],
+    "scenarios": [
+      "SF7",
+      "SF8",
+      "SF9"
+    ],
+    "n_bootstrap": 2000,
+    "options": {},
+    "regenerate": "python3 run.py reproduce iot4cows --only headline",
+    "study": {
+      "name": "iot4cows",
+      "site": "Guamal, Meta, Colombia",
+      "description": "Capacity of a single-gateway LoRaWAN network for collar-mounted cattle monitoring over an 88.54 ha grazing area.",
+      "region": "US915",
+      "bw_khz": 125,
+      "spreading_factors": [
+        7,
+        8,
+        9,
+        10
+      ],
+      "chip": "SX1301",
+      "sensitivity_dbm": null,
+      "n_channels": null,
+      "max_simultaneous_demodulations": null,
+      "n_gateways": 1,
+      "tx_power_dbm": 22.0,
+      "tx_antenna_gain_db": 2.0,
+      "rx_antenna_gain_db": 8.0,
+      "cable_loss_db": 1.0,
+      "path_loss_exponent": 2.16,
+      "path_loss_ref_db": 130.3,
+      "path_loss_ref_distance_m": 100.0,
+      "min_valid_distance_m": 30.0,
+      "path_loss_r_squared": 0.634,
+      "shadowing_sigma_db": 0.0,
+      "fading_sigma_db": 0.0,
+      "path_loss_source": "Field fit over 1,229 aggregated RSSI points, 30 m to 2.21 km, IoT4Cows deployment",
+      "uplink_dwell_time_ms": null,
+      "payload_bytes": 32,
+      "coding_rate": 1,
+      "send_interval_s": 15.0,
+      "capture_threshold_db": 6.0,
+      "receiver_model": "lorasim",
+      "inter_sf_rejection": null,
+      "lock_survival": null,
+      "header_recapture": false,
+      "radio": null,
+      "tx_current_ma": null,
+      "supply_voltage_v": 3.0,
+      "sleep_current_ua": null,
+      "battery_capacity_mah": null,
+      "adr_margin_db": 10.0,
+      "tx_power_offsets_db": null,
+      "placement": "polygon",
+      "polygons_m": "<3 polygon(s), omitted for brevity>",
+      "gateway_lat": 3.91915,
+      "gateway_lon": -73.82184,
+      "scenarios": [
+        "SF7",
+        "SF8",
+        "SF9"
+      ],
+      "adaptive_sf_options": null,
+      "node_counts": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        12,
+        14,
+        17,
+        20,
+        23,
+        28,
+        33,
+        39,
+        46,
+        54,
+        65,
+        77,
+        91,
+        108,
+        128,
+        152,
+        180,
+        213,
+        253,
+        300
+      ],
+      "sim_time_s": 3600.0,
+      "n_runs": 30,
+      "base_seed": 99,
+      "der_threshold": 0.9,
+      "highlight_scenario": "SF8",
+      "highlight_color": "#1f6fb2",
+      "plot_full_xlim": null,
+      "plot_zoom_xlim": [
+        10,
+        160
+      ],
+      "plot_zoom_ylim": [
+        0.75,
+        1.0
+      ],
+      "figure_basename": "iot4cows_capacity",
+      "extra_figures": [
+        "site_map"
+      ],
+      "site_map_nodes": null,
+      "figure_formats": [
+        "pdf",
+        "svg",
+        "png"
+      ],
+      "figure_dpi": 200,
+      "figure_size_in": null,
+      "figure_greyscale": false,
+      "data_files": [
+        "csv"
+      ],
+      "resolved_sensitivity_dbm": {
+        "7": -126.5,
+        "8": -129.0,
+        "9": -131.5,
+        "10": -134.0
+      },
+      "net_antenna_gain_db": 9.0
+    },
+    "loracap_version": "2.1.0",
+    "code_sha256": "68a2947554dfcbba74a1d9ddd7f99f4b4c9f61324faaa134672dbe9cabcfc5ee",
+    "python": "3.13.18",
+    "generated": "2026-11-20T03:55:47+00:00"
+  }
+}

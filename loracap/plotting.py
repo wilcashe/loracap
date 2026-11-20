@@ -23,9 +23,12 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.patches import Circle, Polygon
 from matplotlib.ticker import FixedLocator, ScalarFormatter
 
 from .analysis import crossing, delivered_per_hour, group_by_scenario
+from .sitemap import load_site_map
 from .study import Study, output_dir
 
 LINESTYLES = ["-", "--", ":", "-.", (0, (3, 1, 1, 1)), (0, (5, 1)), (0, (1, 1))]
@@ -347,7 +350,14 @@ def plot_study(study: Study, rows, root=None, formats=None, out_dir=None,
     base = os.path.join(out, study.figure_basename)
     written = _save(study_figure(study, rows, marks), base, formats, study.figure_dpi)
     for kind in study.extra_figures:
-        fig = EXTRA_FIGURES[kind](study, rows)
+        if kind == "site_map":
+            # Drawn from site_map.json, the placement the run wrote, not from
+            # the rows. None when the run could not place one, and then the
+            # run has already said why.
+            data = load_site_map(out)
+            fig = site_map_figure(study, data) if data is not None else None
+        else:
+            fig = EXTRA_FIGURES[kind](study, rows)
         if fig is not None:
             written += _save(fig, f"{base}_{kind}", formats, study.figure_dpi)
     return written
@@ -549,10 +559,176 @@ def losses_figure(study: Study, rows):
     return fig
 
 
+# ---------------------------------------------------------------------------
+# The site map (design item 31)
+# ---------------------------------------------------------------------------
+#
+# Spreading factor is ordered, each step slower and reaching further, so it
+# takes one hue light to dark rather than unrelated colours: the reader sees
+# the order in the colour. The steps are spread over the data rates a study
+# has, so neighbours stay apart. Three to five pass the dataviz validator's
+# ordinal checks (one hue, monotone lightness, visible gaps, light end at
+# 2:1 on the surface). Six leave SF11 and SF12 one step apart, and a marker
+# shape per spreading factor keeps every pair apart in colour, in grey and
+# for a reader who cannot tell the blues apart.
+_SF_RAMP = {
+    1: ["#2a78d6"],
+    2: ["#86b6ef", "#0d366b"],
+    3: ["#86b6ef", "#2a78d6", "#0d366b"],
+    4: ["#86b6ef", "#3987e5", "#1c5cab", "#0d366b"],
+    5: ["#86b6ef", "#5598e7", "#2a78d6", "#1c5cab", "#104281"],
+    6: ["#86b6ef", "#5598e7", "#2a78d6", "#1c5cab", "#104281", "#0d366b"],
+}
+_SF_MARKERS = ["o", "s", "^", "D", "v", "P"]
+_INK, _INK_2, _MUTED, _GRID, _SITE_FILL = (
+    "#0b0b0b", "#52514e", "#898781", "#e1e0d9", "#f0efec")
+
+
+def _sf_style(sfs, greyscale):
+    n = len(sfs)
+    if greyscale:
+        # The same light-to-dark order in grey, for a print without colour.
+        ramp = ([f"{0.62 - 0.54 * i / (n - 1):.2f}" for i in range(n)]
+                if n > 1 else ["0.30"])
+    else:
+        ramp = _SF_RAMP[min(n, 6)]
+    return {sf: (ramp[i], _SF_MARKERS[i % len(_SF_MARKERS)])
+            for i, sf in enumerate(sfs)}
+
+
+def site_map_figure(study: Study, data):
+    """Where the nodes of one run sit, and what each one transmits with.
+
+    `data` is the "site_map" record of site_map.json. Each node is drawn at
+    its position, in the colour and shape of its spreading factor. A node
+    whose link falls below its data rate's sensitivity, shadowing included,
+    is drawn hollow: it transmits and is not heard. A node no data rate
+    reaches is a grey cross: an adaptive scenario leaves it silent. Dashed
+    circles are each data rate's median reach at full power, so a node
+    beyond its circle got there by luck in the shadowing and one inside it
+    can still miss. The frame is the site, not the reach: a circle that
+    lies wholly outside it is named in the legend instead of shrinking the
+    site to a corner."""
+    _rc()
+    sfs = sorted(int(k) for k in data["reach_m"])
+    style = _sf_style(sfs, study.figure_greyscale)
+    nodes = data["nodes"]
+    # The chrome's greys lean warm. A print without colour gets neutral ones.
+    ink2, muted, site_fill = ((_INK_2, _MUTED, _SITE_FILL)
+                              if not study.figure_greyscale
+                              else ("0.32", "0.55", "0.94"))
+
+    # The frame: the site, or the placement disc, and the gateway.
+    if data["polygons_m"]:
+        xs = [p[0] for ring in data["polygons_m"] for p in ring]
+        ys = [p[1] for ring in data["polygons_m"] for p in ring]
+    else:
+        r = data["disc_radius_m"]
+        xs, ys = [-r, r], [-r, r]
+    xs += [0.0] + [n["x_m"] for n in nodes]
+    ys += [0.0] + [n["y_m"] for n in nodes]
+    span = max(max(xs) - min(xs), max(ys) - min(ys), 1.0)
+    pad = 0.06 * span
+    x0, x1, y0, y1 = min(xs) - pad, max(xs) + pad, min(ys) - pad, max(ys) + pad
+    km = span >= 2000.0
+    k = 1000.0 if km else 1.0
+
+    fig, ax = plt.subplots(figsize=study.figure_size_in or (7.2, 7.4))
+    handles = []
+    if data["polygons_m"]:
+        for ring in data["polygons_m"]:
+            ax.add_patch(Polygon([(px / k, py / k) for px, py in ring], closed=True,
+                                 facecolor=site_fill, edgecolor=ink2,
+                                 linewidth=1.2, zorder=1))
+        handles.append(Polygon([(0, 0)], facecolor=site_fill, edgecolor=ink2,
+                               label="site boundary"))
+    else:
+        ax.add_patch(Circle((0, 0), data["disc_radius_m"] / k, fill=False,
+                            edgecolor=ink2, linewidth=1.2, zorder=1))
+        handles.append(Line2D([], [], color=ink2, linewidth=1.2,
+                              label="placement disc"))
+
+    ax.scatter([0], [0], s=120, marker="^", color=_INK, edgecolors="white",
+               linewidths=0.8, zorder=6)
+    handles.append(Line2D([], [], linestyle="none", marker="^", markersize=9,
+                          color=_INK, markeredgecolor="white", label="gateway"))
+
+    for sf in sfs:
+        color, marker = style[sf]
+        heard = [n for n in nodes if n["sf"] == sf and n["link"] == "ok"]
+        weak = [n for n in nodes if n["sf"] == sf and n["link"] == "below_sensitivity"]
+        if heard:
+            ax.scatter([n["x_m"] / k for n in heard], [n["y_m"] / k for n in heard],
+                       s=40, marker=marker, color=color, edgecolors="white",
+                       linewidths=0.6, zorder=4)
+            handles.append(Line2D([], [], linestyle="none", marker=marker,
+                                  markersize=6.5, color=color, markeredgecolor="white",
+                                  label=f"SF{sf}, {len(heard)} nodes"))
+        if weak:
+            ax.scatter([n["x_m"] / k for n in weak], [n["y_m"] / k for n in weak],
+                       s=40, marker=marker, facecolors="white", edgecolors=color,
+                       linewidths=1.2, zorder=4)
+            handles.append(Line2D([], [], linestyle="none", marker=marker,
+                                  markersize=6.5, markerfacecolor="white",
+                                  markeredgecolor=color,
+                                  label=f"SF{sf}, below sensitivity, {len(weak)} nodes"))
+    silent = [n for n in nodes if n["link"] == "unreachable"]
+    if silent:
+        ax.scatter([n["x_m"] / k for n in silent], [n["y_m"] / k for n in silent],
+                   s=30, marker="x", color=muted, linewidths=1.2, zorder=4)
+        handles.append(Line2D([], [], linestyle="none", marker="x", markersize=6.5,
+                              color=muted, label=f"no data rate reaches it, "
+                                                  f"{len(silent)} nodes"))
+
+    corner = max(math.hypot(x, y) for x in (x0, x1) for y in (y0, y1))
+    for sf in sfs:
+        color, _m = style[sf]
+        r = data["reach_m"][str(sf)]
+        ax.add_patch(Circle((0, 0), r / k, fill=False, edgecolor=color,
+                            linestyle=(0, (4, 3)), linewidth=1.3, zorder=2))
+        dist = f"{r / 1000:.2f} km" if r >= 1000 else f"{r:.0f} m"
+        out = ", beyond the frame" if r > corner else ""
+        handles.append(Line2D([], [], color=color, linestyle=(0, (4, 3)),
+                              linewidth=1.3, label=f"SF{sf} median reach, {dist}{out}"))
+
+    ax.set_xlim(x0 / k, x1 / k)
+    ax.set_ylim(y0 / k, y1 / k)
+    ax.set_aspect("equal", adjustable="box")
+    ax.grid(color=_GRID if not study.figure_greyscale else "0.88",
+            linewidth=0.6, zorder=0)
+    ax.set_axisbelow(True)
+    unit = "km" if km else "m"
+    if data["angles_for_display_only"]:
+        ax.set_xlabel(f"From the gateway ({unit})")
+        ax.set_ylabel(f"From the gateway ({unit})")
+    else:
+        ax.set_xlabel(f"East of the gateway ({unit})")
+        ax.set_ylabel(f"North of the gateway ({unit})")
+
+    how = ("its capacity" if data.get("nodes_from") == "capacity"
+           else "set by site_map_nodes")
+    lines = [f"{data['scenario']}, {data['n_nodes']} nodes ({how}): the "
+             f"placement of the first repetition, seed {data['seed']}"]
+    if data["angles_for_display_only"]:
+        lines.append("Disc placement: the model uses distance only, so the "
+                     "angles are drawn for display")
+    if data["shadowing_sigma_db"]:
+        lines.append(f"Shadowing sigma {data['shadowing_sigma_db']:g} dB moves "
+                     f"each node's link off the median reach")
+    ax.set_title("\n".join(lines), fontsize=9.5, loc="left", color="0.25")
+    ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.1),
+              ncol=2, frameon=False, fontsize=9)
+    fig.tight_layout()
+    return fig
+
+
+# The site map takes the placement written beside the results rather than
+# the rows, so plot_study hands it that instead.
 EXTRA_FIGURES = {
     "delivered": delivered_figure,
     "energy": energy_figure,
     "losses": losses_figure,
+    "site_map": site_map_figure,
 }
 
 

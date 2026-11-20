@@ -137,4 +137,8 @@ STUDY = Study(
     highlight_scenario="SF8",
     plot_zoom_xlim=(10, 160),
     figure_basename="iot4cows_capacity",
+    # Where the nodes of one run sit on the Guamal paddocks (design item 31):
+    # the first repetition of SF8 at its capacity. It adds a figure and
+    # site_map.json beside the headline results and moves no number.
+    extra_figures=("site_map",),
 )

@@ -33,7 +33,7 @@ import sys
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
 
-from loracap import analysis, experiment, study as study_mod
+from loracap import analysis, experiment, sitemap, study as study_mod
 
 TEMPLATE = "_template"
 
@@ -119,6 +119,9 @@ def cmd_run(args):
     for path in experiment.write_results(s, rows, provenance=prov):
         if path:
             print(f"Wrote {path}")
+    path, note = sitemap.write_site_map(s, rows, provenance=prov)
+    if path or note:
+        print(f"Wrote {path}" if path else note)
 
     cap = analysis.capacity_with_ci(rows, threshold=s.der_threshold,
                                     n_boot=args.bootstrap)

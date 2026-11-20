@@ -46,7 +46,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 
-from loracap import analysis, experiment, geo, pathloss, presets, study as study_mod
+from loracap import analysis, experiment, geo, pathloss, presets, sitemap, study as study_mod
 from loracap.core import RECEIVER_MODELS, max_distance_m, parse_scenario
 from loracap.core import ref_loss_for_range as core_ref_loss
 
@@ -117,7 +117,7 @@ ORTHOGONAL_NOTE = (
 
 
 OUTPUT_FIELDS = ("highlight_color", "plot_zoom_ylim", "figure_basename",
-                 "extra_figures", "figure_formats", "figure_dpi",
+                 "extra_figures", "site_map_nodes", "figure_formats", "figure_dpi",
                  "figure_size_in", "figure_greyscale", "data_files")
 
 
@@ -601,6 +601,10 @@ def _run_worker(name: str, bootstrap: int):
 
         rows = experiment.run_study(st, progress=False, callback=cb)
         experiment.write_results(st, rows)
+        _path, note = sitemap.write_site_map(st, rows)
+        if note:
+            with _job_lock:
+                _job["log"].append(note)
         cap = analysis.capacity_with_ci(rows, threshold=st.der_threshold,
                                         n_boot=bootstrap)
         analysis.write_capacity(st.name, cap, st.der_threshold)

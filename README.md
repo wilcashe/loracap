@@ -136,7 +136,9 @@ A second tab, **Output**, chooses the figures and files of the run, writes
 the choice into `study.py` like any other setting, and lists the files the run
 will write. Once the run is done it offers them, with `study.py`, as one zip
 to download. The files themselves stay in `outputs/`, where `plot`,
-`capacity` and `reproduce` look for them.
+`capacity` and `reproduce` look for them. Among the figures is the site map,
+where the nodes of one run sit, with a field for how many nodes it shows
+(design item 31).
 
 The page reads in English or in Spanish, chosen with the **English |
 Español** switch in its corner (design item 27). It starts in the browser's
@@ -384,7 +386,8 @@ written before they existed is unaffected.
 
 | Field | Default | What it does |
 |---|---|---|
-| `extra_figures` | `()` | Figures beside the DER figure, by name: `"delivered"`, `"energy"`, `"losses"` |
+| `extra_figures` | `()` | Figures beside the DER figure, by name: `"delivered"`, `"energy"`, `"losses"`, `"site_map"` |
+| `site_map_nodes` | `None` | Nodes on the site map. None takes the capacity of the highlighted scenario |
 | `figure_formats` | `("pdf", "svg", "png")` | Formats of every figure |
 | `figure_dpi` | `200` | Resolution of the PNG files |
 | `figure_size_in` | `None` | `(width, height)` in inches for every figure. None keeps each figure's own size |
@@ -394,7 +397,7 @@ written before they existed is unaffected.
 No journal size is offered by name. The width belongs to the journal the
 figure is for, one column or two, and its author guidelines give it.
 
-The three figures beside the DER figure read only what the run saved:
+The figures beside the DER figure read only what the run saved:
 
 - **`delivered`**, messages delivered per hour against node count: packets
   transmitted times DER, scaled from the simulated time to an hour, beside
@@ -411,6 +414,46 @@ The three figures beside the DER figure read only what the run saved:
   a shared axis. The engine counts the three so they never overlap. Nodes no
   data rate reaches never transmit and are not here: the fleet DER counts
   them.
+- **`site_map`**, where the nodes of one run sit (design item 31): the site
+  boundary, the gateway, each node in the colour and marker of its spreading
+  factor, and a dashed circle for each data rate's median reach at full
+  power. A node whose link, shadowing included, falls below its data rate's
+  sensitivity is drawn hollow: it transmits and is not heard. A node no data
+  rate reaches is a grey cross: an adaptive scenario leaves it silent. A
+  reach circle wholly outside the site is named in the legend rather than
+  shrinking the site into a corner.
+
+### The site map shows one run, exactly
+
+The map is the placement of the first repetition of the highlighted scenario
+(or of the first scenario), replayed with the seed the grid gave that
+repetition. It is that repetition node for node, not one like it, which
+`tests/test_site_map.py` checks against the engine for a fixed data rate,
+MULTI and ADR, with shadowing, on a polygon and on a disc. The node count is
+the scenario's capacity rounded to the nearest whole node, or
+`site_map_nodes`. When the scenario never crosses the threshold and no count
+is set there is no capacity to show, so no map is drawn, and the run says
+so.
+
+The run writes the placement to `site_map.json`, and the figure is drawn
+from that file, so `run.py plot` redraws it without simulating. In a
+`reproduce` manifest only an experiment that draws its own figure writes a
+map. A placement left by an earlier run in the same directory is removed
+when the new run writes none.
+
+On a disc there is no site boundary and the engine draws a distance only,
+because propagation here depends on nothing else. The angles on that map are
+drawn for display, from a generator of their own that cannot touch the run,
+and the figure says so.
+
+The spreading factors share one blue, light to dark, because their order
+means something: each is slower and reaches further. With three to five data
+rates the shades pass the ordinal checks of the colour validator. With six,
+SF11 and SF12 sit one shade apart, and the marker shape, different for every
+spreading factor, keeps them apart in colour, in grey and for a reader who
+cannot tell the blues apart.
+
+The worked example, `iot4cows`, draws it for SF8 at its capacity.
 
 The capacity table, as `capacity_table.md` or `capacity_table.tex`, gives
 each scenario's capacity and 95% bootstrap interval, and says under it what
@@ -1373,7 +1416,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-484 checks, about fifteen seconds, standard library only like the rest of the
+518 checks, about fifteen seconds, standard library only like the rest of the
 package, so nothing needs installing. They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
 studies take minutes each and nobody runs those on every edit.
@@ -1500,8 +1543,9 @@ loracap/
     validation.py           the ALOHA bound and the degeneracy ladder
     compare.py              one study under two propagation models
     reproduce.py            experiments.py manifests behind `run.py reproduce`
-    plotting.py             the figures: one run and the three beside it, the
+    plotting.py             the figures: one run and the four beside it, the
                             ladder, panels side by side
+    sitemap.py              the placement of one run, for the site map
     geo.py                  KML parsing, projection, area and overlap checks
     pathloss.py             log-distance fit and its sanity checks
 tools/
@@ -1511,7 +1555,7 @@ webui/
     server.py               loopback server behind `run.py serve`, and the zip download
     index.html              the setup form: basic and advanced modes, Output tab
     i18n_es.json            the form in Spanish, keyed by its English
-tests/                      484 fast checks, `run.py test`
+tests/                      518 fast checks, `run.py test`
 studies/
     _template/              commented starting point, copied by `run.py new`
     iot4cows/               worked example, see below
