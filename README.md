@@ -111,6 +111,13 @@ checks name each field as the form labels it, and clicking one leads to the
 field. A problem in a part of the form you have not reached yet is listed as
 still to fill in, and turns red only once you enter a value that is wrong.
 
+Under the gateway chip, a note gives the sensitivity, the number of channels
+and the demodulation limit the simulation will use at the bandwidth entered,
+resolved by the same code a run uses, and says so when a column was derived
+from another bandwidth (design item 29). Only concentrators are offered. Bor
+et al.'s XRange SX1272 is a node radio, so the two studies that reproduce
+them name it in their `study.py` instead.
+
 The page opens in **basic** mode: only what has no default, or is usually
 changed, is shown. A field marked with an asterisk has no default and must be
 filled in. Everything else, from the gateway chip and the antenna gains to
@@ -1367,7 +1374,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-468 checks, about fifteen seconds, standard library only like the rest of the
+481 checks, about fifteen seconds, standard library only like the rest of the
 package, so nothing needs installing. They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
 studies take minutes each and nobody runs those on every edit.
@@ -1505,7 +1512,7 @@ webui/
     server.py               loopback server behind `run.py serve`, and the zip download
     index.html              the setup form: basic and advanced modes, Output tab
     i18n_es.json            the form in Spanish, keyed by its English
-tests/                      468 fast checks, `run.py test`
+tests/                      481 fast checks, `run.py test`
 studies/
     _template/              commented starting point, copied by `run.py new`
     iot4cows/               worked example, see below

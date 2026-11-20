@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import io
 import json
+import math
 import os
 import re
 import sys
@@ -199,6 +200,54 @@ def field_limits():
     }
 
 
+def gateway_chips():
+    """The chips the form offers as the gateway's: those with a known
+    channel count, which is what makes a chip a concentrator here.
+
+    XRange_SX1272 stays out (design item 29). It is the node radio on which
+    Bor et al. measured sensitivity, kept in presets for the two studies that
+    reproduce them, which name it in their study.py. Offered in the form it
+    had no channels and no demodulation limit, and `check` then asked for a
+    channel count the form has no field for."""
+    return [c for c in sorted(presets.SENSITIVITY_DBM)
+            if c in presets.N_UPLINK_CHANNELS]
+
+
+def lorawan_bandwidths():
+    """Every uplink bandwidth some regional plan defines, read from the same
+    tables `check` uses rather than listed by hand."""
+    return sorted({bw for table in presets.DATA_RATES.values()
+                   for _sf, bw in table.values()})
+
+
+def chip_detail(chip):
+    """What the chip note under the form shows, for each LoRaWAN uplink
+    bandwidth.
+
+    Resolved by a Study, the object the simulator itself reads, so the note
+    cannot state a figure the simulation does not use. Until design item 29
+    the note showed the 125 kHz figures whatever the bandwidth: eight
+    channels and Table 12 for an SX1301 at 500 kHz, where the simulation runs
+    one channel on Table 14."""
+    sfs = tuple(sorted(next(iter(presets.SENSITIVITY_DBM[chip].values()))))
+    by_bw = {}
+    for bw in lorawan_bandwidths():
+        s = study_mod.Study(name="chip_note", chip=chip, bw_khz=bw,
+                            spreading_factors=sfs)
+        table, derived_from = s.resolved_sensitivity_with_provenance()
+        by_bw[bw] = {
+            # Rounded for reading only: a derived column carries the
+            # 10*log10 shift to many decimals.
+            "sensitivity": {sf: round(v, 2) for sf, v in table.items()},
+            "derived_from": derived_from,
+            "shift_db": (None if derived_from is None
+                         else round(10 * math.log10(bw / derived_from), 2)),
+            "channels": s.resolved_n_channels(),
+            "max_demod": s.resolved_max_demod(),
+        }
+    return {"source": presets.SENSITIVITY_SOURCE.get(chip, ""), "by_bw": by_bw}
+
+
 def payload_ceilings():
     """Every uplink data rate per region as (sf, bw, dwell, ceiling), so the
     page can state the payload limit for whatever SFs are marked. Read from
@@ -235,17 +284,8 @@ def api_bootstrap(_):
         "translations": translations(),
         "regions": {r: list(sfs) for r, sfs in presets.REGION_UPLINK_SF_125KHZ.items()},
         "region_notes": presets.REGION_NOTES,
-        "chips": sorted(presets.SENSITIVITY_DBM),
-        "chip_detail": {
-            c: {
-                "sensitivity": presets.SENSITIVITY_DBM[c].get(
-                    125, next(iter(presets.SENSITIVITY_DBM[c].values()))),
-                "bandwidths": sorted(presets.SENSITIVITY_DBM[c]),
-                "source": presets.SENSITIVITY_SOURCE.get(c, ""),
-                "channels": presets.N_UPLINK_CHANNELS.get(c),
-                "max_demod": presets.MAX_SIMULTANEOUS_DEMODULATIONS.get(c),
-            } for c in presets.SENSITIVITY_DBM
-        },
+        "chips": gateway_chips(),
+        "chip_detail": {c: chip_detail(c) for c in gateway_chips()},
         "dwell_time_regions": list(presets.DWELL_TIME_REGIONS),
         "dwell_time_options": {
             r: sorted(presets.MAX_APP_PAYLOAD_BYTES[r])

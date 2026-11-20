@@ -923,6 +923,7 @@ async function boot(){
   BOOT.chips.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;chip.appendChild(o);});
   chip.value = BOOT.chips[0]||'';
   chip.onchange = chipNote; chipNote();
+  ['input','change'].forEach(ev=>$('f_bw').addEventListener(ev, chipNote));
   reg.onchange = ()=>{buildScenarios(); buildAnchorSf(); buildDwell(); validate();};
   buildDwell();
   buildScenarios();
@@ -1119,12 +1120,22 @@ function chipNote(){
   const c=$('f_chip').value, box=$('chipnote');
   box.innerHTML='';
   if(!c){ box.textContent=T('No chip selected, so you must supply sensitivity values yourself in study.py.'); return; }
-  const d=BOOT.chip_detail[c];
-  const s=Object.keys(d.sensitivity).sort((a,b)=>a-b)
-          .map(k=>'SF'+k+' '+d.sensitivity[k]).join(' · ');
+  // The figures belong to the bandwidth, not to the chip alone: an SX1301 at
+  // 500 kHz has one channel and its own table (design item 29). The server
+  // resolves each bandwidth the way the simulation does.
+  const d=BOOT.chip_detail[c], bw=Math.round(num('f_bw',125)), at=d.by_bw[bw];
   const b=document.createElement('b'); b.textContent=c+'. '; box.appendChild(b);
-  box.append(T('Sensitivity {values} dBm · {channels} channels · {demod} simultaneous demodulations. Source:',
-    {values:s, channels:d.channels, demod:d.max_demod})+' ', sourceSpan(d.source));
+  if(!at){
+    box.append(T('Its figures depend on the bandwidth, and {bw} kHz is not a LoRaWAN uplink bandwidth.', {bw}));
+    return;
+  }
+  const s=Object.keys(at.sensitivity).sort((a,b)=>a-b)
+          .map(k=>'SF'+k+' '+at.sensitivity[k]).join(' · ');
+  const ch = at.channels===1 ? T('1 channel') : T('{n} channels', {n:at.channels});
+  box.append(T('At {bw} kHz: sensitivity {values} dBm · {channels} · {demod} simultaneous demodulations. Source:',
+    {bw, values:s, channels:ch, demod:at.max_demod})+' ', sourceSpan(d.source));
+  if(at.derived_from) box.append(' '+T('There is no table at {bw} kHz, so these figures were derived from its {base} kHz column by +{db} dB, which understates sensitivity.',
+    {bw, base:at.derived_from, db:at.shift_db}));
 }
 
 function buildScenarios(){
