@@ -226,6 +226,10 @@ class Study:
     def resolved_n_channels(self) -> int:
         if self.n_channels is not None:
             return self.n_channels
+        # Above 125 kHz a concentrator receives on its one wide channel, not
+        # on the eight 125 kHz ones (see presets.WIDE_BW_UPLINK_CHANNELS).
+        if self.bw_khz != 125 and self.chip in presets.WIDE_BW_UPLINK_CHANNELS:
+            return presets.WIDE_BW_UPLINK_CHANNELS[self.chip]
         if self.chip and self.chip in presets.N_UPLINK_CHANNELS:
             return presets.N_UPLINK_CHANNELS[self.chip]
         raise ValueError(f"study {self.name!r}: set n_channels (or a known chip).")
@@ -420,6 +424,35 @@ def output_dir(name: str, root: Optional[str] = None) -> str:
 # Validation
 # ---------------------------------------------------------------------------
 
+def _wide_channel_errors(study: Study):
+    """A concentrator receives 250 and 500 kHz on one channel that
+    demodulates one configured data rate (presets.WIDE_BW_UPLINK_CHANNELS).
+    More channels would simulate a gateway the chip cannot make.
+
+    An adaptive scenario is refused as well. With one data rate there is
+    nothing to assign, and in every transcribed plan a wide bandwidth carries
+    a single spreading factor anyway, so MULTI would be that fixed scenario
+    under another name and ADR would be a fixed data rate with power control,
+    which this tool leaves out by design."""
+    if study.bw_khz == 125 or study.chip not in presets.WIDE_BW_UPLINK_CHANNELS:
+        return []
+    limit = presets.WIDE_BW_UPLINK_CHANNELS[study.chip]
+    where = (f"the {study.chip} receives {study.bw_khz} kHz only on IF8, one "
+             f"channel that demodulates the one data rate it is configured "
+             f"for (SX1301 datasheet V2.4, section 3.6.2)")
+    errors = []
+    if study.n_channels is not None and study.n_channels > limit:
+        errors.append(f"n_channels = {study.n_channels}, but {where}. Leave "
+                      f"n_channels unset, or set it to {limit}.")
+    for scen in study.scenarios:
+        if scen.upper() in ("MULTI", "ADR"):
+            errors.append(f"Scenario {scen} assigns a spreading factor per "
+                          f"node, but {where}, so there is nothing to assign. "
+                          f"Simulate the configured spreading factor as a "
+                          f"fixed scenario instead.")
+    return errors
+
+
 def validate(study: Study):
     """Returns (errors, warnings, info). Errors must be fixed before running.
     Warnings are things worth a second look that are not necessarily wrong."""
@@ -464,11 +497,11 @@ def validate(study: Study):
             f"No sensitivity table for {study.chip} at {study.bw_khz} kHz, so "
             f"the figures were derived from its {derived_from} kHz column by "
             f"{10 * math.log10(study.bw_khz / derived_from):+.2f} dB. "
-            f"Measured against the one table here that covers several "
-            f"bandwidths, that derivation is conservative by 1 to 2 dB "
-            f"typically and up to 5 dB, always understating sensitivity and "
-            f"so understating range. Report them as derived, or read the "
-            f"datasheet and set sensitivity_dbm."
+            f"Measured against the one table here measured independently at "
+            f"several bandwidths (Bor et al.'s SX1272), that derivation is "
+            f"conservative by 1 to 2 dB typically and up to 5 dB, always "
+            f"understating sensitivity and so understating range. Report "
+            f"them as derived, or read the datasheet and set sensitivity_dbm."
         )
     for sf in sfs:
         if sf not in sens:
@@ -499,6 +532,7 @@ def validate(study: Study):
                 parse_scenario(scen, cfg)
             except ValueError as e:
                 errors.append(str(e))
+    errors += _wide_channel_errors(study)
     # --- data rates: is each scenario a real uplink DR, and does the payload fit? ---
     if not has_dr_table:
         info.append(

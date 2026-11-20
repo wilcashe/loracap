@@ -92,8 +92,9 @@ REGION_UPLINK_MHZ = {
 # and says so. See that function for how well the derivation holds up.
 # ---------------------------------------------------------------------------
 SENSITIVITY_DBM = {
-    # Semtech SX1301 datasheet V2.4 (June 2017), Table 12, "125 kHz Mode:
-    # IF8, IF[0 to 7] Paths".
+    # Semtech SX1301 datasheet V2.4 (June 2017), section 3.12. Table 12,
+    # "125kHz Mode: IF8, IF[0 to 7] Paths", and Tables 13 and 14, "250 & 500
+    # kHz Mode: IF8 only". All three were read from the rendered page.
     #
     # Section 3.12 states these are typical measurements around 867 MHz using
     # an SX1257 front end WITH an external low-noise amplifier, SAW filter and
@@ -105,10 +106,25 @@ SENSITIVITY_DBM = {
     # The same section states the values depend only on bandwidth and spreading
     # factor, not on carrier frequency, so they apply to other bands using the
     # same front-end design.
+    #
+    # Section 3.11 (Table 11) states the conditions: a 32-byte payload and 10%
+    # packet error rate. It also disagrees with Table 12 by 0.5 dB at SF7 on
+    # the eight 125 kHz channels: -126 dBm "at SF7 : IF0 to 7 paths" against
+    # Table 12's -126.5 dBm for IF8 and IF0 to 7 together. At SF12 both give
+    # -139.5. Table 12 is kept (decided 2026-11-19), since changing it would
+    # move published results. The kept value is the optimistic one by 0.5 dB
+    # for the channels every shipped study uses.
     "SX1301": {
         125: {7: -126.5, 8: -129.0, 9: -131.5, 10: -134.0, 11: -136.5, 12: -139.5},
-        # Table 12 is headed "125 kHz Mode". The 250 and 500 kHz paths
-        # (IF9) are not transcribed here, so those bandwidths are derived.
+        # 250 and 500 kHz exist only on IF8, one channel that demodulates only
+        # the data rate it is configured for (section 3.6.2), so these apply
+        # to one channel at one spreading factor. `WIDE_BW_UPLINK_CHANNELS`
+        # and `study.validate` hold a study to that. Both columns equal the
+        # 125 kHz one plus 10*log10(BW/125 kHz), 3 and 6 dB, to the half
+        # decibel the datasheet prints, so they confirm the derivation
+        # `sensitivity_for` uses for this chip rather than test it.
+        250: {7: -123.5, 8: -126.0, 9: -128.5, 10: -131.0, 11: -133.5, 12: -136.5},
+        500: {7: -120.5, 8: -123.0, 9: -125.5, 10: -128.0, 11: -130.5, 12: -133.5},
     },
 
     # Semtech SX1308. THESE ARE NOT SX1308 FIGURES.
@@ -138,8 +154,9 @@ SENSITIVITY_DBM = {
 
     # Bor, Roedig, Voigt and Alonso, MSWiM 2016, Table 1: sensitivity they
     # MEASURED on an XRange SX1272, which is a node radio, not a gateway
-    # concentrator. Included because it is the only fully sourced table
-    # here that covers all three bandwidths, and because the reproduction
+    # concentrator. Included because it is the only table here MEASURED
+    # independently at all three bandwidths (the SX1301's wider columns are
+    # its 125 kHz one scaled, see above), and because the reproduction
     # studies need it. Note SF12 comes out less sensitive than SF11 in
     # their measurements: that is their result, not a transcription error.
     "XRange_SX1272": {
@@ -153,7 +170,8 @@ SENSITIVITY_DBM = {
 }
 
 SENSITIVITY_SOURCE = {
-    "SX1301": "Semtech SX1301 datasheet V2.4 (June 2017), Table 12",
+    "SX1301": ("Semtech SX1301 datasheet V2.4 (June 2017), Table 12 at 125 kHz, "
+               "Tables 13 and 14 at 250 and 500 kHz (IF8 only)"),
     "SX1308": ("Semtech SX1301 datasheet V2.4 (June 2017), Table 12, reused for "
                "the SX1308, whose datasheet (V1.2) publishes no per-SF table. "
                "Documented assumption, not a measured table."),
@@ -183,6 +201,19 @@ N_UPLINK_CHANNELS = {
     # star connection to sensors", plus a 250 kHz backhaul channel and a GFSK
     # channel that are outside this fixed-bandwidth model.
     "SX1308": 8,
+}
+
+# Uplink channels above 125 kHz. SX1301 datasheet V2.4, section 3.6.2: IF0 to
+# IF7 are fixed at 125 kHz and receive every data rate at once, while 250 and
+# 500 kHz exist only on IF8, a single LoRa channel where "ONLY the configured
+# data rate will be demodulated". Above 125 kHz the chip therefore offers one
+# channel and one spreading factor, and the eight channels of
+# `N_UPLINK_CHANNELS` would describe a gateway that cannot be built with it.
+# The SX1308 is held to the same, since its datasheet describes the same
+# structure: eight 125 kHz channels and one wider backhaul channel.
+WIDE_BW_UPLINK_CHANNELS = {
+    "SX1301": 1,
+    "SX1308": 1,
 }
 
 
@@ -378,9 +409,9 @@ def terrain_range(label: str):
     return TERRAIN_EXPONENTS[key]
 
 
-# Measured against Bor et al.'s Table 1, the only fully sourced table here
-# covering all three bandwidths. Deriving their 250 and 500 kHz columns from
-# their own 125 kHz column gives:
+# Measured against Bor et al.'s Table 1, the only table here measured
+# independently at all three bandwidths. Deriving their 250 and 500 kHz
+# columns from their own 125 kHz column gives:
 #
 #   250 kHz   mean error -1.18 dB, worst -2.51 dB
 #   500 kHz   mean error -2.10 dB, worst -5.02 dB

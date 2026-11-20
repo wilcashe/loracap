@@ -1367,7 +1367,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-456 checks, about fifteen seconds, standard library only like the rest of the
+468 checks, about fifteen seconds, standard library only like the rest of the
 package, so nothing needs installing. They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
 studies take minutes each and nobody runs those on every edit.
@@ -1505,7 +1505,7 @@ webui/
     server.py               loopback server behind `run.py serve`, and the zip download
     index.html              the setup form: basic and advanced modes, Output tab
     i18n_es.json            the form in Spanish, keyed by its English
-tests/                      456 fast checks, `run.py test`
+tests/                      468 fast checks, `run.py test`
 studies/
     _template/              commented starting point, copied by `run.py new`
     iot4cows/               worked example, see below
@@ -1631,16 +1631,28 @@ on one core.
   extending `core.py`.
 - Downlink, acknowledgements, retransmissions and join procedures are not
   modelled. This is an uplink capacity model.
-- Sensitivity is tabulated at 125 kHz for the gateway chips, and at 125, 250
-  and 500 kHz for the one node radio whose measured table is published here.
-  At any other bandwidth the figure is derived from the nearest tabulated one
-  by `10·log10(BW₂/BW₁)`, and `check` says so. The derivation is conservative:
-  measured against the table that does cover three bandwidths, it understates
-  sensitivity by 1.2 dB on average at 250 kHz and 2.1 dB at 500 kHz, and by
-  up to 5.0 dB, never the other way (`python3 run.py reproduce reference`).
-  That understates range, which is the safe direction for a coverage claim,
-  but 5 dB is about 70% of range at a typical exponent, so read a derived
-  figure as a bound rather than a value.
+- Sensitivity is tabulated at 125, 250 and 500 kHz for the SX1301 (datasheet
+  V2.4, Tables 12 to 14) and for the one node radio whose measured table is
+  published here, and at 125 kHz only for the SX1308. At any other bandwidth
+  the figure is derived from the nearest tabulated one by `10·log10(BW₂/BW₁)`,
+  and `check` says so. The SX1301's own 250 and 500 kHz columns equal that
+  derivation to 0.02 dB, so they confirm it for that chip rather than test it.
+  Against the table measured independently at three bandwidths, Bor et al.'s
+  SX1272, the derivation is conservative: it understates sensitivity by 1.2 dB
+  on average at 250 kHz and 2.1 dB at 500 kHz, and by up to 5.0 dB, never the
+  other way (`python3 run.py reproduce reference`). That understates range,
+  which is the safe direction for a coverage claim, but 5 dB is about 70% of
+  range at a typical exponent, so read a derived figure as a bound rather than
+  a value.
+- Above 125 kHz the SX1301 and the SX1308 receive on one channel, IF8, which
+  demodulates only the data rate it is configured for (SX1301 datasheet,
+  section 3.6.2). A study at 250 or 500 kHz with either chip gets one channel
+  by default, and `check` refuses more channels or an adaptive scenario
+  (design item 28). The chip-wide limit of eight simultaneous demodulations
+  is left as it is there, although IF8 is a single path.
+- For SF7 on the eight 125 kHz channels the SX1301 datasheet gives two
+  values: −126.5 dBm in Table 12, used here, and −126 dBm in Table 11. The
+  one used is the more optimistic by 0.5 dB.
 - Plain LoRa outside LoRaWAN is not supported. Spreading factors and
   bandwidths are checked against the regional data-rate tables, so a
   proprietary link such as SF6 at 500 kHz is rejected by design.
