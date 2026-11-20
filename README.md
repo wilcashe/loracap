@@ -497,9 +497,10 @@ supported, for the reason given under "Known limitations".
 ## Reproducing the ancestor
 
 The degeneracy ladder checks the engine against theory. `studies/bor2016_sn1`
-and `studies/bor2016_sn3` check it against an independent published
-simulation, which is a different question, and they are the thing to re-run
-after any substantial change to the engine.
+and `studies/bor2016_sn3` set up the configuration of an independent
+published simulation and compare with what its paper reports, which is a
+different question, and they are the thing to re-run after any substantial
+change to the engine.
 
 Both reproduce Experiment Set 1 of Bor, Roedig, Voigt and Alonso, *Do LoRa
 Low-Power Wide-Area Networks Scale?*, MSWiM 2016. Every parameter comes from
@@ -517,12 +518,12 @@ which is a node radio rather than a gateway.
 python3 run.py run bor2016_sn3
 ```
 
-**The engine agrees with LoRaSim. Neither agrees with the paper.**
+**The engine does not reach the paper's figure, and the paper disagrees
+with itself.**
 
 | | SN1 (CR 4/8) | SN3 (CR 4/5) |
 |---|---|---|
 | This engine | 39.0, CI [38.1, 40.1] | 51.4, CI [49.8, 52.4] |
-| LoRaSim itself, run here | 38.7 | 52.3 |
 | Paper, abstract, body and findings | — | 64 |
 | Paper, Figure 4 caption | — | 120 |
 
@@ -531,36 +532,33 @@ python3 run.py run bor2016_sn3
 `studies/bor2016_sn3/experiments.py`, 15 runs per point, 17 node counts from
 10 to 300, 200000 s simulated, seed 99, 2000 bootstrap replicates.
 Regenerate with `python3 run.py reproduce bor2016_sn1` and `bor2016_sn3`.
-The LoRaSim row comes from a run of LoRaSim outside this repository. The
-Python 3 port and the script that produced it are not included yet, so that
-row cannot be regenerated from here. The paper rows are quoted from the
-paper.*
+The paper rows are quoted from the paper.*
 
-The SN3 figure marks the three numbers the curve is read against as
-labelled vertical lines: LoRaSim's 52.3, and the paper's 64 and 120. None of
-them is produced here, which is why they are marks and not curves, and
-their sources are written beside them in `studies/bor2016_sn3/experiments.py`.
-LoRaSim's own curve is not drawn, because the run that produced it is not
-in this repository.
+The SN3 figure marks the paper's two numbers, 64 and 120, as labelled
+vertical lines. Neither is produced here, which is why they are marks and
+not curves, and their sources are written beside them in
+`studies/bor2016_sn3/experiments.py`. Airtime matches the published
+1712.13 ms for SN1 exactly.
 
-LoRaSim was taken from [mcbor/lorasim](https://github.com/mcbor/lorasim),
-converted to Python 3 and run at the same settings. Across N = 20 to 100 the
-two simulators agree within 0.009 DER at every point, this engine sitting
-about 0.005 lower throughout. Airtime matches the published 1712.13 ms for
-SN1 exactly.
+The paper disagrees with itself: 64 appears in the abstract, the body and
+the findings, while Figure 4's caption says 120 for the same configuration.
+That is what text and figures drifting apart looks like, and it fits the
+footnote recording that every figure was regenerated after Mariusz Slabicki
+found a bug that overestimated goodput.
 
-The paper's own figure does not follow from the published code at the stated
-parameters, and the paper disagrees with itself about it: 64 appears in the
-abstract, the body and the findings, while Figure 4's caption says 120 for
-the same configuration. That is what text and figures drifting apart looks
-like, and it fits the footnote recording that every figure was regenerated
-after Mariusz Slabicki found a bug that overestimated goodput.
+During development, LoRaSim itself
+([mcbor/lorasim](https://github.com/mcbor/lorasim), converted to Python 3)
+was run at these settings outside this repository. Its capacity came out
+close to this engine's, not near 64, the capacity the paper states for SN3
+in its abstract, body and findings. That run is not part of the repository
+and cannot be regenerated from it, so it is mentioned as context, not as
+evidence, and none of its figures are quoted.
 
-Two things this cannot settle. The repository is a single 2021 commit with no
-history, so whether it is the corrected code cannot be established from it.
-And since the bug overestimated goodput, if that code is still the buggy
-version then the corrected answer would be at or below 52.3, which moves it
-further from 64 rather than closer.
+Two things this cannot settle. LoRaSim's repository is a single 2021 commit
+with no history, so whether it holds the corrected code cannot be
+established from it. And since the bug overestimated goodput, if that code
+is still the buggy version, a corrected simulation would support fewer nodes
+still, which moves it further from 64 rather than closer.
 
 A detail worth knowing if you ever compare against LoRaSim yourself: its
 `maxDist` inverts the path-loss model in base *e* while computing the loss
@@ -609,11 +607,11 @@ than microamps, a GNSS receiver kept tracking for example, the balance is
 reversed, so recompute it for your own hardware rather than borrowing either
 figure.
 
-**Checked against LoRaSim**, which computes energy for the same configuration
-with the same current table. At N = 64 LoRaSim reported 2215.4 J, and this
-engine now gives 2228.8 J, 0.6% apart. The LoRaSim figure comes from a run
-outside this repository, so the comparison will be regenerable once the
-LoRaSim port is added.
+**The same quantity LoRaSim computes.** LoRaSim reports transmit energy for
+this configuration with the same SX1272 current table, entry for entry, so
+the two are directly comparable. No comparison is quoted here, because the
+LoRaSim run that made one is not part of this repository (see the
+reproduction above).
 
 **What it says about ADR**, on the SN3 reproduction in EU868, as energy per
 extracted message against fixed SF12:
@@ -1375,7 +1373,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-481 checks, about fifteen seconds, standard library only like the rest of the
+484 checks, about fifteen seconds, standard library only like the rest of the
 package, so nothing needs installing. They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
 studies take minutes each and nobody runs those on every edit.
@@ -1513,7 +1511,7 @@ webui/
     server.py               loopback server behind `run.py serve`, and the zip download
     index.html              the setup form: basic and advanced modes, Output tab
     i18n_es.json            the form in Spanish, keyed by its English
-tests/                      481 fast checks, `run.py test`
+tests/                      484 fast checks, `run.py test`
 studies/
     _template/              commented starting point, copied by `run.py new`
     iot4cows/               worked example, see below

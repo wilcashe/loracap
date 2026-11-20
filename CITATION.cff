@@ -29,11 +29,11 @@ abstract: >-
   together with optional rejection between spreading factors taken from
   published measurements. The engine is validated twice. It degenerates onto
   the analytical pure-ALOHA bound when the mechanisms the theory lacks are
-  switched off, and it agrees with LoRaSim within 0.009 DER on Bor et al.'s
-  Experiment Set 1. Capacity is reported with a bootstrap confidence
-  interval. Every quoted result is regenerated from a manifest that fixes its
-  configuration and seed, and every output file records the digest of the
-  code that produced it. Written in Python 3 with the standard library only,
+  switched off, and it reproduces the configuration of Bor et al.'s
+  Experiment Set 1, whose published airtime it matches exactly. Capacity is
+  reported with a bootstrap confidence interval. Every quoted result is
+  regenerated from a manifest that fixes its configuration and seed, and
+  every output file records the digest of the code that produced it. Written in Python 3 with the standard library only,
   plus matplotlib for figures. Includes tools to convert a KML boundary and to
   fit a log-distance model to field measurements, and a web interface for
   configuring a study. The lock rule can also take a measured per-SF

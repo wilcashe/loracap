@@ -19,16 +19,15 @@ EXPERIMENTS = [
                      150, 200, 250, 300),
         scenarios=("SF12",),
         figure=True,
-        # What the capacity above is read against. None of the three is
-        # produced here, which is why they are marks and not curves.
-        #   52.3  LoRaSim itself (github.com/mcbor/lorasim, ported to
-        #         Python 3) at these settings, run outside this repository.
-        #         See study.py, "WHAT THIS REPRODUCTION FOUND".
+        # What the capacity above is read against. Neither is produced
+        # here, which is why they are marks and not curves.
         #   64    Bor et al. (2016), abstract, body and findings.
         #   120   Bor et al. (2016), caption of Figure 4, for the same
         #         configuration.
-        figure_marks=((52.3, "LoRaSim, external run"),
-                      (64.0, "Bor et al., text"),
+        # LoRaSim itself is not marked: the one run of it at these settings
+        # was made outside this repository and cannot be regenerated, so it
+        # is not quoted (design item 30, and study.py).
+        figure_marks=((64.0, "Bor et al., text"),
                       (120.0, "Bor et al., Fig. 4 caption")),
         **COMMON,
     ),

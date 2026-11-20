@@ -22,11 +22,11 @@ rate and nothing else.
 Why this study exists
 ---------------------
 The degeneracy ladder in `run.py validate` checks the engine against ALOHA
-theory. This checks it against an independent published simulation, which is
-a different question: theory says what the floor is, Bor et al. say what
-their simulator got for a specific configuration. Reproducing their number is
-the cheapest strong external validation available, and after any substantial
-change to the engine it is the thing to re-run.
+theory. This sets up the configuration of an independent published
+simulation and compares with what its paper reports, which is a different
+question: theory says what the floor is, Bor et al. say what their simulator
+got for a specific configuration. After any substantial change to the engine
+it is the thing to re-run.
 
 Every value below is from the paper, not inferred. Table 2 gives the
 transmitter settings, Section 3.2 gives the propagation model, Table 1 gives

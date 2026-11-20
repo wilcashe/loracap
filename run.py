@@ -504,7 +504,7 @@ def cmd_test(args):
     if result.wasSuccessful():
         print("\nThe fast checks pass. They do not replace:")
         print("  python3 run.py validate <study>    degeneracy onto ALOHA theory")
-        print("  python3 run.py run bor2016_sn3     agreement with LoRaSim")
+        print("  python3 run.py run bor2016_sn3     reproduction of Bor et al. 2016")
         return 0
     return 1
 

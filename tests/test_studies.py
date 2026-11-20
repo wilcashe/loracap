@@ -5,9 +5,11 @@ that no longer comes out of the code is worse than no quantity at all. These
 check the cheap derived figures, not the simulated ones: capacity belongs to
 `run.py run`, which takes minutes.
 """
+import os
+import re
 import unittest
 
-from loracap import geo, study as study_mod
+from loracap import geo, reproduce, study as study_mod
 from loracap.core import airtime_ms, max_distance_m
 
 
@@ -116,6 +118,46 @@ class TestReproductionStudies(unittest.TestCase):
         cfg = load("bor2016_sn3").to_sim_config()
         self.assertAlmostEqual(max_distance_m(cfg, cfg.sensitivity_dbm[12]),
                                360, delta=5)
+
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+class TestTheExternalLoRaSimRunIsNotQuoted(unittest.TestCase):
+    """LoRaSim was run once outside this repository, during development. That
+    run cannot be regenerated from here, so none of its figures may be
+    quoted, and the documents mention it in words only (design item 30). The
+    ROADMAP keeps the figures as history, and it is not in the repository."""
+
+    # Its capacities for SN1 and SN3, its energy at N = 64, and the agreement
+    # and offset it was said to show.
+    FIGURES = (r"38\.7", r"52\.3", r"2215\.4", r"0\.009 DER", r"0\.005 lower")
+    DOCUMENTS = ("README.md", "CITATION.cff", "run.py",
+                 "studies/bor2016_sn1/study.py", "studies/bor2016_sn1/experiments.py",
+                 "studies/bor2016_sn3/study.py", "studies/bor2016_sn3/experiments.py")
+
+    def test_none_of_its_figures_is_quoted(self):
+        for rel in self.DOCUMENTS:
+            with open(os.path.join(ROOT, rel), encoding="utf-8") as f:
+                text = f.read()
+            for fig in self.FIGURES:
+                # 52.3 must not match inside 152.3, a lock-rule interval.
+                found = re.findall(r"(?<![\d.])" + fig + r"(?!\d)", text)
+                self.assertEqual(found, [], (rel, fig))
+
+    def test_the_sn3_figure_marks_only_the_papers_numbers(self):
+        headline = [e for e in reproduce.load_manifest("bor2016_sn3")
+                    if e.name == "headline"][0]
+        self.assertEqual([v for v, _label in headline.figure_marks], [64.0, 120.0])
+
+    def test_the_readme_still_says_it_was_run(self):
+        """Mentioned, not erased: a reader is told why the engine sits below
+        the paper's 64 without being handed a number to cite."""
+        with open(os.path.join(ROOT, "README.md"), encoding="utf-8") as f:
+            text = " ".join(f.read().split())
+        self.assertIn("was run at these settings outside this repository", text)
+        self.assertIn("mentioned as context, not as evidence, and none of its "
+                      "figures are quoted", text)
 
 
 if __name__ == "__main__":
