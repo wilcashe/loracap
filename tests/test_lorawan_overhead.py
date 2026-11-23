@@ -164,3 +164,16 @@ class TestTheWebPage(TempRoot):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestTimeOnAirIsAnAbbreviation(unittest.TestCase):
+    """The note on the header says "time on air (ToA)". ToA is in the page's
+    glossary and must be marked where it appears, as every abbreviation is."""
+
+    def test_the_page_marks_it(self):
+        with open(PAGE, encoding="utf-8") as f:
+            html = f.read()
+        term_re = re.search(r"const TERM_RE=/(.*)/g;", html).group(1)
+        self.assertEqual(re.search(term_re, "the time on air (ToA) counts them").group(1), "ToA")
+        self.assertIn("  ToA:'time on air: ", html)
+        self.assertIn("so the time on air\n      (ToA) counts them", html)

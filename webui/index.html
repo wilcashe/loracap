@@ -368,7 +368,7 @@
     <div class="srcnote" data-for="f_hdr" data-i18n><b>LoRaWAN header.</b> Every uplink carries
       13 bytes besides the application payload: MHDR (1), FHDR without options
       (7), FPort (1) and MIC (4). The radio sends them, so the time on air
-      counts them, while the payload limit of each data rate applies to the
+      (ToA) counts them, while the payload limit of each data rate applies to the
       application payload alone. Set 0 only for a bare LoRa frame without
       LoRaWAN.</div>
     </div></div>
@@ -792,8 +792,9 @@ const TERMS={
   dBm:'power in decibels relative to one milliwatt',
   dBi:'antenna gain in decibels relative to an isotropic antenna',
   dpi:'dots per inch: the resolution of a PNG figure',
+  ToA:'time on air: how long one uplink occupies the channel, longer at a higher spreading factor or a larger frame',
 };
-const TERM_RE=/\b(DER|DR|ADR|CR|RSSI|SIR|KML|CSV|CI|Tx|dBm|dBi|dpi)\b|\bSF(?=\d|\b)/g;
+const TERM_RE=/\b(DER|DR|ADR|CR|RSSI|SIR|KML|CSV|CI|Tx|dBm|dBi|dpi|ToA)\b|\bSF(?=\d|\b)/g;
 const NO_TERMS='ABBR,CODE,PRE,SCRIPT,STYLE,OPTION,SELECT,TEXTAREA,BUTTON,SUMMARY,DT';
 function buildTerms(){
   const dl=$('terms_list');
