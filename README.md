@@ -224,6 +224,20 @@ It reports the distance distribution, runs those sanity checks, then prints two
 fits, binned and unbinned, with the block to paste for each. They can differ by
 enough to matter, so choose deliberately and record which one you used.
 
+`--tx-power` and `--net-gain` describe the equipment **the measurements were
+taken with**, not the radio the study will simulate. They are what turns each
+RSSI into a loss of the terrain, and the loss at d₀ moves one for one with
+them. A study may then simulate a different power over the same terrain.
+On the web page the measurements pane has four fields of its own for that
+equipment: the node's power, both antennas and the losses of node and cable
+(design item 32). Left blank, the fit gives the exponent and σ but no loss
+at d₀, since a default would be a number with nothing behind it. The fit is
+redone whenever the equipment, the gateway position, d₀ or the floor
+changes, and the model records the equipment in `path_loss_source`. Until
+item 32 the page read the study's radio fields when the file was loaded and
+never again, which on the CowNet data put the loss at 100 m 11.7 dB too low
+when the file came before the equipment.
+
 Points closer than 30 m are excluded by default, because the receiver front end
 compresses at very short range and the reported RSSI understates the true
 level. Move that floor with `--min-distance`. The same floor is recorded in the
@@ -1416,7 +1430,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-518 checks, about fifteen seconds, standard library only like the rest of the
+528 checks, about fifteen seconds, standard library only like the rest of the
 package, so nothing needs installing. They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
 studies take minutes each and nobody runs those on every edit.
@@ -1555,7 +1569,7 @@ webui/
     server.py               loopback server behind `run.py serve`, and the zip download
     index.html              the setup form: basic and advanced modes, Output tab
     i18n_es.json            the form in Spanish, keyed by its English
-tests/                      518 fast checks, `run.py test`
+tests/                      528 fast checks, `run.py test`
 studies/
     _template/              commented starting point, copied by `run.py new`
     iot4cows/               worked example, see below

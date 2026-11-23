@@ -269,6 +269,15 @@
          file of received messages with the received signal strength (RSSI),
          latitude and longitude. Filter it first to one spreading factor
          and one gateway.</p>
+      <p class="hint" data-i18n>The equipment the measurements were taken with. It turns
+         each RSSI into the loss of the terrain, and it can differ from the radio
+         the study simulates.</p>
+      <div class="grid">
+        <div><label for="m_tx" data-i18n>Node Tx power (dBm)</label><input id="m_tx" type="number" step="any"></div>
+        <div><label for="m_gtx" data-i18n>Node antenna (dBi)</label><input id="m_gtx" type="number" step="any"></div>
+        <div><label for="m_grx" data-i18n>Gateway antenna (dBi)</label><input id="m_grx" type="number" step="any"></div>
+        <div><label for="m_loss" data-i18n>Losses, node and cable (dB)</label><input id="m_loss" type="number" step="any"></div>
+      </div>
       <div class="row">
         <input type="file" id="csvfile" accept=".csv,.tsv,.txt" style="display:none">
         <button onclick="document.getElementById('csvfile').click()" data-i18n>Choose measurements CSV…</button>
@@ -1257,21 +1266,57 @@ function drawPoly(r){
 }
 
 /* ---------- path loss ---------- */
-$('csvfile').onchange = async e=>{
-  const f=e.target.files[0]; if(!f) return;
-  tplain($('csvname'), f.name);
+// The equipment the measurements were taken with (design item 32). An RSSI
+// becomes a loss of the terrain only through the power and antennas that
+// sent it, and those are the campaign's, which need not be the radio the
+// study simulates. Until this item the page read the study's radio fields
+// when the CSV was loaded and never again: loaded before the real equipment
+// was typed, the CowNet loss at 100 m came out 11.7 dB too low, and "Use"
+// copied it without a word. Left blank, no loss is derived at all, since a
+// default would be a number with nothing behind it.
+const EQUIPMENT_IDS=['m_tx','m_gtx','m_grx','m_loss'];
+function measuredWith(){
+  if(EQUIPMENT_IDS.some(i=>$(i).value==='')) return null;
+  return {tx:num('m_tx'), net:num('m_gtx')+num('m_grx')-num('m_loss')};
+}
+function fitRequest(csv){
+  const eq=measuredWith();
+  return {csv, lat:num('f_lat'), lon:num('f_lon'),
+    tx_power_dbm: eq ? eq.tx : null, net_gain_db: eq ? eq.net : 0,
+    d0_m:num('f_d0',100), min_distance_m:num('f_minv',30)};
+}
+// The file is kept, so every input the fit reads can redo it: the
+// equipment, the gateway position (it sets every distance), d0 and the
+// floor. The table then always describes the form as it stands. The model
+// itself changes only when "Use" is pressed.
+// Two quick edits send two fits, and the first can answer last. Only the
+// answer to the latest request is shown, or a stale fit would sit in the
+// table as if it were current.
+let CSVTEXT=null, FITSEQ=0;
+async function runFit(){
+  if(CSVTEXT===null) return;
+  const seq=++FITSEQ;
   const out=$('fitout'); out.innerHTML=''; out.appendChild(msgT('i','Fitting…'));
   if($('f_lat').value===''||$('f_lon').value===''){
     out.innerHTML=''; out.appendChild(msgT('e','Enter the gateway position first.')); return;
   }
+  const equipment=measuredWith();
   try{
-    const netGain = num('f_gtx',0)+num('f_grx',0)-num('f_cable',0);
-    const r = await post('/api/fit',{csv:await f.text(),lat:num('f_lat'),lon:num('f_lon'),
-      tx_power_dbm:num('f_tx'),net_gain_db:netGain,d0_m:num('f_d0',100),
-      min_distance_m:num('f_minv',30)});
-    LASTFIT=r; showFit(r);
-  }catch(err){ out.innerHTML=''; out.appendChild(msgX('e',err.message)); }
+    const r = await post('/api/fit', fitRequest(CSVTEXT));
+    if(seq!==FITSEQ) return;
+    r.equipment=equipment; LASTFIT=r; showFit(r);
+  }catch(err){
+    if(seq!==FITSEQ) return;
+    out.innerHTML=''; out.appendChild(msgX('e',err.message));
+  }
+}
+$('csvfile').onchange = async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  tplain($('csvname'), f.name);
+  CSVTEXT=await f.text(); runFit();
 };
+EQUIPMENT_IDS.concat(['f_lat','f_lon','f_d0','f_minv'])
+  .forEach(id=>$(id).addEventListener('change', runFit));
 
 function showFit(r){
   const out=$('fitout'); out.innerHTML='';
@@ -1280,6 +1325,10 @@ function showFit(r){
      from:r.distance_min_m.toFixed(0), to:r.distance_max_m.toFixed(0)}));
   // The fit's warnings are the simulator's, in English.
   r.warnings.forEach(w=>out.appendChild(msgEn('w',w.message)));
+  out.appendChild(r.equipment
+    ? msgT('i','RSSI turned into loss with {tx} dBm and a net antenna gain of {net} dB, the equipment entered above.',
+           {tx:r.equipment.tx, net:+r.equipment.net.toFixed(2)})
+    : msgT('w','Enter the equipment the measurements were taken with to get the loss at d₀. Without it the fit gives the exponent and σ only.'));
   const t=mk('table'), head=mk('tr');
   head.append(tset(mk('th'),'Fit'), mk('th','','n'), mk('th','','R²'), mk('th','','σ (dB)'),
               mk('th','','L(d₀)'), tset(mk('th'),'Points'), mk('th'));
@@ -1412,8 +1461,12 @@ function useFit(i){
   $('f_minv').value=f.min_distance_m;
   if(f.shadowing_sigma_db!==undefined && f.shadowing_sigma_db!==null)
     $('f_sigma').value=f.shadowing_sigma_db.toFixed(2);
+  // study.py records the equipment the loss was derived with, so the model
+  // can be checked against the campaign later.
+  const eq=LASTFIT.equipment;
   $('f_plsrc').value='Field fit ('+f.label+'), '+f.n_points+' points, '
-    + f.min_distance_m.toFixed(0)+' m to '+f.max_distance_m.toFixed(0)+' m';
+    + f.min_distance_m.toFixed(0)+' m to '+f.max_distance_m.toFixed(0)+' m'
+    + (eq ? ', measured at '+eq.tx+' dBm with a net antenna gain of '+(+eq.net.toFixed(2))+' dB' : '');
   schedule();
 }
 
