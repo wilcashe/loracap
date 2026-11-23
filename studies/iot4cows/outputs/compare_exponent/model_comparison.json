@@ -22,21 +22,21 @@
         "overrides": {},
         "capacity": {
           "SF7": {
-            "capacity": 114.90954845022107,
-            "ci_low": 113.8777855252453,
-            "ci_high": 115.94869909329306,
+            "capacity": 88.00649636694978,
+            "ci_low": 87.07822707535233,
+            "ci_high": 89.09488897672418,
             "n_bootstrap": 2000
           },
           "SF8": {
-            "capacity": 61.842762399272026,
-            "ci_low": 61.08938142113569,
-            "ci_high": 62.64964106911322,
+            "capacity": 49.89221308383814,
+            "ci_low": 49.25986512264763,
+            "ci_high": 50.537309815041226,
             "n_bootstrap": 2000
           },
           "SF9": {
-            "capacity": 33.9399990828778,
-            "ci_low": 32.96358633362298,
-            "ci_high": 34.65981360661771,
+            "capacity": 26.270848796894057,
+            "ci_low": 25.625117015529863,
+            "ci_high": 27.09124636469852,
             "n_bootstrap": 2000
           }
         },
@@ -68,21 +68,21 @@
         },
         "capacity": {
           "SF7": {
-            "capacity": 89.44681595131027,
-            "ci_low": 83.67823159741059,
-            "ci_high": 94.89268832064462,
+            "capacity": 69.92320720478199,
+            "ci_low": 64.08502687995068,
+            "ci_high": 74.39654181422056,
             "n_bootstrap": 2000
           },
           "SF8": {
-            "capacity": 67.13942898557981,
-            "ci_low": 66.30788625237483,
-            "ci_high": 67.87950965046687,
+            "capacity": 54.26759884707188,
+            "ci_low": 53.48871767729264,
+            "ci_high": 55.047517675998506,
             "n_bootstrap": 2000
           },
           "SF9": {
-            "capacity": 36.77759175226373,
-            "ci_low": 36.180818888668064,
-            "ci_high": 37.42740039060139,
+            "capacity": 28.819972916112008,
+            "ci_low": 27.97280266964256,
+            "ci_high": 29.49712576122794,
             "n_bootstrap": 2000
           }
         },
@@ -114,52 +114,52 @@
       {
         "variant": "exponent only (rural)",
         "scenario": "SF7",
-        "baseline": 114.90954845022107,
+        "baseline": 88.00649636694978,
         "baseline_ci": [
-          113.8777855252453,
-          115.94869909329306
+          87.07822707535233,
+          89.09488897672418
         ],
-        "estimate": 89.44681595131027,
+        "estimate": 69.92320720478199,
         "estimate_ci": [
-          83.67823159741059,
-          94.89268832064462
+          64.08502687995068,
+          74.39654181422056
         ],
         "inside": false,
-        "relative_error": -0.22158935303745692,
+        "relative_error": -0.20547675352019626,
         "covers_site": false
       },
       {
         "variant": "exponent only (rural)",
         "scenario": "SF8",
-        "baseline": 61.842762399272026,
+        "baseline": 49.89221308383814,
         "baseline_ci": [
-          61.08938142113569,
-          62.64964106911322
+          49.25986512264763,
+          50.537309815041226
         ],
-        "estimate": 67.13942898557981,
+        "estimate": 54.26759884707188,
         "estimate_ci": [
-          66.30788625237483,
-          67.87950965046687
+          53.48871767729264,
+          55.047517675998506
         ],
         "inside": false,
-        "relative_error": 0.08564731555992292,
+        "relative_error": 0.08769676654514008,
         "covers_site": true
       },
       {
         "variant": "exponent only (rural)",
         "scenario": "SF9",
-        "baseline": 33.9399990828778,
+        "baseline": 26.270848796894057,
         "baseline_ci": [
-          32.96358633362298,
-          34.65981360661771
+          25.625117015529863,
+          27.09124636469852
         ],
-        "estimate": 36.77759175226373,
+        "estimate": 28.819972916112008,
         "estimate_ci": [
-          36.180818888668064,
-          37.42740039060139
+          27.97280266964256,
+          29.49712576122794
         ],
         "inside": false,
-        "relative_error": 0.08360615044381234,
+        "relative_error": 0.09703242323557232,
         "covers_site": true
       }
     ],
@@ -248,6 +248,7 @@
       "path_loss_source": "Field fit over 1,229 aggregated RSSI points, 30 m to 2.21 km, IoT4Cows deployment",
       "uplink_dwell_time_ms": null,
       "payload_bytes": 32,
+      "lorawan_overhead_bytes": 13,
       "coding_rate": 1,
       "send_interval_s": 15.0,
       "capture_threshold_db": 6.0,
@@ -340,9 +341,9 @@
       },
       "net_antenna_gain_db": 9.0
     },
-    "loracap_version": "2.1.0",
-    "code_sha256": "68a2947554dfcbba74a1d9ddd7f99f4b4c9f61324faaa134672dbe9cabcfc5ee",
+    "loracap_version": "2.2.0",
+    "code_sha256": "8319cc7acc843ae952f20ab4323e8878ed98cf8965d65fff78a75e9dc1127671",
     "python": "3.13.18",
-    "generated": "2026-11-20T03:58:37+00:00"
+    "generated": "2026-11-23T18:53:48+00:00"
   }
 }

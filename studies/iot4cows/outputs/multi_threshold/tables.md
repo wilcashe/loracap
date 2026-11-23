@@ -4,10 +4,10 @@ MULTI at the 1 and 3 dB same-SF thresholds under both receiver rules, so that th
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|
-| LoRaSim rule, 1 dB threshold | MULTI | 165.5 | [164.6, 166.4] | 29.4 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| LoRaSim rule, 3 dB threshold | MULTI | 137.8 | [136.8, 138.8] | 29.1 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| lock rule, 1 dB threshold | MULTI | 129.4 | [128.6, 130.3] | 29.1 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| lock rule, 3 dB threshold | MULTI | 138.5 | [137.8, 139.3] | 29.1 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| LoRaSim rule, 1 dB threshold | MULTI | 127.2 | [126.3, 128.3] | 29.1 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| LoRaSim rule, 3 dB threshold | MULTI | 105.8 | [104.7, 106.9] | 28.2 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| lock rule, 1 dB threshold | MULTI | 99.4 | [98.7, 100.1] | 27.8 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| lock rule, 3 dB threshold | MULTI | 106.7 | [105.8, 107.6] | 28.2 dB | 22.0 dBm | SF7 300.0 (N = 300) |
 
 RSSI spread is the largest range of received power within one spreading factor, and it and mean power are taken at the simulated node count nearest each capacity. Nodes per SF are means over the runs.
 

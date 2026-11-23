@@ -88,6 +88,7 @@
       "path_loss_source": "Bor et al. 2016, Section 3.2: empirical measurements in a built-up environment, d0 = 40 m, Lpl(d0) = 127.41 dB, gamma = 2.08, sigma = 3.57 dB set to zero by the authors",
       "uplink_dwell_time_ms": null,
       "payload_bytes": 20,
+      "lorawan_overhead_bytes": 0,
       "coding_rate": 1,
       "send_interval_s": 1000.0,
       "capture_threshold_db": 6.0,
@@ -165,9 +166,9 @@
       },
       "net_antenna_gain_db": 0.0
     },
-    "loracap_version": "2.1.0",
-    "code_sha256": "68a2947554dfcbba74a1d9ddd7f99f4b4c9f61324faaa134672dbe9cabcfc5ee",
+    "loracap_version": "2.2.0",
+    "code_sha256": "8319cc7acc843ae952f20ab4323e8878ed98cf8965d65fff78a75e9dc1127671",
     "python": "3.13.18",
-    "generated": "2026-11-20T03:55:11+00:00"
+    "generated": "2026-11-23T18:50:48+00:00"
   }
 }

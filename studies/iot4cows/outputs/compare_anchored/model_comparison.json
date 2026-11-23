@@ -22,21 +22,21 @@
         "overrides": {},
         "capacity": {
           "SF7": {
-            "capacity": 114.90954845022107,
-            "ci_low": 113.8777855252453,
-            "ci_high": 115.94869909329306,
+            "capacity": 88.00649636694978,
+            "ci_low": 87.07822707535233,
+            "ci_high": 89.09488897672418,
             "n_bootstrap": 2000
           },
           "SF8": {
-            "capacity": 61.842762399272026,
-            "ci_low": 61.08938142113569,
-            "ci_high": 62.64964106911322,
+            "capacity": 49.89221308383814,
+            "ci_low": 49.25986512264763,
+            "ci_high": 50.537309815041226,
             "n_bootstrap": 2000
           },
           "SF9": {
-            "capacity": 33.9399990828778,
-            "ci_low": 32.96358633362298,
-            "ci_high": 34.65981360661771,
+            "capacity": 26.270848796894057,
+            "ci_low": 25.625117015529863,
+            "ci_high": 27.09124636469852,
             "n_bootstrap": 2000
           }
         },
@@ -76,15 +76,15 @@
             "note": "DER never crosses the threshold over the simulated node range; widen node_counts."
           },
           "SF8": {
-            "capacity": 20.392089124599416,
-            "ci_low": 3.3717322402277388,
-            "ci_high": 23.913671310868992,
+            "capacity": 18.167183237781074,
+            "ci_low": 3.315725930760924,
+            "ci_high": 21.09830294974876,
             "n_bootstrap": 2000
           },
           "SF9": {
-            "capacity": 36.77759175226373,
-            "ci_low": 36.180818888668064,
-            "ci_high": 37.42740039060139,
+            "capacity": 28.819972916112008,
+            "ci_low": 27.97280266964256,
+            "ci_high": 29.49712576122794,
             "n_bootstrap": 2000
           }
         },
@@ -116,10 +116,10 @@
       {
         "variant": "assumed (rural)",
         "scenario": "SF7",
-        "baseline": 114.90954845022107,
+        "baseline": 88.00649636694978,
         "baseline_ci": [
-          113.8777855252453,
-          115.94869909329306
+          87.07822707535233,
+          89.09488897672418
         ],
         "estimate": null,
         "estimate_ci": [
@@ -133,35 +133,35 @@
       {
         "variant": "assumed (rural)",
         "scenario": "SF8",
-        "baseline": 61.842762399272026,
+        "baseline": 49.89221308383814,
         "baseline_ci": [
-          61.08938142113569,
-          62.64964106911322
+          49.25986512264763,
+          50.537309815041226
         ],
-        "estimate": 20.392089124599416,
+        "estimate": 18.167183237781074,
         "estimate_ci": [
-          3.3717322402277388,
-          23.913671310868992
+          3.315725930760924,
+          21.09830294974876
         ],
         "inside": false,
-        "relative_error": -0.6702590839499845,
+        "relative_error": -0.6358713692003759,
         "covers_site": false
       },
       {
         "variant": "assumed (rural)",
         "scenario": "SF9",
-        "baseline": 33.9399990828778,
+        "baseline": 26.270848796894057,
         "baseline_ci": [
-          32.96358633362298,
-          34.65981360661771
+          25.625117015529863,
+          27.09124636469852
         ],
-        "estimate": 36.77759175226373,
+        "estimate": 28.819972916112008,
         "estimate_ci": [
-          36.180818888668064,
-          37.42740039060139
+          27.97280266964256,
+          29.49712576122794
         ],
         "inside": false,
-        "relative_error": 0.08360615044381234,
+        "relative_error": 0.09703242323557232,
         "covers_site": true
       }
     ],
@@ -250,6 +250,7 @@
       "path_loss_source": "Field fit over 1,229 aggregated RSSI points, 30 m to 2.21 km, IoT4Cows deployment",
       "uplink_dwell_time_ms": null,
       "payload_bytes": 32,
+      "lorawan_overhead_bytes": 13,
       "coding_rate": 1,
       "send_interval_s": 15.0,
       "capture_threshold_db": 6.0,
@@ -342,9 +343,9 @@
       },
       "net_antenna_gain_db": 9.0
     },
-    "loracap_version": "2.1.0",
-    "code_sha256": "68a2947554dfcbba74a1d9ddd7f99f4b4c9f61324faaa134672dbe9cabcfc5ee",
+    "loracap_version": "2.2.0",
+    "code_sha256": "8319cc7acc843ae952f20ab4323e8878ed98cf8965d65fff78a75e9dc1127671",
     "python": "3.13.18",
-    "generated": "2026-11-20T04:02:09+00:00"
+    "generated": "2026-11-23T18:57:17+00:00"
   }
 }

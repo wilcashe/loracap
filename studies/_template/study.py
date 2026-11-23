@@ -98,7 +98,8 @@ STUDY = Study(
     # Capacity scales with channel occupancy, so a figure obtained at the
     # shortest interval is a lower bound you can defend.
     # ------------------------------------------------------------------ #
-    payload_bytes=32,
+    payload_bytes=32,           # application payload, what your firmware sends
+    lorawan_overhead_bytes=13,  # MHDR, FHDR, FPort and MIC, added to it on air
     coding_rate=1,              # CR index; airtime uses 4/(4+CR), so 1 is 4/5
     send_interval_s=60.0,
     capture_threshold_db=6.0,

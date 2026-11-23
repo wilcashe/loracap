@@ -97,6 +97,11 @@ STUDY = Study(
 
     # --- traffic, Table 2: 20 B every 16.7 min, CR 4/8 ---
     payload_bytes=20,
+    # Bor et al. time a bare 20-byte LoRa payload. The airtime they publish
+    # for Experiment Set 1, 1712.13 ms at SF12 and CR 4/8, is that of 20
+    # bytes with nothing added, so the LoRaWAN header is left out here
+    # (design item 33). Adding it would give 2498.56 ms.
+    lorawan_overhead_bytes=0,
     coding_rate=4,
     send_interval_s=1000.0,
     capture_threshold_db=6.0,

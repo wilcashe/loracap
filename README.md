@@ -300,21 +300,21 @@ no arguments:
 
 | Exponent | Reach | Covers site | Capacity |
 |---|---|---|---|
-| 2.00 | 3055 m | yes | 60.3 |
-| 2.16 (this study) | 2371 m | yes | 62.0 |
-| 2.25 | 2089 m | yes | 62.6 |
-| 2.50 | 1542 m | yes | 64.2 |
-| 2.75 | 1202 m | yes | 65.7 |
-| 3.00 | 977 m | yes | 67.4 |
-| 3.25 | 820 m | NO | 35.8 |
+| 2.00 | 3055 m | yes | 49.0 |
+| 2.16 (this study) | 2371 m | yes | 49.5 |
+| 2.25 | 2089 m | yes | 49.8 |
+| 2.50 | 1542 m | yes | 51.5 |
+| 2.75 | 1202 m | yes | 53.2 |
+| 3.00 | 977 m | yes | 54.7 |
+| 3.25 | 820 m | NO | 31.0 |
 | 3.50 | 706 m | NO | no crossing |
 
-While the site is covered, capacity spans 60.3 to 67.4, 12% of the lower value. Site radius 958 m, scenario SF8.
+While the site is covered, capacity spans 49.0 to 54.7, 12% of the lower value. Site radius 958 m, scenario SF8.
 
 *Source: experiment `sweep` of `studies/iot4cows/experiments.py`, 30 runs per point, capacity by bisection on node count, 3600 s simulated, seed 99. Data in `studies/iot4cows/outputs/sweep/`. Regenerate with `python3 run.py reproduce iot4cows --only sweep`.*
 
 Capacity here is found by bisection on node count rather than on the
-study's grid, which is why the fitted exponent's 62.0 is not the 61.8
+study's grid, which is why the fitted exponent's 49.5 is not the 49.9
 quoted for SF8 elsewhere. Both are correct for their method.
 
 The reason this works is that capacity is set by collisions, and collisions
@@ -325,7 +325,7 @@ stays in range.
 
 So while the site is covered, the answer barely moves: 12% across the
 range above, up to an exponent of 3.00. Between 3.00 and 3.25 the site
-stops being covered and capacity falls by half. The model's intercept does
+stops being covered and capacity falls by more than 40%. The model's intercept does
 not move it at all, which you can verify rather than take on trust:
 
 ```bash
@@ -337,10 +337,10 @@ untouched, so the DER comes out identical, not merely close:
 
 | Intercept shift | L(d0) | DER | Weak-signal losses |
 |---|---|---|---|
-| -10 dB | 120.30 dB | 0.935174 | 0 |
-| -5 dB | 125.30 dB | 0.935174 | 0 |
-| +0 dB | 130.30 dB | 0.935174 | 0 |
-| +5 dB | 135.30 dB | 0.935174 | 0 |
+| -10 dB | 120.30 dB | 0.920771 | 0 |
+| -5 dB | 125.30 dB | 0.920771 | 0 |
+| +0 dB | 130.30 dB | 0.920771 | 0 |
+| +5 dB | 135.30 dB | 0.920771 | 0 |
 
 Largest DER difference 0.00e+00, SF8 at N = 39. Invariant: yes.
 
@@ -551,6 +551,34 @@ For the worked example's 22 dBm collar that is the same −20 dB as before.
 The optional SF6 and SF5 data rates RP002-1.0.5 added at 125 kHz are not
 supported, for the reason given under "Known limitations".
 
+### The payload and the frame on air
+
+`payload_bytes` is the application payload, what the firmware hands to
+LoRaWAN. The regional ceilings are stated for it, and `check` compares it
+with them. The radio sends more than that. Every uplink wraps the payload in
+13 bytes of LoRaWAN: MHDR (1), FHDR without options (7), FPort (1) and MIC
+(4). Those bytes occupy the channel like any other, so the airtime is
+computed for `payload_bytes + lorawan_overhead_bytes`, and `check` states
+both numbers on a line of its own. The frame layout is the one Eigner (2021,
+Figure 2.22) draws from the LoRaWAN specification, and RP002-1.0.5 agrees
+with it: the M and N of its payload tables differ by 8 bytes, the FHDR and
+the FPort, and its largest N, 242 bytes, plus 13 is 255, the most a LoRa
+frame carries.
+
+Up to version 2.1.0 the airtime used `payload_bytes` alone (design item 33),
+so every LoRaWAN uplink was timed 13 bytes short. The smaller the payload,
+the larger the error. A 14-byte reading at SF9 took 164.9 ms instead of
+226.3 ms, 27% short, and the worked example's 32 bytes at SF8 took 133.6 ms
+instead of 164.4 ms. Capacity was overstated accordingly. Every figure for
+the worked example in this README comes from the corrected airtime.
+
+13 bytes is a floor. MAC commands piggybacked in FOpts add up to 15 bytes to
+some uplinks, and they are not modelled.
+
+`lorawan_overhead_bytes = 0` times the payload alone, for a bare LoRa frame.
+The two Bor et al. studies use it, because the airtime Bor et al. publish,
+1712.13 ms, is that of their 20 bytes with nothing added.
+
 ## Reproducing the ancestor
 
 The degeneracy ladder checks the engine against theory. `studies/bor2016_sn1`
@@ -738,8 +766,8 @@ On the worked example, at DER = 0.9, first changing the exponent alone:
 
 | Model | SF7 | SF8 | SF9 |
 |---|---|---|---|
-| fitted (field) | 114.9 [113.9, 115.9] | 61.8 [61.1, 62.6] | 33.9 [33.0, 34.7] |
-| exponent only (rural) | 89.4 [83.7, 94.9] | 67.1 [66.3, 67.9] | 36.8 [36.2, 37.4] |
+| fitted (field) | 88.0 [87.1, 89.1] | 49.9 [49.3, 50.5] | 26.3 [25.6, 27.1] |
+| exponent only (rural) | 69.9 [64.1, 74.4] | 54.3 [53.5, 55.0] | 28.8 [28.0, 29.5] |
 
 Reach as a multiple of the site radius:
 
@@ -752,8 +780,8 @@ then assuming the whole model, as a deployer with no measurements must:
 
 | Model | SF7 | SF8 | SF9 |
 |---|---|---|---|
-| fitted (field) | 114.9 [113.9, 115.9] | 61.8 [61.1, 62.6] | 33.9 [33.0, 34.7] |
-| assumed (rural) | no crossing - | 20.4 [3.4, 23.9] | 36.8 [36.2, 37.4] |
+| fitted (field) | 88.0 [87.1, 89.1] | 49.9 [49.3, 50.5] | 26.3 [25.6, 27.1] |
+| assumed (rural) | no crossing - | 18.2 [3.3, 21.1] | 28.8 [28.0, 29.5] |
 
 Reach as a multiple of the site radius:
 
@@ -762,18 +790,18 @@ Reach as a multiple of the site radius:
 
 *Source: experiment `compare_anchored` of `studies/iot4cows/experiments.py`, 30 runs per point, 27 node counts from 3 to 300, 3600 s simulated, seed 99, 2000 bootstrap replicates. Data in `studies/iot4cows/outputs/compare_anchored/`. Regenerate with `python3 run.py reproduce iot4cows --only compare_anchored`.*
 
-**The exponent is worth about 8% while coverage holds.** Change it from the
+**The exponent is worth about 9% while coverage holds.** Change it from the
 fitted 2.16 to rural's published median of 2.94 and keep the measured
-intercept, and SF8 moves from 61.8 to 67.1, SF9 from 33.9 to 36.8. That
+intercept, and SF8 moves from 49.9 to 54.3, SF9 from 26.3 to 28.8. That
 agrees with what `sweep` reports over the same range, and it moves *upward*:
 a steeper exponent widens the spread of received powers, which feeds the
 capture effect. SF7 is the exception, and it is not an exponent effect: at
 2.94 its reach falls to 0.88 of the site radius, the site is no longer
-covered, and capacity drops 22% to 89.4 with a much wider interval.
+covered, and capacity drops 21% to 69.9 with a much wider interval.
 
 **The anchor is worth everything else.** Add the realistic part, that a
 deployer with no measurements must also guess the intercept, and SF8 falls to
-20.4 and SF7 stops crossing at all. The reason is visible in the reach
+18.2 and SF7 stops crossing at all. The reason is visible in the reach
 ratios: the fitted model turns out to have 1.9 to 3.2 times the reach the
 site needs, and an expected-reach statement cannot know that margin is
 there. Anchoring to "the link reaches the far edge" treats a lower bound
@@ -809,22 +837,22 @@ among the values tried:
 
 | Configuration | SF8 | MULTI | ADR | Excluded, worst case |
 |---|---|---|---|---|
-| σ = 0 dB | 61.8 [61.1, 62.6] | 114.9 [113.9, 115.9] | 145.1 [143.1, 147.4] | 0.0% |
-| σ = 4 dB | 66.3 [65.0, 67.3] | 124.7 [123.4, 126.2] | 149.5 [146.3, 153.3] | 0.2% |
-| σ = 7.41 dB | 53.4 [49.0, 57.5] | 145.5 [144.0, 147.4] | 148.2 [146.3, 150.6] | 4.0% |
-| σ = 10 dB | 4.9 [3.6, 25.9] | 162.6 [160.5, 164.5] | 150.7 [148.2, 153.9] | 6.7% |
+| σ = 0 dB | 49.9 [49.3, 50.5] | 88.0 [87.1, 89.1] | 111.4 [108.4, 113.7] | 0.0% |
+| σ = 4 dB | 53.0 [52.1, 54.2] | 95.6 [94.3, 96.7] | 115.0 [113.5, 116.6] | 0.2% |
+| σ = 7.41 dB | 44.8 [36.5, 48.1] | 112.8 [111.2, 114.2] | 115.2 [113.7, 116.6] | 4.0% |
+| σ = 10 dB | 4.9 [3.6, 21.6] | 126.0 [123.9, 128.5] | 118.3 [116.4, 120.4] | 6.7% |
 
 *Source: experiment `shadowing` of `studies/iot4cows/experiments.py`, 30 runs per point, 27 node counts from 3 to 300, 3600 s simulated, seed 99, 2000 bootstrap replicates. Data in `studies/iot4cows/outputs/shadowing/`. Regenerate with `python3 run.py reproduce iot4cows --only shadowing`.*
 
 **On a fixed data rate it is punishing.** Capacity rises a little to σ = 4,
 because a wider spread of received powers feeds the capture effect, then
-turns and collapses: 66.3, then 53.4 at the measured 7.41 dB. At 10 dB the
+turns and collapses: 53.0, then 44.8 at the measured 7.41 dB. At 10 dB the
 fixed rate is no longer collision-limited at all. About 9% of its packets
 are lost to weak signal before congestion begins, DER sits at the threshold
 from the first few nodes, and the crossing at 4.9 with an interval reaching
-26 says only that SF8 cannot serve this site under that much shadowing.
-Weak-signal losses near capacity go from none to 2.9% at 7.41 dB, and the
-interval widens from 1.6 nodes to 8.6, which is its own finding: with
+22 says only that SF8 cannot serve this site under that much shadowing.
+Weak-signal losses near capacity go from none to 2.5% at 7.41 dB, and the
+interval widens from 1.3 nodes to 11.6, which is its own finding: with
 realistic shadowing, whether a few unlucky nodes land below sensitivity
 starts to dominate the answer, and a single capacity figure means much less
 than the deterministic model suggests. The losses behind these statements
@@ -843,32 +871,32 @@ deployment. `run` detects this and reports both readings:
   Up to 4.0% of nodes have no usable data rate at some node count.
   Those nodes never transmit, so they cannot lower the DER above.
   Counting them as lost traffic instead:
-    SF8              53.4  ->          53.4
-    MULTI           145.5  ->         128.3
-    ADR             148.2  ->         129.9
+    SF8              44.8  ->          44.8
+    MULTI           112.8  ->          99.7
+    ADR             115.2  ->         102.0
 ```
 
 That is the 7.41 dB row. Across the whole sweep:
 
 | Configuration | Scenario | Capacity, `der` | Capacity, `der_fleet` | Excluded, worst case |
 |---|---|---|---|---|
-| σ = 0 dB | SF8 | 61.8 | 61.8 | 0.0% |
-| σ = 0 dB | MULTI | 114.9 | 114.9 | 0.0% |
-| σ = 0 dB | ADR | 145.1 | 145.1 | 0.0% |
-| σ = 4 dB | SF8 | 66.3 | 66.3 | 0.0% |
-| σ = 4 dB | MULTI | 124.7 | 124.7 | 0.2% |
-| σ = 4 dB | ADR | 149.5 | 148.7 | 0.2% |
-| σ = 7.41 dB | SF8 | 53.4 | 53.4 | 0.0% |
-| σ = 7.41 dB | MULTI | 145.5 | 128.3 | 4.0% |
-| σ = 7.41 dB | ADR | 148.2 | 129.9 | 4.0% |
+| σ = 0 dB | SF8 | 49.9 | 49.9 | 0.0% |
+| σ = 0 dB | MULTI | 88.0 | 88.0 | 0.0% |
+| σ = 0 dB | ADR | 111.4 | 111.4 | 0.0% |
+| σ = 4 dB | SF8 | 53.0 | 53.0 | 0.0% |
+| σ = 4 dB | MULTI | 95.6 | 95.5 | 0.2% |
+| σ = 4 dB | ADR | 115.0 | 114.8 | 0.2% |
+| σ = 7.41 dB | SF8 | 44.8 | 44.8 | 0.0% |
+| σ = 7.41 dB | MULTI | 112.8 | 99.7 | 4.0% |
+| σ = 7.41 dB | ADR | 115.2 | 102.0 | 4.0% |
 | σ = 10 dB | SF8 | 4.9 | 4.9 | 0.0% |
-| σ = 10 dB | MULTI | 162.6 | 96.2 | 6.7% |
-| σ = 10 dB | ADR | 150.7 | 88.8 | 6.7% |
+| σ = 10 dB | MULTI | 126.0 | 69.6 | 6.7% |
+| σ = 10 dB | ADR | 118.3 | 63.6 | 6.7% |
 
 *Source: experiment `shadowing` of `studies/iot4cows/experiments.py`, 30 runs per point, 27 node counts from 3 to 300, 3600 s simulated, seed 99, 2000 bootstrap replicates. Data in `studies/iot4cows/outputs/shadowing/`. Regenerate with `python3 run.py reproduce iot4cows --only shadowing`.*
 
 Counted over the intended fleet, ADR falls steadily with shadowing, from
-145.1 to 129.9 to 88.8, while the fixed rate collapses. Both readings are
+111.4 to 102.0 to 63.6, while the fixed rate collapses. Both readings are
 in `results.csv` for every run, and `capacity.json` stores both
 capacities.
 
@@ -900,10 +928,10 @@ On the worked example, at DER = 0.9:
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|
-| base | SF8 | 61.8 | [61.1, 62.6] | 25.0 dB | 22.0 dBm | SF8 300.0 (N = 300) |
-| base | MULTI | 114.9 | [113.9, 115.9] | 28.2 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| base | ADR | 145.1 | [143.1, 147.4] | 6.4 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| ADR, margin only | ADR | 170.8 | [168.9, 172.6] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| base | SF8 | 49.9 | [49.3, 50.5] | 22.8 dB | 22.0 dBm | SF8 300.0 (N = 300) |
+| base | MULTI | 88.0 | [87.1, 89.1] | 27.8 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| base | ADR | 111.4 | [108.4, 113.7] | 5.5 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| ADR, margin only | ADR | 131.9 | [129.6, 133.8] | 25.7 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
 
 RSSI spread is the largest range of received power within one spreading factor, and it and mean power are taken at the simulated node count nearest each capacity. Nodes per SF are means over the runs.
 
@@ -917,7 +945,7 @@ reach, which is also why MULTI's capacity is SF7's to the last digit. One
 spreading factor means every node colliding with every other. Insisting on
 10 dB of margin moves about 66 of the 300 nodes to SF8 and 15 to SF9, and
 the engine treats spreading factors as orthogonal, so those stop colliding
-with the SF7 traffic altogether. Capacity goes from 114.9 to 170.8. Within
+with the SF7 traffic altogether. Capacity goes from 88.0 to 131.9. Within
 the model, the idealisation was costing capacity by throwing orthogonality
 away.
 
@@ -926,9 +954,9 @@ spreading factors are not perfectly orthogonal. Croce et al. measured an
 SX1272 losing an SF7 packet to an interferer on another spreading factor
 received 8 to 9 dB stronger, and an SF8 packet at 11 to 13 dB (Table I of
 the paper cited under "Known limitations"). With orthogonal spreading
-factors, the default, 170.8 is therefore an upper bound on what the margin
-buys here. With Croce et al.'s table the margin alone gives 153.2, still a
-gain over MULTI, and power control then costs 5% rather than 15%. "Spreading
+factors, the default, 131.9 is therefore an upper bound on what the margin
+buys here. With Croce et al.'s table the margin alone gives 118.7, still a
+gain over MULTI, and power control then costs 6% rather than 16%. "Spreading
 factors that are not orthogonal" has the table and its limits.
 
 **Under LoRaSim's receiver rule, power control is a cost, and it is the
@@ -936,10 +964,10 @@ capture effect being spent.** The capture effect resolves a collision only
 when the two signals differ by more than `capture_threshold_db`, 6 dB by
 default. Power control exists to bring every node to the same level at the
 gateway, and it does: the largest range
-of received power within a spreading factor falls from 26.9 dB to 6.4 dB.
-No two nodes on one spreading factor then differ by more than 6.4 dB, so
+of received power within a spreading factor falls from 25.7 dB to 5.5 dB.
+No two nodes on one spreading factor then differ by more than 5.5 dB, so
 capture can resolve only the few most extreme pairs. Capacity drops from
-170.8 to 145.1, 15%.
+131.9 to 111.4, 16%.
 
 That conclusion belongs to the receiver rule, not to the network. Under the
 lock rule described in the next section, power control is a gain at this
@@ -948,9 +976,9 @@ Eigner's per-SF table, in which case it is neither. Neither rule has been
 checked against the capacity of a real network. Read "The receiver rule"
 before quoting either sign.
 
-Net, realistic ADR beats ideal assignment here, 145.1 against 114.9, at the
+Net, realistic ADR beats ideal assignment here, 111.4 against 88.0, at the
 default 6 dB threshold. At 1 dB under LoRaSim's rule the two cannot be told
-apart, 167.1 [164.9, 169.2] against 165.5 [164.6, 166.4], so this is a
+apart, 129.6 [127.0, 131.9] against 127.2 [126.3, 128.3], so this is a
 result of the threshold as well as of the site (see "Spreading factors that
 are not orthogonal"). It is not a general law, which is the point: a reporting
 interval, a site radius or a payload that changes where nodes land on the
@@ -977,16 +1005,16 @@ saved results:
 
 | Scenario | Capacity at DER = 0.9 | 95% CI | Most delivered per hour | At N | Collided at the peak | No free demodulator at the peak | No free demodulator at N max |
 |---|---|---|---|---|---|---|---|
-| SF8 | 61.8 | [61.1, 62.7] | 52,682 | 579 (491 to 683) | 54.4% | 7.8% | 71.5% (N = 3000) |
-| MULTI | 114.9 | [113.9, 115.9] | 97,612 | 949 (805 to 1118) | 52.1% | 5.0% | 50.2% (N = 3000) |
-| ADR | 145.1 | [143.1, 147.5] | 105,739 | 949 (805 to 1118) | 41.7% | 11.9% | 60.5% (N = 3000) |
+| SF8 | 49.9 | [49.2, 50.5] | 42,445 | 417 (354 to 491) | 52.5% | 5.1% | 76.6% (N = 3000) |
+| MULTI | 88.0 | [87.1, 89.0] | 75,577 | 805 (683 to 949) | 54.1% | 6.8% | 60.0% (N = 3000) |
+| ADR | 111.4 | [108.5, 113.8] | 82,583 | 805 (683 to 949) | 43.1% | 14.2% | 68.1% (N = 3000) |
 
 Delivered per hour is packets transmitted times DER, both means over the runs, scaled from the simulated time to an hour. The peak is the simulated node count that delivers the most, so the true maximum lies between the neighbouring node counts given in brackets. It carries no interval, because transmitted packets are saved as a mean and not run by run. Losses are shares of the packets transmitted. A packet refused for want of a demodulator is counted there only, never also as collided.
 
 *Source: experiment `saturation` of `studies/iot4cows/experiments.py`, 30 runs per point, 41 node counts from 3 to 3000, 3600 s simulated, seed 99, 2000 bootstrap replicates. Data in `studies/iot4cows/outputs/saturation/`. Regenerate with `python3 run.py reproduce iot4cows --only saturation`.*
 
-Every scenario keeps delivering more past its capacity: SF8 peaks at 579
-nodes and MULTI and ADR at 949, six to nine times the node counts where
+Every scenario keeps delivering more past its capacity: SF8 peaks at 417
+nodes and MULTI and ADR at 805, seven to nine times the node counts where
 their DER crossed 0.9. The capacities are the ones the `receiver` experiment
 gives under the same rule, since the first 27 points are the same runs. Only
 the intervals can move in the last decimal, because the bootstrap draws over
@@ -995,8 +1023,8 @@ more points.
 The peak is not where the network is still usable. More than half of the
 packets sent are lost there, most of them to collisions. The limit of eight
 simultaneous demodulations in the SX1301 is a minor cause at the peak and
-takes over well past it: at 3000 nodes it refuses between half and three
-quarters of the packets sent. `extra_figures` draws both views, messages
+takes over well past it: at 3000 nodes it refuses between 60 and 77% of the
+packets sent. `extra_figures` draws both views, messages
 delivered per hour with the offered traffic, and the losses by cause.
 
 So the threshold, not the gateway, sets the capacity this tool reports. A
@@ -1043,22 +1071,22 @@ On the worked example, at DER = 0.9:
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|
-| LoRaSim rule | SF8 | 61.8 | [61.1, 62.6] | 25.0 dB | 22.0 dBm | SF8 300.0 (N = 300) |
-| LoRaSim rule | MULTI | 114.9 | [113.9, 115.9] | 28.2 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| LoRaSim rule | ADR | 145.1 | [143.1, 147.4] | 6.4 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule | SF8 | 81.7 | [81.1, 82.2] | 26.8 dB | 22.0 dBm | SF8 300.0 (N = 300) |
-| lock rule | MULTI | 151.1 | [150.0, 152.3] | 29.4 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| lock rule | ADR | 275.1 | [272.6, 277.5] | 7.2 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, ADR margin only | ADR | 170.8 | [168.9, 172.6] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, ADR margin only | ADR | 246.2 | [243.1, 249.9] | 27.2 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, 1 dB threshold | ADR | 167.1 | [164.9, 169.2] | 7.0 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, 1 dB threshold, ADR margin only | ADR | 236.6 | [235.1, 238.1] | 27.2 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, 3 dB threshold | ADR | 145.5 | [143.5, 147.9] | 6.4 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, 3 dB threshold, ADR margin only | ADR | 195.9 | [194.4, 197.3] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, 1 dB threshold | ADR | 249.4 | [246.4, 252.7] | 7.2 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, 1 dB threshold, ADR margin only | ADR | 210.8 | [207.6, 214.4] | 27.1 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, 3 dB threshold | ADR | 274.2 | [271.7, 276.7] | 7.2 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, 3 dB threshold, ADR margin only | ADR | 228.7 | [225.4, 231.7] | 27.1 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule | SF8 | 49.9 | [49.3, 50.5] | 22.8 dB | 22.0 dBm | SF8 300.0 (N = 300) |
+| LoRaSim rule | MULTI | 88.0 | [87.1, 89.1] | 27.8 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| LoRaSim rule | ADR | 111.4 | [108.4, 113.7] | 5.5 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule | SF8 | 65.8 | [64.9, 66.5] | 25.0 dB | 22.0 dBm | SF8 300.0 (N = 300) |
+| lock rule | MULTI | 116.9 | [116.2, 117.6] | 28.2 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| lock rule | ADR | 215.5 | [212.2, 218.5] | 7.1 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, ADR margin only | ADR | 131.9 | [129.6, 133.8] | 25.7 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, ADR margin only | ADR | 192.5 | [189.8, 194.9] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, 1 dB threshold | ADR | 129.6 | [127.0, 131.9] | 6.3 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, 1 dB threshold, ADR margin only | ADR | 184.2 | [182.6, 185.6] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, 3 dB threshold | ADR | 111.8 | [109.0, 114.0] | 5.5 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, 3 dB threshold, ADR margin only | ADR | 152.0 | [150.2, 153.9] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, 1 dB threshold | ADR | 194.9 | [192.6, 197.1] | 7.0 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, 1 dB threshold, ADR margin only | ADR | 163.5 | [160.6, 166.0] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, 3 dB threshold | ADR | 214.8 | [211.7, 217.9] | 7.1 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, 3 dB threshold, ADR margin only | ADR | 178.3 | [175.0, 181.8] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
 
 RSSI spread is the largest range of received power within one spreading factor, and it and mean power are taken at the simulated node count nearest each capacity. Nodes per SF are means over the runs.
 
@@ -1075,17 +1103,17 @@ conditional on both. The threshold and power-control variants stay in the
 table only.
 
 **The rule moves capacity more than the propagation exponent does** while
-the site is covered: SF8 goes from 61.8 to 81.7, 32%, where the exponent
+the site is covered: SF8 goes from 49.9 to 65.8, 32%, where the exponent
 moved it by 12% at most for as long as the site stayed covered. Neither
 rule has been checked against the measured capacity of a network, so this
 is a sensitivity
 to a modelling assumption, not a known error in either direction.
 
 **The sign of power control's effect depends on the rule.** Under LoRaSim's
-rule, power control costs capacity at every threshold tried: 170.8 to 145.1
-at 6 dB, 195.9 to 145.5 at 3 dB, 236.6 to 167.1 at 1 dB. Under the lock rule
-it gains at every threshold: 246.2 to 275.1, 228.7 to 274.2 and 210.8 to
-249.4. The mechanism is the same pair of packets read two ways. Power control
+rule, power control costs capacity at every threshold tried: 131.9 to 111.4
+at 6 dB, 152.0 to 111.8 at 3 dB, 184.2 to 129.6 at 1 dB. Under the lock rule
+it gains at every threshold: 192.5 to 215.5, 178.3 to 214.8 and 163.5 to
+194.9. The mechanism is the same pair of packets read two ways. Power control
 brings received powers within a few dB of each other. Under LoRaSim's rule
 such a pair loses both packets. Under the lock rule the first one survives,
 and what power control removes is the stronger late arrival that would have
@@ -1106,9 +1134,9 @@ or less at SF7 and SF8, and needing up to 2 dB at SF11 and SF12. None of the
 three declares the coding rate of its collision tests, and two used a node
 radio rather than a gateway concentrator, so 6 dB stays a choice, inherited
 from LoRaSim, and on this evidence a pessimistic one. Lowering it from 6 to 1 dB moves ADR without
-power control from 170.8 to 236.6 under LoRaSim's rule, and from 246.2 to
-210.8 under the lock rule, in opposite directions. At 1 dB that ordering
-reverses, 236.6 under LoRaSim's rule against 210.8 under the lock rule, so
+power control from 131.9 to 184.2 under LoRaSim's rule, and from 192.5 to
+163.5 under the lock rule, in opposite directions. At 1 dB that ordering
+reverses, 184.2 under LoRaSim's rule against 163.5 under the lock rule, so
 "the lock rule gives more capacity" holds at the default threshold and not
 in general.
 
@@ -1135,20 +1163,20 @@ air as it starts, which is exp(-G), half ALOHA's vulnerable period.
 
 | N | G | full model | lorasim rule | no demod limit | single channel | no capture | no preamble | ALOHA |
 |---|---|---|---|---|---|---|---|---|
-| 10 | 0.089 | 0.9879 | 0.9825 | 0.9825 | 0.8692 | 0.8454 | 0.8386 | 0.8368 |
-| 30 | 0.267 | 0.9618 | 0.9497 | 0.9497 | 0.6682 | 0.6014 | 0.5867 | 0.5859 |
-| 60 | 0.535 | 0.9249 | 0.9022 | 0.9022 | 0.4603 | 0.3609 | 0.3438 | 0.3433 |
-| 100 | 0.891 | 0.8791 | 0.8446 | 0.8446 | 0.2925 | 0.1831 | 0.1688 | 0.1683 |
-| 200 | 1.782 | 0.7717 | 0.7170 | 0.7172 | 0.1214 | 0.0331 | 0.0282 | 0.0283 |
+| 10 | 0.110 | 0.9852 | 0.9787 | 0.9787 | 0.8399 | 0.8118 | 0.8045 | 0.8032 |
+| 30 | 0.329 | 0.9534 | 0.9385 | 0.9385 | 0.6079 | 0.5313 | 0.5185 | 0.5182 |
+| 60 | 0.657 | 0.9083 | 0.8806 | 0.8806 | 0.3876 | 0.2822 | 0.2685 | 0.2685 |
+| 100 | 1.096 | 0.8530 | 0.8117 | 0.8117 | 0.2280 | 0.1218 | 0.1122 | 0.1118 |
+| 200 | 2.191 | 0.7254 | 0.6631 | 0.6636 | 0.0892 | 0.0146 | 0.0125 | 0.0125 |
 
 What each mechanism is worth at N = 200, as the DER it adds:
 
-- receiver lock: +0.0547 (0.7717 with it, 0.7170 without)
-- demodulator limit: -0.0002 (0.7170 with it, 0.7172 without)
-- multiple channels: +0.5958 (0.7172 with it, 0.1214 without)
-- capture effect: +0.0883 (0.1214 with it, 0.0331 without)
-- preamble allowance: +0.0049 (0.0331 with it, 0.0282 without)
-- residual against ALOHA: -0.0002
+- receiver lock: +0.0624 (0.7254 with it, 0.6631 without)
+- demodulator limit: -0.0006 (0.6631 with it, 0.6636 without)
+- multiple channels: +0.5744 (0.6636 with it, 0.0892 without)
+- capture effect: +0.0746 (0.0892 with it, 0.0146 without)
+- preamble allowance: +0.0021 (0.0146 with it, 0.0125 without)
+- residual against ALOHA: -0.0000
 
 The receiver lock is checked for no direction: it saves the first of two equal-power packets and loses both when the later one is stronger, so its sign depends on the site.
 
@@ -1156,11 +1184,11 @@ The lock rule's own bound, on one channel with no capture and no preamble allowa
 
 | N | first-come | exp(-G) |
 |---|---|---|
-| 10 | 0.9156 | 0.9148 |
-| 30 | 0.7661 | 0.7655 |
-| 60 | 0.5861 | 0.5859 |
-| 100 | 0.4110 | 0.4103 |
-| 200 | 0.1684 | 0.1683 |
+| 10 | 0.8969 | 0.8962 |
+| 30 | 0.7200 | 0.7199 |
+| 60 | 0.5181 | 0.5182 |
+| 100 | 0.3347 | 0.3343 |
+| 200 | 0.1118 | 0.1118 |
 
 Verdict: directions hold, 5 of 5 points within 3 standard errors of the bound. 5 of 5 first-come points within 3 standard errors of exp(-G). PASS.
 
@@ -1208,23 +1236,23 @@ own formula, the strong one gaining exactly the header's length of
 protection from weak packets ahead of it.
 
 **What they change at the worked example**, against the unrefined lock rule
-in experiment `receiver` (SF8 81.7, MULTI 151.1, ADR 275.1, ADR margin only
-246.2), at the default 6 dB threshold:
+in experiment `receiver` (SF8 65.8, MULTI 116.9, ADR 215.5, ADR margin only
+192.5), at the default 6 dB threshold:
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|
-| lock rule, Eigner survival | SF8 | 65.9 | [65.1, 66.7] | 25.0 dB | 22.0 dBm | SF8 300.0 (N = 300) |
-| lock rule, Eigner survival | MULTI | 122.6 | [121.9, 123.3] | 29.1 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| lock rule, Eigner survival | ADR | 190.8 | [188.5, 192.8] | 7.0 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Eigner survival, ADR margin only | ADR | 192.2 | [190.1, 194.1] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, header recapture | SF8 | 83.4 | [82.9, 83.8] | 26.8 dB | 22.0 dBm | SF8 300.0 (N = 300) |
-| lock rule, header recapture | MULTI | 154.1 | [153.0, 155.2] | 29.4 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| lock rule, header recapture | ADR | 275.2 | [272.8, 277.7] | 7.2 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, header recapture, ADR margin only | ADR | 250.0 | [246.8, 253.8] | 27.2 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Eigner survival and header recapture | SF8 | 67.1 | [66.4, 67.8] | 25.0 dB | 22.0 dBm | SF8 300.0 (N = 300) |
-| lock rule, Eigner survival and header recapture | MULTI | 124.7 | [123.9, 125.5] | 29.1 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| lock rule, Eigner survival and header recapture | ADR | 190.8 | [188.5, 192.9] | 7.0 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Eigner survival and header recapture, ADR margin only | ADR | 194.5 | [192.6, 196.4] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Eigner survival | SF8 | 53.6 | [53.0, 54.2] | 24.6 dB | 22.0 dBm | SF8 300.0 (N = 300) |
+| lock rule, Eigner survival | MULTI | 94.4 | [93.5, 95.2] | 27.8 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| lock rule, Eigner survival | ADR | 147.7 | [145.6, 150.4] | 6.4 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Eigner survival, ADR margin only | ADR | 148.9 | [146.6, 151.7] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, header recapture | SF8 | 66.9 | [66.2, 67.6] | 25.0 dB | 22.0 dBm | SF8 300.0 (N = 300) |
+| lock rule, header recapture | MULTI | 118.8 | [118.1, 119.4] | 29.1 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| lock rule, header recapture | ADR | 215.6 | [212.3, 218.6] | 7.1 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, header recapture, ADR margin only | ADR | 194.7 | [192.2, 197.2] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Eigner survival and header recapture | SF8 | 54.3 | [53.7, 54.9] | 24.6 dB | 22.0 dBm | SF8 300.0 (N = 300) |
+| lock rule, Eigner survival and header recapture | MULTI | 95.6 | [94.8, 96.4] | 27.8 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| lock rule, Eigner survival and header recapture | ADR | 147.8 | [145.6, 150.5] | 6.4 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Eigner survival and header recapture, ADR margin only | ADR | 150.2 | [147.8, 153.0] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
 
 RSSI spread is the largest range of received power within one spreading factor, and it and mean power are taken at the simulated node count nearest each capacity. Nodes per SF are means over the runs.
 
@@ -1234,18 +1262,18 @@ RSSI spread is the largest range of received power within one spreading factor, 
   a much stronger packet to land in an eight-symbol window, and that is
   rare.
 - **The survival table matters a great deal**: about 19% off SF8 and MULTI,
-  31% off ADR and 22% off ADR without power control. At SF7 and SF8 it
+  31% off ADR and 23% off ADR without power control. At SF7 and SF8 it
   makes a later packet stronger by any margin fatal to the locked one,
   where the unrefined rule needed 6 dB.
 - **Under it, power control stops being a gain.** ADR with power control
-  gives 190.8 [188.5, 192.8] and without it 192.2 [190.1, 194.1]: no
+  gives 147.7 [145.6, 150.4] and without it 148.9 [146.6, 151.7]: no
   distinguishable difference, where the unrefined lock rule found a 12%
-  gain. With recapture as well, 190.8 against 194.5, a 2% cost with
-  intervals that barely separate. So the reversal of power control's sign
+  gain. With recapture as well, 147.8 against 150.2, a 2% cost with
+  intervals that overlap. So the reversal of power control's sign
   between the two rules depends on how the lock rule decides the locked
   packet's survival, and on a table measured at its 99% point.
-- **The margin's gain over MULTI survives**: 57% with the survival table,
-  62% with recapture, 56% with both.
+- **The margin's gain over MULTI survives**: 58% with the survival table,
+  64% with recapture, 57% with both.
 
 ## Spreading factors that are not orthogonal
 
@@ -1301,18 +1329,18 @@ spreading factors.
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|
-| LoRaSim rule, orthogonal SFs | MULTI | 114.9 | [113.9, 115.9] | 28.2 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| LoRaSim rule, orthogonal SFs | ADR | 145.1 | [143.1, 147.4] | 6.4 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, ADR margin only, orthogonal SFs | ADR | 170.8 | [168.9, 172.6] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, Croce rejection | MULTI | 114.9 | [113.9, 115.9] | 28.2 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| LoRaSim rule, Croce rejection | ADR | 145.1 | [143.1, 147.4] | 6.4 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, ADR margin only, Croce rejection | ADR | 153.2 | [151.4, 155.0] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, orthogonal SFs | MULTI | 151.1 | [150.0, 152.3] | 29.4 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| lock rule, orthogonal SFs | ADR | 275.1 | [272.6, 277.5] | 7.2 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, ADR margin only, orthogonal SFs | ADR | 246.2 | [243.1, 249.9] | 27.2 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Croce rejection | MULTI | 151.1 | [150.0, 152.3] | 29.4 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| lock rule, Croce rejection | ADR | 275.1 | [272.6, 277.5] | 7.2 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, ADR margin only, Croce rejection | ADR | 211.6 | [208.6, 215.1] | 27.1 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, orthogonal SFs | MULTI | 88.0 | [87.1, 89.1] | 27.8 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| LoRaSim rule, orthogonal SFs | ADR | 111.4 | [108.4, 113.7] | 5.5 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, ADR margin only, orthogonal SFs | ADR | 131.9 | [129.6, 133.8] | 25.7 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, Croce rejection | MULTI | 88.0 | [87.1, 89.1] | 27.8 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| LoRaSim rule, Croce rejection | ADR | 111.4 | [108.4, 113.7] | 5.5 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, ADR margin only, Croce rejection | ADR | 118.7 | [117.4, 120.0] | 25.7 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, orthogonal SFs | MULTI | 116.9 | [116.2, 117.6] | 28.2 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| lock rule, orthogonal SFs | ADR | 215.5 | [212.2, 218.5] | 7.1 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, ADR margin only, orthogonal SFs | ADR | 192.5 | [189.8, 194.9] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Croce rejection | MULTI | 116.9 | [116.2, 117.6] | 28.2 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| lock rule, Croce rejection | ADR | 215.5 | [212.2, 218.5] | 7.1 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, ADR margin only, Croce rejection | ADR | 165.6 | [163.3, 167.8] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
 
 RSSI spread is the largest range of received power within one spreading factor, and it and mean power are taken at the simulated node count nearest each capacity. Nodes per SF are means over the runs.
 
@@ -1328,18 +1356,18 @@ four things, each conditional on the table and on the 6 dB same-SF threshold:
   SF8 or SF9 one, and at this site the table found no packet to take. MULTI
   does not move either, trivially: at this site it puts every node on SF7.
 - **Without power control the margin's gain shrinks.** Near nodes on SF7 now
-  bury far ones on SF8 and SF9. ADR with the margin alone falls from 170.8
-  to 153.2 under LoRaSim's rule and from 246.2 to 211.6 under the lock rule,
-  with about 1.0% and 1.4% of transmitted packets lost to another spreading
+  bury far ones on SF8 and SF9. ADR with the margin alone falls from 131.9
+  to 118.7 under LoRaSim's rule and from 192.5 to 165.6 under the lock rule,
+  with about 1.0% and 1.2% of transmitted packets lost to another spreading
   factor at those points.
-- **The margin's gain survives.** Against MULTI it is 114.9 to 153.2 under
-  LoRaSim's rule and 151.1 to 211.6 under the lock rule, a third and two
+- **The margin's gain survives.** Against MULTI it is 88.0 to 118.7 under
+  LoRaSim's rule and 116.9 to 165.6 under the lock rule, a third and two
   fifths more, where with orthogonal spreading factors it was about a half
   and two thirds.
 - **Power control's sign survives, and its size changes.** Under LoRaSim's
-  rule it still costs capacity, 153.2 to 145.1 instead of 170.8 to 145.1.
-  Under the lock rule it still gains, 211.6 to 275.1 instead of 246.2 to
-  275.1. What power control gives up in capture it now partly buys back in
+  rule it still costs capacity, 118.7 to 111.4 instead of 131.9 to 111.4.
+  Under the lock rule it still gains, 165.6 to 215.5 instead of 192.5 to
+  215.5. What power control gives up in capture it now partly buys back in
   protection from the other spreading factors, which an orthogonal model
   cannot see.
 
@@ -1349,24 +1377,24 @@ counterpart of every row is in experiment `receiver`:
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|
-| LoRaSim rule, Croce rejection, 1 dB threshold | ADR | 167.1 | [164.9, 169.2] | 7.0 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, Croce rejection, 1 dB threshold, ADR margin only | ADR | 204.7 | [203.2, 206.4] | 27.1 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, Croce rejection, 3 dB threshold | ADR | 145.5 | [143.5, 147.9] | 6.4 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, Croce rejection, 3 dB threshold, ADR margin only | ADR | 173.3 | [172.0, 174.6] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Croce rejection, 1 dB threshold | ADR | 249.4 | [246.4, 252.7] | 7.2 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Croce rejection, 1 dB threshold, ADR margin only | ADR | 184.8 | [182.1, 187.2] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Croce rejection, 3 dB threshold | ADR | 274.2 | [271.7, 276.7] | 7.2 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Croce rejection, 3 dB threshold, ADR margin only | ADR | 198.5 | [196.1, 201.0] | 27.1 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, Croce rejection, 1 dB threshold | ADR | 129.6 | [127.0, 131.9] | 6.3 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, Croce rejection, 1 dB threshold, ADR margin only | ADR | 159.8 | [158.0, 161.4] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, Croce rejection, 3 dB threshold | ADR | 111.8 | [109.0, 114.0] | 5.5 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, Croce rejection, 3 dB threshold, ADR margin only | ADR | 135.4 | [134.0, 136.7] | 25.7 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Croce rejection, 1 dB threshold | ADR | 194.9 | [192.6, 197.1] | 7.0 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Croce rejection, 1 dB threshold, ADR margin only | ADR | 144.0 | [142.0, 146.3] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Croce rejection, 3 dB threshold | ADR | 214.8 | [211.7, 217.9] | 7.1 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Croce rejection, 3 dB threshold, ADR margin only | ADR | 154.5 | [151.3, 157.4] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
 
 RSSI spread is the largest range of received power within one spreading factor, and it and mean power are taken at the simulated node count nearest each capacity. Nodes per SF are means over the runs.
 
 *Source: experiment `inter_sf_threshold` of `studies/iot4cows/experiments.py`, 30 runs per point, 27 node counts from 3 to 300, 3600 s simulated, seed 99, 2000 bootstrap replicates. Data in `studies/iot4cows/outputs/inter_sf_threshold/`. Regenerate with `python3 run.py reproduce iot4cows --only inter_sf_threshold`.*
 
 The pattern of 6 dB holds at both thresholds. With power control the table
-changes nothing. Without it, capacity falls by 11 to 14% under either rule.
+changes nothing. Without it, capacity falls by 11 to 13% under either rule.
 And the sign of power control survives every combination tried: a cost
-under LoRaSim's rule (18%, 16% and 5% at 1, 3 and 6 dB), a gain under the
-lock rule (35%, 38% and 30%).
+under LoRaSim's rule (19%, 17% and 6% at 1, 3 and 6 dB), a gain under the
+lock rule (35%, 39% and 30%).
 
 MULTI was run at the same thresholds to read the margin's gain there. At
 this site MULTI puts every node on SF7, so the rejection table has nothing
@@ -1374,23 +1402,23 @@ to act on and the rows hold with or without it:
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|
-| LoRaSim rule, 1 dB threshold | MULTI | 165.5 | [164.6, 166.4] | 29.4 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| LoRaSim rule, 3 dB threshold | MULTI | 137.8 | [136.8, 138.8] | 29.1 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| lock rule, 1 dB threshold | MULTI | 129.4 | [128.6, 130.3] | 29.1 dB | 22.0 dBm | SF7 300.0 (N = 300) |
-| lock rule, 3 dB threshold | MULTI | 138.5 | [137.8, 139.3] | 29.1 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| LoRaSim rule, 1 dB threshold | MULTI | 127.2 | [126.3, 128.3] | 29.1 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| LoRaSim rule, 3 dB threshold | MULTI | 105.8 | [104.7, 106.9] | 28.2 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| lock rule, 1 dB threshold | MULTI | 99.4 | [98.7, 100.1] | 27.8 dB | 22.0 dBm | SF7 300.0 (N = 300) |
+| lock rule, 3 dB threshold | MULTI | 106.7 | [105.8, 107.6] | 28.2 dB | 22.0 dBm | SF7 300.0 (N = 300) |
 
 RSSI spread is the largest range of received power within one spreading factor, and it and mean power are taken at the simulated node count nearest each capacity. Nodes per SF are means over the runs.
 
 *Source: experiment `multi_threshold` of `studies/iot4cows/experiments.py`, 30 runs per point, 27 node counts from 3 to 300, 3600 s simulated, seed 99, 2000 bootstrap replicates. Data in `studies/iot4cows/outputs/multi_threshold/`. Regenerate with `python3 run.py reproduce iot4cows --only multi_threshold`.*
 
-The margin's gain over MULTI survives every combination: 42 to 49% under
-LoRaSim's rule and 63 to 65% under the lock rule with orthogonal spreading
-factors, 24 to 33% and 40 to 43% with the table. What does not survive is
+The margin's gain over MULTI survives every combination: 44 to 50% under
+LoRaSim's rule and 64 to 67% under the lock rule with orthogonal spreading
+factors, 26 to 35% and 42 to 45% with the table. What does not survive is
 realistic ADR beating ideal assignment under LoRaSim's rule. Its lead over
-MULTI is 26% at 6 dB, 6% at 3 dB and nothing distinguishable at 1 dB, where
-the intervals overlap. Under the lock rule it leads by 82 to 98% at all
-three. MULTI under the lock rule also falls as the threshold drops, 151.1,
-138.5 and 129.4 at 6, 3 and 1 dB, because a later packet stronger by the
+MULTI is 27% at 6 dB, 6% at 3 dB and nothing distinguishable at 1 dB, where
+the intervals overlap. Under the lock rule it leads by 84 to 101% at all
+three. MULTI under the lock rule also falls as the threshold drops, 116.9,
+106.7 and 99.4 at 6, 3 and 1 dB, because a later packet stronger by the
 threshold destroys the one the receiver locked onto, and a lower threshold
 makes that more common.
 
@@ -1399,18 +1427,18 @@ power control under both rules, beside the Croce rows above:
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|
-| LoRaSim rule, Eigner rejection | ADR | 145.1 | [143.1, 147.4] | 6.4 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, Eigner rejection, ADR margin only | ADR | 153.0 | [151.1, 154.7] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Eigner rejection | ADR | 275.1 | [272.6, 277.5] | 7.2 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Eigner rejection, ADR margin only | ADR | 211.1 | [208.1, 214.6] | 27.1 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, Eigner rejection | ADR | 111.4 | [108.4, 113.7] | 5.5 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, Eigner rejection, ADR margin only | ADR | 118.5 | [117.2, 119.8] | 25.7 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Eigner rejection | ADR | 215.5 | [212.2, 218.5] | 7.1 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Eigner rejection, ADR margin only | ADR | 165.2 | [162.9, 167.4] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
 
 RSSI spread is the largest range of received power within one spreading factor, and it and mean power are taken at the simulated node count nearest each capacity. Nodes per SF are means over the runs.
 
 *Source: experiment `inter_sf_eigner` of `studies/iot4cows/experiments.py`, 30 runs per point, 27 node counts from 3 to 300, 3600 s simulated, seed 99, 2000 bootstrap replicates. Data in `studies/iot4cows/outputs/inter_sf_eigner/`. Regenerate with `python3 run.py reproduce iot4cows --only inter_sf_eigner`.*
 
 The two tables give the same answer at this site. ADR without power control
-falls to 153.0 under LoRaSim's rule and 211.1 under the lock rule, against
-153.2 and 211.6 with Croce et al.'s, inside each other's intervals, and ADR
+falls to 118.5 under LoRaSim's rule and 165.2 under the lock rule, against
+118.7 and 165.6 with Croce et al.'s, inside each other's intervals, and ADR
 with power control is untouched by either. So item 14's findings do not
 rest on the table having been measured on a node radio.
 
@@ -1430,7 +1458,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-528 checks, about fifteen seconds, standard library only like the rest of the
+542 checks, about fifteen seconds, standard library only like the rest of the
 package, so nothing needs installing. They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
 studies take minutes each and nobody runs those on every edit.
@@ -1451,6 +1479,9 @@ against closed-form results. It has been changed once on purpose, by item
 16, which stopped the loop counting a packet dropped for want of a
 demodulator a second time as a collision. Only the configuration where the
 limit binds hard moved.
+Design item 33 left it untouched, although it changed every LoRaWAN
+airtime: the header is added by the study before the payload reaches the
+engine, and the golden configurations give the engine its payload directly.
 
 When the suite had 120 checks, at the close of design item 10, it was
 checked by putting six real past bugs back in one at a time and confirming it
@@ -1496,19 +1527,19 @@ onto the bound. On the worked example at SF8:
 
 | N | G | full model | no demod limit | single channel | no capture | no preamble | ALOHA |
 |---|---|---|---|---|---|---|---|
-| 10 | 0.089 | 0.9825 | 0.9825 | 0.8692 | 0.8454 | 0.8386 | 0.8368 |
-| 30 | 0.267 | 0.9497 | 0.9497 | 0.6682 | 0.6014 | 0.5867 | 0.5859 |
-| 60 | 0.535 | 0.9022 | 0.9022 | 0.4603 | 0.3609 | 0.3438 | 0.3433 |
-| 100 | 0.891 | 0.8446 | 0.8446 | 0.2925 | 0.1831 | 0.1688 | 0.1683 |
-| 200 | 1.782 | 0.7170 | 0.7172 | 0.1214 | 0.0331 | 0.0282 | 0.0283 |
+| 10 | 0.110 | 0.9787 | 0.9787 | 0.8399 | 0.8118 | 0.8045 | 0.8032 |
+| 30 | 0.329 | 0.9385 | 0.9385 | 0.6079 | 0.5313 | 0.5185 | 0.5182 |
+| 60 | 0.657 | 0.8806 | 0.8806 | 0.3876 | 0.2822 | 0.2685 | 0.2685 |
+| 100 | 1.096 | 0.8117 | 0.8117 | 0.2280 | 0.1218 | 0.1122 | 0.1118 |
+| 200 | 2.191 | 0.6631 | 0.6636 | 0.0892 | 0.0146 | 0.0125 | 0.0125 |
 
 What each mechanism is worth at N = 200, as the DER it adds:
 
-- demodulator limit: -0.0002 (0.7170 with it, 0.7172 without)
-- multiple channels: +0.5958 (0.7172 with it, 0.1214 without)
-- capture effect: +0.0883 (0.1214 with it, 0.0331 without)
-- preamble allowance: +0.0049 (0.0331 with it, 0.0282 without)
-- residual against ALOHA: -0.0002
+- demodulator limit: -0.0006 (0.6631 with it, 0.6636 without)
+- multiple channels: +0.5744 (0.6636 with it, 0.0892 without)
+- capture effect: +0.0746 (0.0892 with it, 0.0146 without)
+- preamble allowance: +0.0021 (0.0146 with it, 0.0125 without)
+- residual against ALOHA: -0.0000
 
 Verdict: directions hold, 5 of 5 points within 3 standard errors of the bound. PASS.
 
@@ -1585,14 +1616,14 @@ studies/
 `studies/iot4cows` is the configuration behind a published scalability
 analysis of a cattle-monitoring deployment in Guamal, Meta, Colombia. It is
 kept here because it shows every field filled with a real, sourced value, and
-because it lets anyone confirm the engine still reproduces the published
-figures:
+because each difference between its figures and the published ones is
+explained below:
 
 | Scenario | Capacity at DER = 0.9 | 95% CI |
 |---|---|---|
-| SF7 | 114.9 | [113.9, 115.9] |
-| SF8 | 61.8 | [61.1, 62.6] |
-| SF9 | 33.9 | [33.0, 34.7] |
+| SF7 | 88.0 | [87.1, 89.1] |
+| SF8 | 49.9 | [49.3, 50.5] |
+| SF9 | 26.3 | [25.6, 27.1] |
 
 *Source: experiment `headline` of `studies/iot4cows/experiments.py`, 30 runs per point, 27 node counts from 3 to 300, 3600 s simulated, seed 99, 2000 bootstrap replicates. Data in `studies/iot4cows/outputs/headline/`. Regenerate with `python3 run.py reproduce iot4cows --only headline`.*
 
@@ -1604,27 +1635,39 @@ cattle monitoring in extensive grazing with network performance evaluation*,
 Smart Agricultural Technology,
 [doi:10.1016/j.atech.2026.102644](https://doi.org/10.1016/j.atech.2026.102644).
 
+**The published figures leave out the LoRaWAN header.** The article times its
+32-byte reading alone, 133.63 ms at SF8, which occupies the channel 0.89% of
+the time at one uplink every 15 s. On air the uplink carries 13 more bytes
+of LoRaWAN (see "The payload and the frame on air"), so it lasts 164.35 ms
+and occupies the channel 1.10% of the time. Counted that way SF8 crosses the
+threshold at 49.9 nodes where the article reports 61.8, a fifth fewer, and
+every other figure for this site moves with it. The study counts the header
+since version 2.2.0 (design item 33). Setting `lorawan_overhead_bytes = 0`
+in it gives the article's figures back exactly: every run of the `headline`
+grid comes out identical to version 2.1.0's.
+
 **The conservative bound here is SF9, where the published figure used SF10.**
 The data-rate check added later caught the reason: SF10 is US915 DR0, which
 carries at most 11 bytes of application payload, so a 32-byte reading cannot
 be sent at that rate at all. The published error is conservative, since the
 airtime computed for 32 bytes at SF10 is longer than any legal SF10 uplink,
 and it moved only that one curve: the article reports about 18 nodes for
-SF10, [16.9, 18.1], against SF9's 33.9 here, because airtime nearly halves
-from 453 ms to 247 ms. The code behind the article is commit `8779a30` of
-[github.com/wilcashe/loracap](https://github.com/wilcashe/loracap). SF8, the
-headline figure, is untouched. Interval bounds here can differ from the
-article's by 0.1 node, because of a bootstrap fix described in design item
-11. Point estimates are unchanged.
+SF10, [16.9, 18.1], against 33.9 for SF9 with the article's airtime, because
+airtime nearly halves from 453 ms to 247 ms. With the header SF9 lasts
+308 ms and crosses at 26.3. The code behind the article is commit `8779a30`
+of [github.com/wilcashe/loracap](https://github.com/wilcashe/loracap). With
+the header left out, interval bounds can differ from the article's by
+0.1 node, because of a bootstrap fix described in design item 11. Point
+estimates are unchanged.
 
-This is the kind of thing the tool exists to catch, and it is worth saying
-plainly that it caught it here, in its own worked example, after the fact.
+Both are the kind of error the tool exists to catch, and it is worth saying
+plainly that they were found here, in its own worked example, after the fact.
 
 The article also defines DER as collision and weak-signal losses only, with
 packets dropped for lack of a free demodulator tracked separately. That is
 `der_classic` here. Capacity in this repository is computed on `der`, which
 counts those drops as losses too. On this site the two coincide, since the
-demodulator limit costs 0.0002 DER at 200 nodes (see "Validating the
+demodulator limit costs 0.0006 DER at 200 nodes (see "Validating the
 engine"), but a study where the limit binds will see them differ.
 
 Remember which bound is which: a *lower* spreading factor has *shorter*
@@ -1672,7 +1715,7 @@ rather than drawn at the edge.
 
 All the worked example's experiments share one configuration, the study's
 own: 30 runs per point, the 27-point grid from 3 to 300 nodes, 3600 s and
-seed 99. So SF8 with no shadowing is 61.8 wherever it appears, and a
+seed 99. So SF8 with no shadowing is 49.9 wherever it appears, and a
 difference between two rows of a table comes from what the rows change. The
 one exception is `saturation`, which carries the same grid on to 3000 nodes.
 Regenerating every study, `python3 run.py reproduce all`, takes about an hour and a half
@@ -1682,7 +1725,7 @@ on one core.
 
 - The propagation model is deterministic unless `shadowing_sigma_db` or
   `fading_sigma_db` is set, and both default to 0. The worked example leaves
-  them there on purpose, to reproduce a published analysis, and `check` warns
+  them there on purpose, as the published analysis did, and `check` warns
   that it is discarding the residual.
 - Nodes are placed uniformly over the site. Real deployments are rarely
   uniform: livestock congregate near water and shade, sensors follow

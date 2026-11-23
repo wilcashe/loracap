@@ -4,9 +4,9 @@ Where the gateway stops delivering more traffic. Capacity is where the DER falls
 
 | Scenario | Capacity at DER = 0.9 | 95% CI | Most delivered per hour | At N | Collided at the peak | No free demodulator at the peak | No free demodulator at N max |
 |---|---|---|---|---|---|---|---|
-| SF8 | 61.8 | [61.1, 62.7] | 52,682 | 579 (491 to 683) | 54.4% | 7.8% | 71.5% (N = 3000) |
-| MULTI | 114.9 | [113.9, 115.9] | 97,612 | 949 (805 to 1118) | 52.1% | 5.0% | 50.2% (N = 3000) |
-| ADR | 145.1 | [143.1, 147.5] | 105,739 | 949 (805 to 1118) | 41.7% | 11.9% | 60.5% (N = 3000) |
+| SF8 | 49.9 | [49.2, 50.5] | 42,445 | 417 (354 to 491) | 52.5% | 5.1% | 76.6% (N = 3000) |
+| MULTI | 88.0 | [87.1, 89.0] | 75,577 | 805 (683 to 949) | 54.1% | 6.8% | 60.0% (N = 3000) |
+| ADR | 111.4 | [108.5, 113.8] | 82,583 | 805 (683 to 949) | 43.1% | 14.2% | 68.1% (N = 3000) |
 
 Delivered per hour is packets transmitted times DER, both means over the runs, scaled from the simulated time to an hour. The peak is the simulated node count that delivers the most, so the true maximum lies between the neighbouring node counts given in brackets. It carries no interval, because transmitted packets are saved as a mean and not run by run. Losses are shares of the packets transmitted. A packet refused for want of a demodulator is counted there only, never also as collided.
 

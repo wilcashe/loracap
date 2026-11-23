@@ -2,17 +2,17 @@
   "der_threshold": 0.9,
   "capacity": {
     "ADR": {
-      "capacity": 204.7380966095979,
-      "ci_low": 203.24887946003122,
-      "ci_high": 206.4110545973039,
+      "capacity": 159.83199339428214,
+      "ci_low": 158.0226368269543,
+      "ci_high": 161.35706440732517,
       "n_bootstrap": 2000
     }
   },
   "fleet_capacity": {
     "ADR": {
-      "capacity": 204.7380966095979,
-      "ci_low": 203.24887946003122,
-      "ci_high": 206.4110545973039,
+      "capacity": 159.83199339428214,
+      "ci_low": 158.0226368269543,
+      "ci_high": 161.35706440732517,
       "n_bootstrap": 2000
     }
   },
@@ -99,6 +99,7 @@
       "path_loss_source": "Field fit over 1,229 aggregated RSSI points, 30 m to 2.21 km, IoT4Cows deployment",
       "uplink_dwell_time_ms": null,
       "payload_bytes": 32,
+      "lorawan_overhead_bytes": 13,
       "coding_rate": 1,
       "send_interval_s": 15.0,
       "capture_threshold_db": 1.0,
@@ -189,9 +190,9 @@
       },
       "net_antenna_gain_db": 9.0
     },
-    "loracap_version": "2.1.0",
-    "code_sha256": "68a2947554dfcbba74a1d9ddd7f99f4b4c9f61324faaa134672dbe9cabcfc5ee",
+    "loracap_version": "2.2.0",
+    "code_sha256": "8319cc7acc843ae952f20ab4323e8878ed98cf8965d65fff78a75e9dc1127671",
     "python": "3.13.18",
-    "generated": "2026-11-20T04:32:27+00:00"
+    "generated": "2026-11-23T19:28:38+00:00"
   }
 }

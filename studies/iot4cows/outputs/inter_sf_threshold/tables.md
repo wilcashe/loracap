@@ -4,27 +4,27 @@ Croce et al.'s rejection table at the 1 and 3 dB same-SF thresholds, under both 
 
 | Configuration | Scenario | Capacity | 95% CI | RSSI spread | Mean power | Nodes per SF at N max |
 |---|---|---|---|---|---|---|
-| LoRaSim rule, Croce rejection, 1 dB threshold | ADR | 167.1 | [164.9, 169.2] | 7.0 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, Croce rejection, 1 dB threshold, ADR margin only | ADR | 204.7 | [203.2, 206.4] | 27.1 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, Croce rejection, 3 dB threshold | ADR | 145.5 | [143.5, 147.9] | 6.4 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| LoRaSim rule, Croce rejection, 3 dB threshold, ADR margin only | ADR | 173.3 | [172.0, 174.6] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Croce rejection, 1 dB threshold | ADR | 249.4 | [246.4, 252.7] | 7.2 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Croce rejection, 1 dB threshold, ADR margin only | ADR | 184.8 | [182.1, 187.2] | 26.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Croce rejection, 3 dB threshold | ADR | 274.2 | [271.7, 276.7] | 7.2 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
-| lock rule, Croce rejection, 3 dB threshold, ADR margin only | ADR | 198.5 | [196.1, 201.0] | 27.1 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, Croce rejection, 1 dB threshold | ADR | 129.6 | [127.0, 131.9] | 6.3 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, Croce rejection, 1 dB threshold, ADR margin only | ADR | 159.8 | [158.0, 161.4] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, Croce rejection, 3 dB threshold | ADR | 111.8 | [109.0, 114.0] | 5.5 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| LoRaSim rule, Croce rejection, 3 dB threshold, ADR margin only | ADR | 135.4 | [134.0, 136.7] | 25.7 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Croce rejection, 1 dB threshold | ADR | 194.9 | [192.6, 197.1] | 7.0 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Croce rejection, 1 dB threshold, ADR margin only | ADR | 144.0 | [142.0, 146.3] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Croce rejection, 3 dB threshold | ADR | 214.8 | [211.7, 217.9] | 7.1 dB | 18.1 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
+| lock rule, Croce rejection, 3 dB threshold, ADR margin only | ADR | 154.5 | [151.3, 157.4] | 25.9 dB | 22.0 dBm | SF7 219.7, SF8 65.6, SF9 14.7 (N = 300) |
 
 RSSI spread is the largest range of received power within one spreading factor, and it and mean power are taken at the simulated node count nearest each capacity. Nodes per SF are means over the runs.
 
 | Configuration | Scenario | At N | Weak signal | Collided | of which another SF | CI width |
 |---|---|---|---|---|---|---|
-| LoRaSim rule, Croce rejection, 1 dB threshold | ADR | 180 | 0.00% | 10.71% | 0.00% | 4.3 |
-| LoRaSim rule, Croce rejection, 1 dB threshold, ADR margin only | ADR | 213 | 0.00% | 10.37% | 1.42% | 3.2 |
-| LoRaSim rule, Croce rejection, 3 dB threshold | ADR | 152 | 0.00% | 10.43% | 0.00% | 4.4 |
-| LoRaSim rule, Croce rejection, 3 dB threshold, ADR margin only | ADR | 180 | 0.00% | 10.37% | 1.22% | 2.6 |
-| lock rule, Croce rejection, 1 dB threshold | ADR | 253 | 0.00% | 10.12% | 0.00% | 6.2 |
-| lock rule, Croce rejection, 1 dB threshold, ADR margin only | ADR | 180 | 0.00% | 9.75% | 1.22% | 5.1 |
-| lock rule, Croce rejection, 3 dB threshold | ADR | 253 | 0.00% | 9.25% | 0.00% | 5.0 |
-| lock rule, Croce rejection, 3 dB threshold, ADR margin only | ADR | 213 | 0.00% | 10.69% | 1.42% | 4.9 |
+| LoRaSim rule, Croce rejection, 1 dB threshold | ADR | 128 | 0.00% | 9.88% | 0.00% | 5.0 |
+| LoRaSim rule, Croce rejection, 1 dB threshold, ADR margin only | ADR | 152 | 0.00% | 9.53% | 1.24% | 3.3 |
+| LoRaSim rule, Croce rejection, 3 dB threshold | ADR | 108 | 0.00% | 9.71% | 0.00% | 5.1 |
+| LoRaSim rule, Croce rejection, 3 dB threshold, ADR margin only | ADR | 128 | 0.00% | 9.49% | 1.03% | 2.6 |
+| lock rule, Croce rejection, 1 dB threshold | ADR | 180 | 0.00% | 9.25% | 0.00% | 4.5 |
+| lock rule, Croce rejection, 1 dB threshold, ADR margin only | ADR | 152 | 0.00% | 10.55% | 1.24% | 4.4 |
+| lock rule, Croce rejection, 3 dB threshold | ADR | 213 | 0.00% | 9.89% | 0.00% | 6.2 |
+| lock rule, Croce rejection, 3 dB threshold, ADR margin only | ADR | 152 | 0.00% | 9.84% | 1.24% | 6.2 |
 
 Losses are shares of transmitted packets at the simulated node count nearest each capacity.
 "Of which another SF" counts collided packets that an overlap with another spreading factor took, alone or together with a same-SF overlap. "Off" marks a configuration with orthogonal spreading factors.

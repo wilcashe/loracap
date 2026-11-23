@@ -107,7 +107,25 @@ class Study:
     # dwell limit, 400 means the 400 ms limit.
     uplink_dwell_time_ms: Optional[int] = None
 
+    # The application payload, the N of the regional payload tables: what the
+    # node's application hands to LoRaWAN, and what the ceiling is checked
+    # against.
     payload_bytes: int = 32
+    # Bytes LoRaWAN wraps around the application payload in every uplink. The
+    # radio transmits them, so the airtime has to count them: MHDR (1 byte),
+    # FHDR without options (7: DevAddr 4, FCtrl 1, FCnt 2), FPort (1) and MIC
+    # (4). Frame layout as drawn in Eigner (2021), Figure 2.22, from the
+    # LoRaWAN specification. RP002-1.0.5 agrees: the M and N of its payload
+    # tables (Table 24 for US915, among others) differ by 8, the FHDR and the
+    # FPort, and its largest N, 242, plus these 13 bytes is 255, the most a
+    # LoRa frame carries. 13 is a floor: MAC commands piggybacked in FOpts add
+    # up to 15 bytes to some uplinks, and they are not modelled.
+    #
+    # Up to version 2.1.0 the airtime used `payload_bytes` alone, which
+    # understated every LoRaWAN uplink (design item 33). 0 restores that
+    # reading on purpose, for a study of bare LoRa frames such as Bor et
+    # al.'s, whose published airtime is that of the payload alone.
+    lorawan_overhead_bytes: int = 13
     coding_rate: int = 1                # CR index; airtime uses 4/(4+CR)
     send_interval_s: float = 60.0
     capture_threshold_db: float = 6.0
@@ -246,9 +264,22 @@ class Study:
             return presets.MAX_SIMULTANEOUS_DEMODULATIONS[self.chip]
         return None     # None disables the limit, which is a valid choice
 
+    def frame_bytes(self) -> int:
+        """What the radio sends: the application payload plus the LoRaWAN
+        header. This, not `payload_bytes`, is the payload length the airtime
+        formula takes. The payload ceiling is still checked against
+        `payload_bytes`, because the regional tables state it for the
+        application payload."""
+        overhead = self.lorawan_overhead_bytes
+        if isinstance(overhead, bool) or not isinstance(overhead, int) or overhead < 0:
+            raise ValueError(
+                f"study {self.name!r}: lorawan_overhead_bytes must be a whole "
+                f"number of bytes, 0 or more, not {overhead!r}.")
+        return self.payload_bytes + overhead
+
     def to_sim_config(self) -> SimConfig:
         return SimConfig(
-            payload_bytes=self.payload_bytes,
+            payload_bytes=self.frame_bytes(),
             coding_rate=self.coding_rate,
             tx_power_dbm=self.tx_power_dbm,
             net_antenna_gain_db=self.net_antenna_gain_db,
@@ -615,6 +646,22 @@ def validate(study: Study):
                 f"{study.region}, so it was not checked."
             )
 
+    # The payload ceiling above reads the application payload, the airtime
+    # reads the whole frame. Stating both keeps the two from being confused,
+    # which is how the header went uncounted until design item 33.
+    try:
+        frame = study.frame_bytes()
+    except ValueError:
+        frame = None            # to_sim_config has already reported it
+    if frame is not None:
+        if study.lorawan_overhead_bytes:
+            info.append(f"Frame on air: {study.payload_bytes} B of payload + "
+                        f"{study.lorawan_overhead_bytes} B of LoRaWAN header "
+                        f"= {frame} B, the length the airtime is computed for")
+        else:
+            info.append(f"Frame on air: {frame} B, the payload alone "
+                        f"(lorawan_overhead_bytes = 0, a bare LoRa frame)")
+
     # --- energy ---
     if study.radio and study.radio.upper() not in presets.TX_CURRENT_MA:
         errors.append(
@@ -979,7 +1026,8 @@ STUDY_FIELD_ORDER = [
     ("path_loss_r_squared", None),
     ("shadowing_sigma_db", None), ("fading_sigma_db", None), ("path_loss_source", None),
     ("uplink_dwell_time_ms", None),
-    ("payload_bytes", "traffic"), ("coding_rate", None),
+    ("payload_bytes", "traffic"), ("lorawan_overhead_bytes", None),
+    ("coding_rate", None),
     ("send_interval_s", None), ("capture_threshold_db", None),
     ("receiver_model", None), ("inter_sf_rejection", None),
     ("lock_survival", None), ("header_recapture", None),

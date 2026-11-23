@@ -2,41 +2,41 @@
   "der_threshold": 0.9,
   "capacity": {
     "SF8": {
-      "capacity": 61.842762399272026,
-      "ci_low": 61.08938142113569,
-      "ci_high": 62.64964106911322,
+      "capacity": 49.89221308383814,
+      "ci_low": 49.25986512264763,
+      "ci_high": 50.537309815041226,
       "n_bootstrap": 2000
     },
     "MULTI": {
-      "capacity": 114.90954845022107,
-      "ci_low": 113.86002547930603,
-      "ci_high": 115.86136156553962,
+      "capacity": 88.00649636694978,
+      "ci_low": 87.09460210596038,
+      "ci_high": 89.10669597454486,
       "n_bootstrap": 2000
     },
     "ADR": {
-      "capacity": 145.08796966464143,
-      "ci_low": 143.11823316883346,
-      "ci_high": 147.3924573767505,
+      "capacity": 111.43073405778114,
+      "ci_low": 108.43030009792186,
+      "ci_high": 113.74211966776645,
       "n_bootstrap": 2000
     }
   },
   "fleet_capacity": {
     "SF8": {
-      "capacity": 61.842762399272026,
-      "ci_low": 61.08938142113569,
-      "ci_high": 62.64964106911322,
+      "capacity": 49.89221308383814,
+      "ci_low": 49.25986512264763,
+      "ci_high": 50.537309815041226,
       "n_bootstrap": 2000
     },
     "MULTI": {
-      "capacity": 114.90954845022107,
-      "ci_low": 113.86002547930603,
-      "ci_high": 115.86136156553962,
+      "capacity": 88.00649636694978,
+      "ci_low": 87.09460210596038,
+      "ci_high": 89.10669597454486,
       "n_bootstrap": 2000
     },
     "ADR": {
-      "capacity": 145.08796966464143,
-      "ci_low": 143.11823316883346,
-      "ci_high": 147.3924573767505,
+      "capacity": 111.43073405778114,
+      "ci_low": 108.43030009792186,
+      "ci_high": 113.74211966776645,
       "n_bootstrap": 2000
     }
   },
@@ -120,6 +120,7 @@
       "path_loss_source": "Field fit over 1,229 aggregated RSSI points, 30 m to 2.21 km, IoT4Cows deployment",
       "uplink_dwell_time_ms": null,
       "payload_bytes": 32,
+      "lorawan_overhead_bytes": 13,
       "coding_rate": 1,
       "send_interval_s": 15.0,
       "capture_threshold_db": 6.0,
@@ -212,9 +213,9 @@
       },
       "net_antenna_gain_db": 9.0
     },
-    "loracap_version": "2.1.0",
-    "code_sha256": "68a2947554dfcbba74a1d9ddd7f99f4b4c9f61324faaa134672dbe9cabcfc5ee",
+    "loracap_version": "2.2.0",
+    "code_sha256": "8319cc7acc843ae952f20ab4323e8878ed98cf8965d65fff78a75e9dc1127671",
     "python": "3.13.18",
-    "generated": "2026-11-20T04:14:42+00:00"
+    "generated": "2026-11-23T19:09:57+00:00"
   }
 }

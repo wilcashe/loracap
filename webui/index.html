@@ -334,7 +334,7 @@
        below the threshold. Use the shortest reporting interval the deployment
        can produce: capacity measured at the worst case is a bound you can defend.</p>
     <div class="grid">
-      <div><label for="f_pl" data-i18n>Payload (bytes)</label><input id="f_pl" type="number" value="32"></div>
+      <div><label for="f_pl" data-i18n>Application payload (bytes)</label><input id="f_pl" type="number" value="32"></div>
       <div><label for="f_int" data-i18n>Send interval (s)</label><input id="f_int" type="number" step="any" value="60"></div>
       <div><label for="f_th" data-i18n>DER threshold</label><input id="f_th" type="number" step="any" value="0.9"></div>
     </div>
@@ -355,6 +355,7 @@
       <div><label for="f_cr" data-i18n>Coding rate</label><select id="f_cr">
         <option value="1">4/5 (LoRaWAN)</option><option value="2">4/6</option>
         <option value="3">4/7</option><option value="4">4/8</option></select></div>
+      <div><label for="f_hdr" data-i18n>LoRaWAN header (bytes)</label><input id="f_hdr" type="number" min="0" value="13"></div>
       <div><label for="f_time" data-i18n>Simulated time (s)</label><input id="f_time" type="number" value="3600"></div>
       <div><label for="f_runs" data-i18n>Runs per point</label><input id="f_runs" type="number" value="30"></div>
       <div><label for="f_seed" data-i18n>Random seed</label><input id="f_seed" type="number" value="99"></div>
@@ -364,6 +365,12 @@
       <div><label for="f_hl" data-i18n>Highlighted scenario, drawn in colour</label>
       <select id="f_hl"></select></div>
     </div>
+    <div class="srcnote" data-for="f_hdr" data-i18n><b>LoRaWAN header.</b> Every uplink carries
+      13 bytes besides the application payload: MHDR (1), FHDR without options
+      (7), FPort (1) and MIC (4). The radio sends them, so the time on air
+      counts them, while the payload limit of each data rate applies to the
+      application payload alone. Set 0 only for a bare LoRa frame without
+      LoRaWAN.</div>
     </div></div>
     <div class="adv" id="adv_rx" data-name="advanced receiver settings" data-i18n-attr="data-name"><div class="advbody">
     <div><div class="grp" data-i18n>Receiver model</div>
@@ -551,7 +558,8 @@ const FIELDS={
   path_loss_ref_distance_m:['f_d0','d\u2080 (m)'], min_valid_distance_m:['f_minv','Validity floor (m)'],
   shadowing_sigma_db:['f_sigma','Shadowing \u03c3 (dB)'],
   path_loss_source:['f_plsrc','Where this model came from'],
-  payload_bytes:['f_pl','Payload (bytes)'], coding_rate:['f_cr','Coding rate'],
+  payload_bytes:['f_pl','Application payload (bytes)'],
+  lorawan_overhead_bytes:['f_hdr','LoRaWAN header (bytes)'], coding_rate:['f_cr','Coding rate'],
   send_interval_s:['f_int','Send interval (s)'], sim_time_s:['f_time','Simulated time (s)'],
   n_runs:['f_runs','Runs per point'], der_threshold:['f_th','DER threshold'],
   base_seed:['f_seed','Random seed'], placement:['f_place','Placement'],
@@ -1709,7 +1717,8 @@ function values(){
     path_loss_ref_distance_m:num('f_d0',100), min_valid_distance_m:num('f_minv',30),
     shadowing_sigma_db:num('f_sigma',0),
     path_loss_source:$('f_plsrc').value.trim(),
-    payload_bytes:Math.round(num('f_pl',32)), coding_rate:Math.round(num('f_cr',1)),
+    payload_bytes:Math.round(num('f_pl',32)),
+    lorawan_overhead_bytes:Math.round(num('f_hdr',13)), coding_rate:Math.round(num('f_cr',1)),
     send_interval_s:num('f_int',60), sim_time_s:num('f_time',3600),
     n_runs:Math.round(num('f_runs',30)), der_threshold:num('f_th',0.9),
     base_seed:Math.round(num('f_seed',99)),

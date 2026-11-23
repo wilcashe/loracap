@@ -4,23 +4,29 @@ IoT4Cows: LoRaWAN cattle-monitoring deployment, Guamal, Meta, Colombia.
 
 This is a worked example. It is the configuration behind the scalability
 analysis published with the IoT4Cows paper, kept in the repository for two
-reasons: it shows every field filled with a real, sourced value, and it lets
-anyone confirm the engine still reproduces the published figures.
+reasons: it shows every field filled with a real, sourced value, and each
+difference between its figures and the published ones is explained here.
 
 Expected result at DER = 0.9, with the parameters below:
 
-    SF9    ~34 nodes     conservative bound (the slowest US915 125 kHz data
+    SF9    ~26 nodes     conservative bound (the slowest US915 125 kHz data
                          rate that can carry a 32-byte payload)
-    SF8    ~62 nodes     the deployed configuration
-    SF7   ~115 nodes     optimistic bound (shortest airtime)
+    SF8    ~50 nodes     the deployed configuration
+    SF7    ~88 nodes     optimistic bound (shortest airtime)
+
+The published article timed the 32-byte reading alone, 133.63 ms at SF8.
+On air the uplink carries 13 more bytes of LoRaWAN header, 45 bytes in
+164.35 ms, and the study counts them since design item 33. That moves every
+figure: SF8 crosses at about 50 nodes where the article reports 61.8.
+Setting lorawan_overhead_bytes=0 gives the article's figures back.
 
 The published article (Smart Agricultural Technology,
 doi:10.1016/j.atech.2026.102644) used SF10 as the conservative bound and
 reports about 18 nodes for it, from the code at commit 8779a30 of
 github.com/wilcashe/loracap. SF10 is US915 DR0, whose ceiling is eleven bytes
 of application payload, so a 32-byte reading cannot be sent at that rate and
-the study now uses SF9. The error was conservative and SF8, the headline
-figure, is unaffected. See the comment on `scenarios` below.
+the study now uses SF9. That error was conservative and moved only the
+slowest curve. See the comment on `scenarios` below.
 
 Run `python3 run.py reproduce iot4cows --only headline` and compare. A
 difference means the engine changed, not the configuration. Every other
@@ -113,14 +119,14 @@ STUDY = Study(
     # airtime computed for 32 bytes at SF10 is longer than any legal SF10
     # uplink, so the published SF10 capacity is lower than the true bound.
     # Nothing else moves. SF8 is DR2 with a 125-byte ceiling, and the network
-    # was deployed at SF9, DR1, with 53 bytes.
+    # was deployed at SF8 (Table 3 of the article). SF9 is DR1, with 53 bytes.
     #
     # SF9 replaces SF10 here, so the conservative bound is now the slowest data
-    # rate this payload can legally carry, and it is also the rate the network
-    # actually ran at. The third curve moves a long way as a result: SF10 with
-    # this payload crosses the threshold at 17.5 nodes, SF9 at 33.9, because
-    # airtime nearly halves, from 453 ms to 247 ms. SF7 and SF8 are untouched,
-    # and SF8, the headline figure, still crosses at 61.8.
+    # rate this payload can legally carry. The third curve moved a long way:
+    # timed without the LoRaWAN header, as the article did, SF10 with this
+    # payload crossed the threshold at 17.5 nodes and SF9 at 33.9, because
+    # airtime nearly halves, from 453 ms to 247 ms. With the header (design
+    # item 33) SF9 lasts 308 ms and crosses at 26.3.
     scenarios=("SF7", "SF8", "SF9"),
     # Written out rather than regenerated with node_counts_logspace(3, 300):
     # this is the exact grid behind the published figures, and the interpolated

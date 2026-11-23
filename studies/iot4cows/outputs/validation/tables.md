@@ -4,19 +4,19 @@ The degeneracy ladder: switch off, one at a time, each mechanism pure ALOHA lack
 
 | N | G | full model | no demod limit | single channel | no capture | no preamble | ALOHA |
 |---|---|---|---|---|---|---|---|
-| 10 | 0.089 | 0.9825 | 0.9825 | 0.8692 | 0.8454 | 0.8386 | 0.8368 |
-| 30 | 0.267 | 0.9497 | 0.9497 | 0.6682 | 0.6014 | 0.5867 | 0.5859 |
-| 60 | 0.535 | 0.9022 | 0.9022 | 0.4603 | 0.3609 | 0.3438 | 0.3433 |
-| 100 | 0.891 | 0.8446 | 0.8446 | 0.2925 | 0.1831 | 0.1688 | 0.1683 |
-| 200 | 1.782 | 0.7170 | 0.7172 | 0.1214 | 0.0331 | 0.0282 | 0.0283 |
+| 10 | 0.110 | 0.9787 | 0.9787 | 0.8399 | 0.8118 | 0.8045 | 0.8032 |
+| 30 | 0.329 | 0.9385 | 0.9385 | 0.6079 | 0.5313 | 0.5185 | 0.5182 |
+| 60 | 0.657 | 0.8806 | 0.8806 | 0.3876 | 0.2822 | 0.2685 | 0.2685 |
+| 100 | 1.096 | 0.8117 | 0.8117 | 0.2280 | 0.1218 | 0.1122 | 0.1118 |
+| 200 | 2.191 | 0.6631 | 0.6636 | 0.0892 | 0.0146 | 0.0125 | 0.0125 |
 
 What each mechanism is worth at N = 200, as the DER it adds:
 
-- demodulator limit: -0.0002 (0.7170 with it, 0.7172 without)
-- multiple channels: +0.5958 (0.7172 with it, 0.1214 without)
-- capture effect: +0.0883 (0.1214 with it, 0.0331 without)
-- preamble allowance: +0.0049 (0.0331 with it, 0.0282 without)
-- residual against ALOHA: -0.0002
+- demodulator limit: -0.0006 (0.6631 with it, 0.6636 without)
+- multiple channels: +0.5744 (0.6636 with it, 0.0892 without)
+- capture effect: +0.0746 (0.0892 with it, 0.0146 without)
+- preamble allowance: +0.0021 (0.0146 with it, 0.0125 without)
+- residual against ALOHA: -0.0000
 
 Verdict: directions hold, 5 of 5 points within 3 standard errors of the bound. PASS.
 

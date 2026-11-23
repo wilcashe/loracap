@@ -4,8 +4,8 @@ Fitted model against a fully assumed one: rural's median exponent with the inter
 
 | Model | SF7 | SF8 | SF9 |
 |---|---|---|---|
-| fitted (field) | 114.9 [113.9, 115.9] | 61.8 [61.1, 62.6] | 33.9 [33.0, 34.7] |
-| assumed (rural) | no crossing - | 20.4 [3.4, 23.9] | 36.8 [36.2, 37.4] |
+| fitted (field) | 88.0 [87.1, 89.1] | 49.9 [49.3, 50.5] | 26.3 [25.6, 27.1] |
+| assumed (rural) | no crossing - | 18.2 [3.3, 21.1] | 28.8 [28.0, 29.5] |
 
 Reach as a multiple of the site radius:
 

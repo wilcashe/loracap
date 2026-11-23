@@ -13,49 +13,49 @@
       "reach_m": 3054.921113215509,
       "site_radius_m": 957.5239877935173,
       "covers_site": true,
-      "capacity": 60.33356172340019
+      "capacity": 48.99012703824725
     },
     {
       "path_loss_exponent": 2.16,
       "reach_m": 2371.3737056616515,
       "site_radius_m": 957.5239877935173,
       "covers_site": true,
-      "capacity": 62.04604791440562
+      "capacity": 49.535556630738185
     },
     {
       "path_loss_exponent": 2.25,
       "reach_m": 2089.2961308540366,
       "site_radius_m": 957.5239877935173,
       "covers_site": true,
-      "capacity": 62.58903281679261
+      "capacity": 49.84244741151869
     },
     {
       "path_loss_exponent": 2.5,
       "reach_m": 1541.7004529495578,
       "site_radius_m": 957.5239877935173,
       "covers_site": true,
-      "capacity": 64.22174303173307
+      "capacity": 51.51308552637039
     },
     {
       "path_loss_exponent": 2.75,
       "reach_m": 1202.2644346174118,
       "site_radius_m": 957.5239877935173,
       "covers_site": true,
-      "capacity": 65.66975767880476
+      "capacity": 53.15387644410001
     },
     {
       "path_loss_exponent": 3.0,
       "reach_m": 977.23722095581,
       "site_radius_m": 957.5239877935173,
       "covers_site": true,
-      "capacity": 67.44315690590491
+      "capacity": 54.726450919363934
     },
     {
       "path_loss_exponent": 3.25,
       "reach_m": 820.0609912981716,
       "site_radius_m": 957.5239877935173,
       "covers_site": false,
-      "capacity": 35.83187166721466
+      "capacity": 31.03834269628932
     },
     {
       "path_loss_exponent": 3.5,
@@ -118,6 +118,7 @@
       "path_loss_source": "Field fit over 1,229 aggregated RSSI points, 30 m to 2.21 km, IoT4Cows deployment",
       "uplink_dwell_time_ms": null,
       "payload_bytes": 32,
+      "lorawan_overhead_bytes": 13,
       "coding_rate": 1,
       "send_interval_s": 15.0,
       "capture_threshold_db": 6.0,
@@ -210,9 +211,9 @@
       },
       "net_antenna_gain_db": 9.0
     },
-    "loracap_version": "2.1.0",
-    "code_sha256": "68a2947554dfcbba74a1d9ddd7f99f4b4c9f61324faaa134672dbe9cabcfc5ee",
+    "loracap_version": "2.2.0",
+    "code_sha256": "8319cc7acc843ae952f20ab4323e8878ed98cf8965d65fff78a75e9dc1127671",
     "python": "3.13.18",
-    "generated": "2026-11-20T03:57:37+00:00"
+    "generated": "2026-11-23T18:53:11+00:00"
   }
 }

@@ -2,7 +2,7 @@
   "study": "iot4cows",
   "site_map": {
     "scenario": "SF8",
-    "n_nodes": 62,
+    "n_nodes": 50,
     "repetition": 0,
     "seed": 9900000,
     "placement": "polygon",
@@ -200,7 +200,7 @@
     },
     "counts": {
       "per_sf": {
-        "8": 62
+        "8": 50
       },
       "unreachable": 0,
       "below_sensitivity": 0
@@ -705,130 +705,10 @@
         "tx_power_dbm": 22.0,
         "shadowing_db": 0.0,
         "link": "ok"
-      },
-      {
-        "id": 50,
-        "x_m": -45.15,
-        "y_m": -466.84,
-        "distance_m": 469.02,
-        "sf": 8,
-        "tx_power_dbm": 22.0,
-        "shadowing_db": 0.0,
-        "link": "ok"
-      },
-      {
-        "id": 51,
-        "x_m": 127.96,
-        "y_m": -211.02,
-        "distance_m": 246.79,
-        "sf": 8,
-        "tx_power_dbm": 22.0,
-        "shadowing_db": 0.0,
-        "link": "ok"
-      },
-      {
-        "id": 52,
-        "x_m": -133.88,
-        "y_m": -185.69,
-        "distance_m": 228.92,
-        "sf": 8,
-        "tx_power_dbm": 22.0,
-        "shadowing_db": 0.0,
-        "link": "ok"
-      },
-      {
-        "id": 53,
-        "x_m": 364.95,
-        "y_m": -213.43,
-        "distance_m": 422.77,
-        "sf": 8,
-        "tx_power_dbm": 22.0,
-        "shadowing_db": 0.0,
-        "link": "ok"
-      },
-      {
-        "id": 54,
-        "x_m": -388.96,
-        "y_m": 22.67,
-        "distance_m": 389.62,
-        "sf": 8,
-        "tx_power_dbm": 22.0,
-        "shadowing_db": 0.0,
-        "link": "ok"
-      },
-      {
-        "id": 55,
-        "x_m": -240.18,
-        "y_m": -755.19,
-        "distance_m": 792.46,
-        "sf": 8,
-        "tx_power_dbm": 22.0,
-        "shadowing_db": 0.0,
-        "link": "ok"
-      },
-      {
-        "id": 56,
-        "x_m": -254.86,
-        "y_m": -29.56,
-        "distance_m": 256.57,
-        "sf": 8,
-        "tx_power_dbm": 22.0,
-        "shadowing_db": 0.0,
-        "link": "ok"
-      },
-      {
-        "id": 57,
-        "x_m": 97.75,
-        "y_m": -501.19,
-        "distance_m": 510.63,
-        "sf": 8,
-        "tx_power_dbm": 22.0,
-        "shadowing_db": 0.0,
-        "link": "ok"
-      },
-      {
-        "id": 58,
-        "x_m": -271.58,
-        "y_m": -493.72,
-        "distance_m": 563.49,
-        "sf": 8,
-        "tx_power_dbm": 22.0,
-        "shadowing_db": 0.0,
-        "link": "ok"
-      },
-      {
-        "id": 59,
-        "x_m": -65.62,
-        "y_m": 53.12,
-        "distance_m": 84.43,
-        "sf": 8,
-        "tx_power_dbm": 22.0,
-        "shadowing_db": 0.0,
-        "link": "ok"
-      },
-      {
-        "id": 60,
-        "x_m": -46.74,
-        "y_m": -565.53,
-        "distance_m": 567.46,
-        "sf": 8,
-        "tx_power_dbm": 22.0,
-        "shadowing_db": 0.0,
-        "link": "ok"
-      },
-      {
-        "id": 61,
-        "x_m": -373.97,
-        "y_m": -739.08,
-        "distance_m": 828.31,
-        "sf": 8,
-        "tx_power_dbm": 22.0,
-        "shadowing_db": 0.0,
-        "link": "ok"
       }
     ],
     "nodes_from": "capacity",
-    "capacity": 61.842762399272026
+    "capacity": 49.89221308383814
   },
   "provenance": {
     "source": "manifest",
@@ -910,6 +790,7 @@
       "path_loss_source": "Field fit over 1,229 aggregated RSSI points, 30 m to 2.21 km, IoT4Cows deployment",
       "uplink_dwell_time_ms": null,
       "payload_bytes": 32,
+      "lorawan_overhead_bytes": 13,
       "coding_rate": 1,
       "send_interval_s": 15.0,
       "capture_threshold_db": 6.0,
@@ -1002,9 +883,9 @@
       },
       "net_antenna_gain_db": 9.0
     },
-    "loracap_version": "2.1.0",
-    "code_sha256": "68a2947554dfcbba74a1d9ddd7f99f4b4c9f61324faaa134672dbe9cabcfc5ee",
+    "loracap_version": "2.2.0",
+    "code_sha256": "8319cc7acc843ae952f20ab4323e8878ed98cf8965d65fff78a75e9dc1127671",
     "python": "3.13.18",
-    "generated": "2026-11-20T03:55:47+00:00"
+    "generated": "2026-11-23T18:51:22+00:00"
   }
 }

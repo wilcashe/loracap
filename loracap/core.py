@@ -51,7 +51,7 @@ class SimConfig:
     from a study definition, not written by hand."""
 
     # --- radio / link parameters ---
-    payload_bytes: int
+    payload_bytes: int                      # airtime's PL, the whole frame: Study.frame_bytes()
     coding_rate: int                        # CR index; airtime uses 4/(4+coding_rate)
     tx_power_dbm: float
     net_antenna_gain_db: float              # Gtx + Grx - cable/connector losses
