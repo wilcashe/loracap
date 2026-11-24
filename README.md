@@ -45,8 +45,10 @@ defending a result:
 ## Install
 
 Python 3.8 or newer. The simulation itself uses only the standard library.
-`matplotlib` is needed for the figures, and nothing else is. The test suite
-passes on Python 3.8 and 3.13, with matplotlib and without it. What changed
+`matplotlib` is needed for the figures, and nothing else is. On every push to
+GitHub the test suite runs on Python 3.8 and 3.13, on Linux, Windows and
+macOS, and once more on Python 3.8 without matplotlib
+(`.github/workflows/tests.yml`). What changed
 in each version is in `CHANGELOG.md`.
 
 Every file is read and written as UTF-8 whatever the operating system, so
@@ -1512,7 +1514,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-626 checks, about twenty seconds, standard library only like the rest of the
+629 checks, about twenty seconds, standard library only like the rest of the
 package, so nothing needs installing. Without matplotlib the five modules
 that test figures are skipped, not failed (design item 44). They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction

@@ -46,6 +46,9 @@ change to `loracap/` that needs a regeneration anyway.
   matplotlib the modules that test figures are skipped instead of failing
   (design item 44).
 - `requirements.txt` bounds matplotlib below 4.
+- GitHub Actions runs the suite on every push, on Python 3.8 and 3.13, on
+  Linux, Windows and macOS, and on Python 3.8 without matplotlib (design
+  item 45).
 
 Every experiment was regenerated at `925adaa`. Every number is identical to
 2.2.0's, and only the iot4cows site map changed.

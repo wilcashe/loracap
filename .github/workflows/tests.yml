@@ -1,0 +1,47 @@
+# The test suite on every push, on the three operating systems and on the
+# oldest and newest Python the README promises (design item 45). Until item
+# 44 the suite had run only on Python 3.13 on Linux, and Python 3.8 failed
+# two tests nobody saw.
+#
+# Python comes from uv rather than actions/setup-python, because uv carries
+# Python 3.8 for every runner, Apple silicon included, where setup-python's
+# builds of 3.8 are missing. No environment variable forces UTF-8: a user on
+# Windows gets the system's code page, and so must the tests.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  suite:
+    name: Python ${{ matrix.python }} on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.8", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Node, for the tests that run the page's own functions
+        run: node --version
+      - name: Test suite
+        run: uv run --no-project --python ${{ matrix.python }} --with-requirements requirements.txt python run.py test
+
+  without-matplotlib:
+    # The simulator needs only the standard library. Here the figure tests
+    # must be skipped, not fail, and everything else must pass.
+    name: Python 3.8 without matplotlib
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Test suite
+        run: uv run --no-project --python 3.8 python run.py test
