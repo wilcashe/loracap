@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import unittest
 
+from tests import helpers
 from tests.test_webui import PAGE
 
 from loracap import pathloss
@@ -195,8 +196,7 @@ class TestThePage(unittest.TestCase):
            "r_squared": 0.318}
 
     def run_js(self, code):
-        r = subprocess.run([NODE, "-e", code], capture_output=True, text=True,
-                           encoding="utf-8", timeout=60)
+        r = helpers.run_node(code)
         self.assertEqual(r.returncode, 0, r.stderr)
         return json.loads(r.stdout)
 

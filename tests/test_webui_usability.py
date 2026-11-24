@@ -241,8 +241,7 @@ class TestTheSentencesThePageBuilds(unittest.TestCase):
 
     def _run(self, expr):
         code = self.prelude + "\nconsole.log(JSON.stringify(" + expr + "));"
-        r = subprocess.run([NODE, "-e", code], capture_output=True, text=True,
-                           encoding="utf-8", timeout=60)
+        r = helpers.run_node(code)
         self.assertEqual(r.returncode, 0, r.stderr)
         return json.loads(r.stdout)
 

@@ -17,6 +17,8 @@ import shutil
 import subprocess
 import unittest
 
+from tests import helpers
+
 from tests.test_webui import PAGE
 
 NODE = shutil.which("node")
@@ -64,8 +66,7 @@ class TestTheBoundaryFollowsTheGateway(unittest.TestCase):
 
     def run_js(self, body):
         code = self.prelude + "\n(async()=>{\n" + body + "\n})();"
-        r = subprocess.run([NODE, "-e", code], capture_output=True, text=True,
-                           encoding="utf-8", timeout=60)
+        r = helpers.run_node(code)
         self.assertEqual(r.returncode, 0, r.stderr)
         return json.loads(r.stdout)
 

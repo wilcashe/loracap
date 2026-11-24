@@ -1514,7 +1514,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-629 checks, about twenty seconds, standard library only like the rest of the
+633 checks, about twenty seconds, standard library only like the rest of the
 package, so nothing needs installing. Without matplotlib the five modules
 that test figures are skipped, not failed (design item 44). They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction

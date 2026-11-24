@@ -137,8 +137,7 @@ function note(chip, bw){ els.f_chip.value=chip; els.f_bw.value=bw; chipNote();
     def _note(self, chip, bw):
         code = self.prelude + "\nconsole.log(JSON.stringify(note(%s, %s)));" % (
             json.dumps(chip), json.dumps(str(bw)))
-        r = subprocess.run([NODE, "-e", code], capture_output=True, text=True,
-                           encoding="utf-8", timeout=60)
+        r = helpers.run_node(code)
         self.assertEqual(r.returncode, 0, r.stderr)
         return json.loads(r.stdout)
 

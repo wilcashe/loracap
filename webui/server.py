@@ -277,6 +277,17 @@ def payload_ceilings():
 TRANSLATIONS_ES = os.path.join(HERE, "i18n_es.json")
 
 
+def _shown(path):
+    """A path as the page shows it: relative to the repository when it can
+    be. On Windows a study folder on another drive has no relative path, and
+    os.path.relpath raised ValueError after the study had been written
+    (design item 45)."""
+    try:
+        return os.path.relpath(path, ROOT)
+    except ValueError:
+        return os.path.abspath(path)
+
+
 def translations():
     """The Spanish entries, and which of them the page fills itself. Those are
     kept out of the patterns that read a text arriving whole (design item
@@ -581,7 +592,7 @@ def api_create(body):
         path = os.path.join(target, "site_polygon.py")
         with open(path, "w", encoding="utf-8") as f:
             f.write(text)
-        written.append(os.path.relpath(path, ROOT))
+        written.append(_shown(path))
 
     values.pop("polygons_m", None)
     for k in SEQUENCE_FIELDS:
@@ -593,7 +604,7 @@ def api_create(body):
     path = os.path.join(target, "study.py")
     with open(path, "w", encoding="utf-8") as f:
         f.write(text)
-    written.append(os.path.relpath(path, ROOT))
+    written.append(_shown(path))
 
     # reload from disk, so what is reported back is what the file actually says
     reloaded = study_mod.load_study(name)
@@ -634,7 +645,7 @@ def _run_worker(name: str, bootstrap: int):
             from loracap import plotting
             paths = plotting.plot_study(st, rows)
             png = [p for p in paths if p.endswith(".png")]
-            figure = os.path.relpath(png[0], ROOT) if png else None
+            figure = _shown(png[0]) if png else None
         except ImportError:
             with _job_lock:
                 _job["log"].append("matplotlib not installed, so no figure was drawn")

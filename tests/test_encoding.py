@@ -77,7 +77,10 @@ class TestEveryTextFileStatesItsEncoding(unittest.TestCase):
     def test_the_scan_reaches_every_part_that_opens_files(self):
         """The fault was in webui/, not in the package, so a scan narrowed
         to loracap/ would have passed while the page was broken."""
-        scanned = {os.path.relpath(p, ROOT) for p in _python_files()}
+        # Compared with "/" whatever the system: on Windows relpath answers
+        # with "\\", and this test failed there with every file present.
+        scanned = {os.path.relpath(p, ROOT).replace(os.sep, "/")
+                   for p in _python_files()}
         for path in ("run.py", "webui/server.py", "tools/kml_to_polygon.py",
                      "loracap/pathloss.py", "tests/test_reproduce.py"):
             self.assertIn(path, scanned)
@@ -134,9 +137,16 @@ CHILD = textwrap.dedent(r'''
 
 
 def _non_utf8_env():
-    return {"PATH": os.environ.get("PATH", ""), "LC_ALL": "C", "LANG": "C",
-            "PYTHONUTF8": "0", "PYTHONCOERCECLOCALE": "0",
-            "PYTHONDONTWRITEBYTECODE": "1"}
+    """The caller's environment with UTF-8 taken away. It starts from the whole
+    environment because Windows needs more than PATH to start Python: without
+    SYSTEMROOT the child could not even import asyncio (WinError 10106), and
+    every test that used it failed there (design item 45)."""
+    env = dict(os.environ)
+    for k in ("PYTHONIOENCODING", "PYTHONUTF8", "LC_CTYPE"):
+        env.pop(k, None)
+    env.update({"LC_ALL": "C", "LANG": "C", "PYTHONUTF8": "0",
+                "PYTHONCOERCECLOCALE": "0", "PYTHONDONTWRITEBYTECODE": "1"})
+    return env
 
 
 class TestRedirectedOutput(unittest.TestCase):

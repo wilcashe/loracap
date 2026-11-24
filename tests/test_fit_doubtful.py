@@ -175,8 +175,7 @@ class TestThePageMarksTheRow(unittest.TestCase):
             "console.log(JSON.stringify(t.kids.slice(1).map(tr=>{",
             "  const cell=tr.kids[tr.kids.length-1];",
             "  return cell.kids.filter(x=>x.cls==='pill warn').map(x=>[x.text, x.title]); })));"])
-        out = subprocess.run([NODE, "-e", js], capture_output=True, text=True,
-                             encoding="utf-8", timeout=60)
+        out = helpers.run_node(js)
         self.assertEqual(out.returncode, 0, out.stderr)
         self.assertEqual(json.loads(out.stdout),
                          [[["doubtful", "See the warnings above the table."]], []])

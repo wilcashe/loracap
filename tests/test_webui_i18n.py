@@ -576,8 +576,7 @@ class TestTheLookupInThePage(unittest.TestCase):
 
     def _run(self, expr):
         code = self.prelude + "\nconsole.log(JSON.stringify(" + expr + "));"
-        r = subprocess.run([NODE, "-e", code], capture_output=True, text=True,
-                           encoding="utf-8", timeout=60)
+        r = helpers.run_node(code)
         self.assertEqual(r.returncode, 0, r.stderr)
         return json.loads(r.stdout)
 
@@ -633,9 +632,8 @@ class TestTheLookupInThePage(unittest.TestCase):
             load])
         en = ("time on air: how long one uplink occupies the channel, longer at a "
               "higher spreading factor and a larger frame")
-        r = subprocess.run([NODE, "-e", js + "\nconsole.log(JSON.stringify(["
-                            "COMPOSED.size, TXr(" + json.dumps(en) + ").hit]));"],
-                           capture_output=True, text=True, encoding="utf-8", timeout=60)
+        r = helpers.run_node(js + "\nconsole.log(JSON.stringify(["
+                            "COMPOSED.size, TXr(" + json.dumps(en) + ").hit]));")
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual(json.loads(r.stdout), [len(load_composed()), False])
 

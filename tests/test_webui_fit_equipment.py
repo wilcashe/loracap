@@ -72,8 +72,7 @@ let MODEL_WRITTEN={};
                                  fn("parseCoord"), fn("coord")])
 
     def js(self, body):
-        r = subprocess.run([NODE, "-e", self.prelude + "\n(async()=>{" + body + "})();"],
-                           capture_output=True, text=True, encoding="utf-8", timeout=60)
+        r = helpers.run_node(self.prelude + "\n(async()=>{" + body + "})();")
         self.assertEqual(r.returncode, 0, r.stderr)
         return json.loads(r.stdout)
 

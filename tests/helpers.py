@@ -4,6 +4,8 @@ file at once."""
 import dataclasses
 import importlib.util
 import os
+import shutil
+import subprocess
 import sys
 import unittest
 
@@ -73,3 +75,16 @@ def require_matplotlib():
     if importlib.util.find_spec("matplotlib") is None:
         raise unittest.SkipTest("matplotlib is not installed, and this module "
                                 "tests figures or what draws them")
+
+
+def run_node(code, timeout=60):
+    """Run JavaScript in Node, handing it the script on standard input.
+
+    Passed with `node -e`, a script that carries the page's Spanish
+    dictionary is longer than the 32767 characters a Windows command line
+    holds, and every such test failed there with WinError 206 (design item
+    45). Node reads the script as UTF-8, and its output is read the same way.
+    """
+    return subprocess.run([shutil.which("node"), "-"], input=code,
+                          capture_output=True, text=True, encoding="utf-8",
+                          timeout=timeout)

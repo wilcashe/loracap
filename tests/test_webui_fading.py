@@ -22,6 +22,7 @@ import shutil
 import subprocess
 import unittest
 
+from tests import helpers
 from tests.test_webui import PAGE, TempRoot
 
 from loracap import study as study_mod
@@ -91,8 +92,7 @@ function setOrigin(){} function schedule(){}
         cls.prelude = "\n".join([stubs, fn("handChanges"), fn("written"), fn("useFit")])
 
     def js(self, body):
-        r = subprocess.run([NODE, "-e", self.prelude + "\n" + body],
-                           capture_output=True, text=True, encoding="utf-8", timeout=60)
+        r = helpers.run_node(self.prelude + "\n" + body)
         self.assertEqual(r.returncode, 0, r.stderr)
         return json.loads(r.stdout)
 

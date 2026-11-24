@@ -202,8 +202,7 @@ class TestThePage(unittest.TestCase):
             " {scenario:'SF8', reach_m:2371, covers:true, extrapolated:true, measured_to_m:2000}]",
             ".forEach(x=>{" + body + "\n});",
             "console.log(JSON.stringify(t.kids.map(tr=>tr.kids[1].kids.map(p=>[p.text,p.title]))));"])
-        r = subprocess.run([NODE, "-e", js], capture_output=True, text=True,
-                           encoding="utf-8", timeout=60)
+        r = helpers.run_node(js)
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual(json.loads(r.stdout),
                          [[], [["extrapolated", "Beyond the farthest measurement, 2000 m."]]])

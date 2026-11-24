@@ -15,6 +15,8 @@ import shutil
 import subprocess
 import unittest
 
+from tests import helpers
+
 from tests.test_webui import PAGE
 
 from webui import server
@@ -43,8 +45,7 @@ class TestTheParser(unittest.TestCase):
         """cases: list of (text, axis). Returns the parsed values, None for NaN."""
         body = "console.log(JSON.stringify(%s.map(([t,a])=>{const v=parseCoord(t,a);"\
                "return isNaN(v)?null:v;})));" % json.dumps(cases)
-        r = subprocess.run([NODE, "-e", self.fn + "\n" + body],
-                           capture_output=True, text=True, encoding="utf-8", timeout=60)
+        r = helpers.run_node(self.fn + "\n" + body)
         self.assertEqual(r.returncode, 0, r.stderr)
         return json.loads(r.stdout)
 
@@ -100,8 +101,7 @@ class TestWritingTheStudy(unittest.TestCase):
             *fns,
             "createStudy().then(()=>console.log(JSON.stringify("
             "{sent, said: els.createout.kids.map(m=>m.t)})));"])
-        r = subprocess.run([NODE, "-e", js], capture_output=True, text=True,
-                           encoding="utf-8", timeout=60)
+        r = helpers.run_node(js)
         self.assertEqual(r.returncode, 0, r.stderr)
         return json.loads(r.stdout)
 

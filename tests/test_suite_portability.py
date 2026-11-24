@@ -58,6 +58,56 @@ class TestWithoutMatplotlib(unittest.TestCase):
         self.assertEqual(importers, [])
 
 
+class TestWhatWindowsTaughtUs(unittest.TestCase):
+    """Design item 45: the first run on Windows failed 25 tests on three
+    causes, none of them in the simulator."""
+
+    def test_node_gets_its_script_on_standard_input(self):
+        # `node -e` with the page's dictionary in the script is longer than
+        # a Windows command line (WinError 206).
+        import glob
+        import os
+        import re
+        here = os.path.dirname(os.path.abspath(__file__))
+        offenders = []
+        for path in glob.glob(os.path.join(here, "*.py")):
+            with open(path, encoding="utf-8") as f:
+                text = f.read()
+            if re.search(r"""\[NODE, ["']-e["']""", text):
+                offenders.append(os.path.basename(path))
+        self.assertEqual(offenders, [])
+
+    def test_run_node_reads_unicode_both_ways(self):
+        import shutil
+        if not shutil.which("node"):
+            self.skipTest("Node is not installed")
+        # 200 kB of script: longer than a Windows command line, and than the
+        # 128 kB one argument may hold on Linux, so going back to -e fails
+        # here too.
+        r = helpers.run_node("/*" + "x" * 200000 + "*/ console.log('σ ' + 'ok')")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(r.stdout.strip(), "σ ok")
+
+    def test_a_study_on_another_drive_is_shown_whole(self):
+        from webui import server
+        with mock.patch("os.path.relpath",
+                        side_effect=ValueError("path is on mount 'C:', start on mount 'D:'")):
+            shown = server._shown("/somewhere/else/study.py")
+        self.assertTrue(shown.endswith("study.py"))
+        self.assertEqual(shown, __import__("os").path.abspath("/somewhere/else/study.py"))
+
+    def test_the_child_keeps_the_rest_of_the_environment(self):
+        # Without SYSTEMROOT, Python on Windows cannot import asyncio.
+        import os
+        from tests import test_encoding
+        with mock.patch.dict(os.environ, {"SYSTEMROOT": r"C:\Windows",
+                                          "PYTHONIOENCODING": "utf-8"}):
+            env = test_encoding._non_utf8_env()
+        self.assertEqual(env["SYSTEMROOT"], r"C:\Windows")
+        self.assertNotIn("PYTHONIOENCODING", env)
+        self.assertEqual((env["LC_ALL"], env["PYTHONUTF8"]), ("C", "0"))
+
+
 class TestTheWorkflowKeepsThePromise(unittest.TestCase):
     """Design item 45: the CI runs the oldest Python the README promises, on
     the three operating systems, and once without matplotlib. Read as text,
