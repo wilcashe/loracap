@@ -174,17 +174,27 @@ class TestRedirectedOutput(unittest.TestCase):
             import pty
         except ImportError:
             self.skipTest("no pseudo-terminal on this platform")
+        import select
         master, slave = pty.openpty()
         code = ("import sys; sys.path.insert(0, '.'); import run; "
                 "run._utf8_output(); print('BW\\u2082 ok')")
         r = subprocess.run([sys.executable, "-c", code], cwd=ROOT,
                            env=_non_utf8_env(), stdout=slave,
                            stderr=subprocess.PIPE, timeout=60)
+        # Read while this process still holds the terminal's other end. macOS
+        # throws away what the child wrote once the last holder closes it, and
+        # the test read nothing there (design item 45). Linux keeps it, so the
+        # older order passed on Linux only.
+        raw = b""
+        while select.select([master], [], [], 0.5)[0]:
+            try:
+                chunk = os.read(master, 1024)
+            except OSError:
+                break
+            if not chunk:
+                break
+            raw += chunk
         os.close(slave)
-        try:
-            raw = os.read(master, 1024)
-        except OSError:     # nothing was written before the child exited
-            raw = b""
         os.close(master)
         if "\u2082".encode("utf-8") in raw:
             self.skipTest("the terminal here encodes UTF-8 anyway")
