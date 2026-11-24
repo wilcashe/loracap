@@ -45,7 +45,9 @@ defending a result:
 ## Install
 
 Python 3.8 or newer. The simulation itself uses only the standard library.
-`matplotlib` is needed for the figure, and nothing else is.
+`matplotlib` is needed for the figures, and nothing else is. The test suite
+passes on Python 3.8 and 3.13, with matplotlib and without it. What changed
+in each version is in `CHANGELOG.md`.
 
 Every file is read and written as UTF-8 whatever the operating system, so
 the web page, the `study.py` it writes and a measurements CSV saved by Excel
@@ -1510,8 +1512,9 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-616 checks, about twenty seconds, standard library only like the rest of the
-package, so nothing needs installing. They exist because a change to the
+626 checks, about twenty seconds, standard library only like the rest of the
+package, so nothing needs installing. Without matplotlib the five modules
+that test figures are skipped, not failed (design item 44). They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
 studies take minutes each and nobody runs those on every edit.
 
@@ -1522,15 +1525,17 @@ eventually deletes.
 One of them guards everything else. `tests/test_engine_golden.py` holds the
 exact output of the collision loop, for configurations chosen to reach every
 branch of it, as the loop stood before design item 13 restructured it. Under
-LoRaSim's receiver rule the output must come back identical, not merely
-close, so a refactoring of the engine cannot move a published number without
+LoRaSim's receiver rule every count must come back identical, and every float
+within one part in 10^12, so a refactoring of the engine cannot move a published number without
 failing here first. It held through item 14 too, which split the loop into a
 phase that draws every random number and one that resolves collisions and
 draws none, so that synthetic traffic can be fed to the second and checked
 against closed-form results. It has been changed once on purpose, by item
 16, which stopped the loop counting a packet dropped for want of a
 demodulator a second time as a collision. Only the configuration where the
-limit binds hard moved.
+limit binds hard moved. Until design item 44 the floats had to match bit for
+bit too, and on Python 3.8 one of them differed in its last digit, every
+count the same.
 Design item 33 left it untouched, although it changed every LoRaWAN
 airtime: the header is added by the study before the payload reaches the
 engine, and the golden configurations give the engine its payload directly.

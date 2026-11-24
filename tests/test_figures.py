@@ -14,6 +14,9 @@ import unittest
 
 from tests import helpers  # noqa: F401  (puts the package on sys.path)
 
+from tests.helpers import require_matplotlib
+require_matplotlib()
+
 from loracap import plotting, reproduce, study as study_mod
 from loracap.reproduce import ManifestError, Variant
 from tests.test_reproduce import TempStudy, run_exp

@@ -27,6 +27,9 @@ from tests import helpers
 from tests.test_reproduce import TempStudy, run_exp
 from tests.test_webui import PAGE, TempRoot
 
+from tests.helpers import require_matplotlib
+require_matplotlib()
+
 import matplotlib.colors
 from matplotlib.markers import MarkerStyle
 

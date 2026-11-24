@@ -1,5 +1,9 @@
 # The simulation itself (run.py check / run / capacity) uses only the Python
 # standard library. Nothing here is needed to produce the numbers.
 #
-# matplotlib is required only to draw the figure:
-matplotlib>=3.5
+# matplotlib is required only to draw the figures. The test suite, figure
+# tests included, passes with 3.7.5 on Python 3.8 and 3.11.2 on Python 3.13,
+# and the committed figures were drawn with 3.11.2. The upper bound keeps a
+# major version, which may change how a figure is drawn, from arriving
+# unnoticed.
+matplotlib>=3.5,<4

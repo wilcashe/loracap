@@ -2,8 +2,10 @@
 field would then have to be repeated, and adding a field would break every
 file at once."""
 import dataclasses
+import importlib.util
 import os
 import sys
+import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -58,3 +60,16 @@ def study(**overrides):
     base.update(overrides)
     return Study(**base)
 
+
+
+def require_matplotlib():
+    """Skip the calling test module when matplotlib is not installed (design
+    item 44). The simulator needs only the standard library and draws no
+    figure without matplotlib, as `run` and `reproduce` say when they meet
+    that case, so a module that draws or imports `loracap.plotting` has
+    nothing to test there. It used to fail to import instead, and the suite
+    went red on an install the README calls complete. Call it before the
+    module's first import of matplotlib or of `loracap.plotting`."""
+    if importlib.util.find_spec("matplotlib") is None:
+        raise unittest.SkipTest("matplotlib is not installed, and this module "
+                                "tests figures or what draws them")

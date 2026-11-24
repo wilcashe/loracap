@@ -543,8 +543,16 @@ def api_validate(body):
                               # Past the farthest measurement, design item 39.
                               "measured_to_m": measured_to,
                               "extrapolated": measured_to is not None and d > measured_to})
-        except Exception:
-            pass
+        except Exception as e:
+            # The study passed every check, so a failure here is a fault in
+            # LoRaCAP, not in the form. It was dropped in silence, leaving the
+            # page without its reach table and no word why (design item 44).
+            # Like the simulator's own warnings it stays in English.
+            warnings.append(
+                f"The reach of each scenario could not be computed "
+                f"({type(e).__name__}: {e}), so the reach table is empty. This "
+                f"is a fault in LoRaCAP, not in the study: please report it.")
+            reach = []
     return {"errors": errors, "warnings": warnings, "info": info, "reach": reach}
 
 

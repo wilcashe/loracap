@@ -19,6 +19,9 @@ import unittest
 from tests import helpers
 from tests.test_webui import PAGE
 
+from tests.helpers import require_matplotlib
+require_matplotlib()
+
 import matplotlib
 matplotlib.use("Agg")
 

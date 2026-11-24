@@ -13,6 +13,9 @@ import shutil
 import tempfile
 import unittest
 
+from tests.helpers import require_matplotlib
+require_matplotlib()
+
 from loracap import analysis, plotting, reproduce
 from loracap.reproduce import Experiment
 

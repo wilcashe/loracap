@@ -27,6 +27,9 @@ from unittest import mock
 from tests import helpers
 from tests.test_webui import TempRoot, form_values
 
+from tests.helpers import require_matplotlib
+require_matplotlib()
+
 from loracap import analysis, experiment, plotting, presets, study as study_mod
 from loracap.study import DATA_FILES, FIGURE_FORMATS, FIGURE_KINDS
 from webui import server

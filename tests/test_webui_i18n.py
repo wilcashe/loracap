@@ -279,6 +279,16 @@ def _render(node):
     return None
 
 
+def _subscript_key(node):
+    """The constant in d["key"], or None. Python 3.8 wraps it in ast.Index,
+    which 3.9 removed, and reading only the newer shape made this test miss a
+    server warning on 3.8 (design item 44)."""
+    s = node.slice
+    if type(s).__name__ == "Index":
+        s = s.value
+    return s.value if isinstance(s, ast.Constant) else None
+
+
 def server_messages():
     """The errors server.py raises and the warnings it writes for the page.
     raise ValueError(str(e)) passes on the simulator's own message."""
@@ -292,7 +302,7 @@ def server_messages():
                 out.append(text)
         if (isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
                 and n.func.attr == "append" and isinstance(n.func.value, ast.Subscript)
-                and getattr(n.func.value.slice, "value", None) == "warnings"):
+                and _subscript_key(n.func.value) == "warnings"):
             out.append(_render(n.args[0]))
     return out
 

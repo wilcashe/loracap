@@ -24,10 +24,19 @@ changed, collisions falling by about 200 per run and DER rising by about
 code that wrote it is recorded in the file. Regenerate it only when an
 engine result is meant to change, and record why here:
 
+Since design item 44 the comparison is exact for every count, key, flag and
+string, and allows a float to differ by one part in 10^12. Python 3.8 gave
+`rssi_spread_db` = 40.847997993199414 where 3.13 gives 40.84799799319944, a
+difference in the last digit from floating-point arithmetic, with every count
+identical. Any change to what the loop decides moves a count, or a float by
+far more than that, so the test still catches it, and the README's promise of
+Python 3.8 can be kept.
+
     python3 -m tests.test_engine_golden --write
 """
 import dataclasses
 import json
+import math
 import os
 import random
 import sys
@@ -90,6 +99,37 @@ def cases():
 
 SEEDS = (1, 99, 2024)
 
+# The one part in 10^12 a float may move between Python versions. See the
+# docstring: the last digit of a sum, never a decision of the loop.
+FLOAT_REL_TOL = 1e-12
+
+
+def differences(now, golden, path="") -> list:
+    """Where `now` differs from `golden`: exactly for anything but a float, and
+    within FLOAT_REL_TOL for two floats. An int that became a float, or the
+    reverse, is a difference."""
+    if isinstance(golden, float) and isinstance(now, float):
+        if math.isclose(now, golden, rel_tol=FLOAT_REL_TOL, abs_tol=0.0):
+            return []
+        return [f"{path}: {now!r} != {golden!r}"]
+    if type(now) is not type(golden):
+        return [f"{path}: {now!r} != {golden!r} (type)"]
+    if isinstance(golden, dict):
+        if sorted(now) != sorted(golden):
+            return [f"{path}: keys {sorted(now)} != {sorted(golden)}"]
+        out = []
+        for k in sorted(golden):
+            out += differences(now[k], golden[k], f"{path}.{k}")
+        return out
+    if isinstance(golden, list):
+        if len(now) != len(golden):
+            return [f"{path}: length {len(now)} != {len(golden)}"]
+        out = []
+        for i, (a, b) in enumerate(zip(now, golden)):
+            out += differences(a, b, f"{path}[{i}]")
+        return out
+    return [] if now == golden else [f"{path}: {now!r} != {golden!r}"]
+
 
 def _key(name, seed):
     return f"{name}@{seed}"
@@ -121,7 +161,7 @@ class TestEngineIsUnchanged(unittest.TestCase):
     def test_output_is_identical(self):
         for key in sorted(self.golden):
             with self.subTest(case=key):
-                self.assertEqual(self.now[key], self.golden[key])
+                self.assertEqual(differences(self.now[key], self.golden[key], key), [])
 
     def test_the_cases_actually_reach_the_branches(self):
         """A golden file that never exercised a branch would protect nothing
@@ -134,6 +174,35 @@ class TestEngineIsUnchanged(unittest.TestCase):
                         "no case loses a packet to weak signal")
         self.assertTrue(any(r["unreachable_nodes"] > 0 for r in runs),
                         "no case excludes a node")
+
+
+class TestTheComparison(unittest.TestCase):
+    """The comparison above is the guard of every published figure, so what it
+    lets through is tested on its own."""
+
+    def test_a_last_digit_passes(self):
+        self.assertEqual(differences({"x": 40.847997993199414},
+                                     {"x": 40.84799799319944}), [])
+
+    def test_a_float_moved_more_fails(self):
+        self.assertTrue(differences({"der": 0.8657201505302771 * (1 + 1e-10)},
+                                    {"der": 0.8657201505302771}))
+
+    def test_a_count_moved_by_one_fails(self):
+        self.assertTrue(differences({"collided": 612}, {"collided": 611}))
+
+    def test_an_int_that_became_a_float_fails(self):
+        self.assertTrue(differences({"lost_capacity": 0.0}, {"lost_capacity": 0}))
+        self.assertTrue(differences({"x": True}, {"x": 1}))
+
+    def test_keys_and_nesting_are_exact(self):
+        self.assertTrue(differences({"a": 1, "b": 2}, {"a": 1}))
+        self.assertTrue(differences({"n": {"7": 144}}, {"n": {"8": 144}}))
+        self.assertTrue(differences([1, 2], [1, 2, 3]))
+        self.assertTrue(differences({"s": None}, {"s": 0.0}))
+
+    def test_a_zero_must_stay_zero(self):
+        self.assertTrue(differences({"x": 1e-300}, {"x": 0.0}))
 
 
 def _write():

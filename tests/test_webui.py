@@ -143,6 +143,19 @@ class TestLiveValidation(unittest.TestCase):
         self.assertTrue(any("receiver_model" in e
                             for e in self.check(receiver_model="nonesuch")))
 
+    def test_a_failed_reach_table_is_reported(self):
+        # Design item 44: the table was dropped in silence on any fault.
+        ok = server.api_validate({"values": form_values()})
+        self.assertTrue(ok["reach"])
+        self.assertFalse(any("could not be computed" in w for w in ok["warnings"]))
+        with mock.patch.object(server, "max_distance_m",
+                               side_effect=ZeroDivisionError("float division by zero")):
+            r = server.api_validate({"values": form_values()})
+        self.assertEqual(r["reach"], [])
+        self.assertTrue(any(w.startswith("The reach of each scenario could not be "
+                                         "computed (ZeroDivisionError: float division")
+                            for w in r["warnings"]), r["warnings"])
+
     def test_an_unknown_table_is_an_error_not_a_crash(self):
         self.assertTrue(any("nonesuch" in e
                             for e in self.check(inter_sf_rejection="nonesuch")))
