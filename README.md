@@ -90,10 +90,16 @@ packages beyond the ones already listed above.
 
 The page does one thing: it **writes a `study.py`**. It is never an
 alternative to that file, and nothing it offers bypasses the commands below.
-Upload the KML and it shows you the area, whether the gateway falls inside the
+The gateway's position goes in as decimal degrees or as a GPS or a survey
+sheet writes it, 5°30′04.10″ N, and under a position written that way the
+page shows the decimal degrees it read, the only value it sends on (design
+item 36). Upload the KML and it shows you the area, whether the gateway falls inside the
 boundary, whether polygons overlap and an outline of the result. Upload a
-measurement CSV and it shows both fits side by side so you can adopt either
-one. Every field is validated as you type, including the question that decides
+measurement CSV and it shows the fits side by side so you can adopt any of
+them, a doubtful one marked as such. Adopting the per position fit fills the
+fading σ as well. A boundary loaded before the gateway's position, or kept
+while it is corrected, is projected again around the position as it now
+stands (design item 41). Every field is validated as you type, including the question that decides
 whether the answer means anything: does each spreading factor reach the far
 edge of the site. The receiver model is chosen there too: the receiver
 rule, the capture threshold, whether spreading factors are orthogonal and,
@@ -127,7 +133,9 @@ radio settings" and so on, opened one at a time or all at once with the
 **Basic | Advanced** switch at the top. A hidden setting is never changed
 silently: while a block is closed it says how many settings it holds and
 lists every one that differs from its default, with both values and a
-button that restores the defaults. The checks still cover hidden fields, and
+button that restores the defaults. A block filled in by a field fit or by
+the environment model still lists every value the model did not set, such
+as a fading σ typed by hand (design item 35). The checks still cover hidden fields, and
 clicking one opens its block. Every abbreviation on the page (DER, SF, ADR,
 RSSI and the rest) is written out where it first appears, carries its
 definition on hover, and is listed under *Terms used on this page*.
@@ -151,7 +159,10 @@ English, and the checks panel says why it is in English. Abbreviations,
 numbers and units are the same in both languages, with a decimal point in
 both. The Spanish lives in `webui/i18n_es.json`, keyed by the page's own
 English, and `tests/test_webui_i18n.py` fails when a text on the page has no
-Spanish or an entry no longer matches any text on the page.
+Spanish or an entry no longer matches any text on the page. The templates the
+page fills in itself, such as "{first} and {last}", are listed apart in that
+file and never used to read a text that arrives whole, so an English sentence
+with " and " in it cannot pass for translated (design item 37).
 
 When you press the button it writes
 `studies/<name>/study.py` and `site_polygon.py`, shows you the file it wrote,
@@ -222,7 +233,34 @@ python3 tools/fit_path_loss.py field.csv \
 
 It reports the distance distribution, runs those sanity checks, then prints two
 fits, binned and unbinned, with the block to paste for each. They can differ by
-enough to matter, so choose deliberately and record which one you used.
+enough to matter, so choose deliberately and record which one you used. Each
+fit is checked on its own, and a warning names the fit it is about (design
+item 38): an exponent outside 1.45 to 5.97, the span measured for LoRa across
+environments, or one that explains less than 15% of the spread in RSSI. On
+CowNet's data the unbinned fit gives n = 0.64 with R² = 0.06 and the binned
+one n = 2.19 with R² = 0.45. Checked as a pair, the binned fit covered the
+unbinned one, and adopting the unbinned fit on the page gave SF7 a reach of
+453,209 km with no warning. The page marks such a fit "doubtful" beside the
+button that would adopt it.
+
+When some positions were measured more than once, with the same coordinates
+written for several packets, as a logger does for a node standing still, a
+third fit appears, **per position** (design item 40). The spread between the
+packets of one position is fading alone, and it is pooled over every such
+position by its degrees of freedom. Each position then enters the fit once,
+with the mean of its packets, and the spread about that line, less what is
+left of fading in a mean of n packets, is shadowing. Its block carries both
+sigmas. On CowNet's data four positions were measured more than once (134,
+27, 13 and 2 packets), fading comes to 8.81 dB, and the spread between
+positions, 8.64 dB about the line, leaves no shadowing to tell apart from
+it, so the fit sets shadowing to 0 and says why. A logger whose coordinates
+jitter for a node standing still forms no such groups, and the tool then
+says fading cannot be told apart.
+
+Every fit also records how far it was measured, `max_measured_distance_m`
+(design item 39). Past that distance every received power is the line
+extrapolated, so `check` says when the site, a scenario's disc or a reach it
+reports lies beyond it, and the site map draws it as a dotted circle.
 
 `--tx-power` and `--net-gain` describe the equipment **the measurements were
 taken with**, not the radio the study will simulate. They are what turns each
@@ -467,6 +505,10 @@ SF11 and SF12 sit one shade apart, and the marker shape, different for every
 spreading factor, keeps them apart in colour, in grey and for a reader who
 cannot tell the blues apart.
 
+The gateway is a star, a shape no node has (design item 34). When the
+study records how far its model was measured, a dotted circle marks that
+distance, and each reach past it is labelled extrapolated (design item 39).
+
 The worked example, `iot4cows`, draws it for SF8 at its capacity.
 
 The capacity table, as `capacity_table.md` or `capacity_table.tex`, gives
@@ -505,6 +547,12 @@ still redraws the run it describes.
   extrapolation that should not appear in a parameter table.
 - A site that extends beyond the reach of a scenario's spreading factor, so
   some nodes are out of range.
+- A path-loss exponent of 0 or less, which is an error, and one outside 1.45
+  to 5.97, the span measured for LoRa across environments, which is a
+  warning, as is a recorded R² below 0.15 (design item 38).
+- A site, a disc or a reach past the farthest measurement, when the study
+  records it in `max_measured_distance_m`. Past it the model is extrapolated
+  (design item 39).
 - A gateway that falls outside the boundary, which usually means the wrong
   coordinates were used when converting the KML.
 - Too few repetitions, or a simulated duration too short to expose collisions.
@@ -825,10 +873,14 @@ trees, a collar facing the wrong way. A node behind a hill stays behind it.
 changes between transmissions. It averages out across many packets, so it
 moves DER far less than its size suggests. A residual sigma fitted from field
 data mixes the two and cannot tell them apart, so putting all of it into
-shadowing is the conservative reading for a static deployment.
+shadowing is the conservative reading for a static deployment. On the web
+page it has a field of its own, which adopting a fit leaves as it is.
 
-`fit_path_loss` reports the sigma to use. Take the **unbinned** one: binning
-averages away the very scatter sigma is meant to measure. On the worked
+`fit_path_loss` reports the sigma to use. When some positions were measured
+more than once, take both sigmas from the **per position** fit, which tells
+fading apart from shadowing (design item 40). Otherwise take the
+**unbinned** one: binning averages away the very scatter sigma is meant to
+measure. On the worked
 example the unbinned fit gives 7.41 dB and the binned one 3.47, and using the
 second would understate shadowing by half.
 
@@ -1458,7 +1510,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-543 checks, about fifteen seconds, standard library only like the rest of the
+616 checks, about twenty seconds, standard library only like the rest of the
 package, so nothing needs installing. They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
 studies take minutes each and nobody runs those on every edit.

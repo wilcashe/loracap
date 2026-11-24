@@ -181,10 +181,14 @@ def field_limits():
                              "text": "greater than 0 dB"},
         "shadowing_sigma_db": {"kind": "accepted", "ge": 0, "warn_gt": 20,
                                "text": "0 to 20 dB, above 20 is checked"},
+        "fading_sigma_db": {"kind": "accepted", "ge": 0, "warn_gt": 20,
+                            "text": "0 to 20 dB, above 20 is checked"},
+        "max_measured_distance_m": {"kind": "accepted", "gt": 0,
+                                    "text": "beyond the validity floor, or empty if not known"},
         "lat": {"kind": "accepted", "ge": -90, "le": 90,
-                "text": "decimal degrees, -90 to 90, negative south"},
+                "text": "decimal degrees, -90 to 90, negative south, or degrees, minutes and seconds with N or S"},
         "lon": {"kind": "accepted", "ge": -180, "le": 180,
-                "text": "decimal degrees, -180 to 180, negative west"},
+                "text": "decimal degrees, -180 to 180, negative west, or degrees, minutes and seconds with E or W"},
         "n_runs": {"kind": "accepted", "ge": 2, "warn_lt": 20,
                    "text": "at least 2, and 20 or more recommended"},
         "sim_time_s": {"kind": "recommended", "warn_lt": 600,
@@ -274,8 +278,12 @@ TRANSLATIONS_ES = os.path.join(HERE, "i18n_es.json")
 
 
 def translations():
+    """The Spanish entries, and which of them the page fills itself. Those are
+    kept out of the patterns that read a text arriving whole (design item
+    37)."""
     with open(TRANSLATIONS_ES, encoding="utf-8") as f:
-        return {"es": json.load(f)["strings"]}
+        data = json.load(f)
+    return {"es": data["strings"], "composed": data["composed"]}
 
 
 def api_bootstrap(_):
@@ -528,9 +536,13 @@ def api_validate(body):
                 except ValueError:
                     continue
                 d = max_distance_m(cfg, min(cfg.sensitivity_dbm[sf] for sf in opts))
+                measured_to = st.max_measured_distance_m
                 reach.append({"scenario": scen, "reach_m": d,
                               "site_radius_m": site_r,
-                              "covers": None if site_r is None else d >= site_r})
+                              "covers": None if site_r is None else d >= site_r,
+                              # Past the farthest measurement, design item 39.
+                              "measured_to_m": measured_to,
+                              "extrapolated": measured_to is not None and d > measured_to})
         except Exception:
             pass
     return {"errors": errors, "warnings": warnings, "info": info, "reach": reach}

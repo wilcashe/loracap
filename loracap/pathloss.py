@@ -24,6 +24,8 @@ import io
 import math
 from typing import Dict, List, Optional, Sequence, Tuple
 
+from . import presets
+
 RSSI_NAMES = ["rssi", "rssi_dbm", "rssi(dbm)", "signal", "rx_rssi", "snr_rssi"]
 LAT_NAMES = ["latitude", "lat", "gps_lat", "device_lat"]
 LON_NAMES = ["longitude", "lon", "lng", "long", "gps_lon", "device_lon"]
@@ -172,7 +174,7 @@ def analyse(
             f"Columns in the file: {header}"
         )
 
-    pts, skipped = [], 0
+    pts, places, skipped = [], [], 0
     for r in rows:
         try:
             rssi = float(r[rc])
@@ -182,14 +184,16 @@ def analyse(
             skipped += 1
             continue
         pts.append((haversine_m(gw_lat, gw_lon, lat, lon), rssi))
+        places.append((lat, lon))
 
     if not pts:
         raise ValueError("No rows had usable RSSI and coordinates.")
 
     warnings = sanity_checks(rows, header, [d for d, _ in pts])
 
-    kept = [(d, v) for d, v in pts
+    keep = [i for i, (d, _v) in enumerate(pts)
             if d >= min_distance_m and (max_distance_m is None or d <= max_distance_m)]
+    kept = [pts[i] for i in keep]
     if len(kept) < 10:
         raise ValueError(
             f"Only {len(kept)} points survive the {min_distance_m:.0f} m floor. "
@@ -237,37 +241,55 @@ def analyse(
                  "distance bands averaged first; robust to uneven sampling"),
     ]
 
-    # Checks that need the fitted model. The commonest cause of an absurd
-    # exponent is a mistyped gateway position: distances are then unrelated to
-    # the real geometry, the regression finds no trend, and nothing upstream
-    # notices. A wrong sign is the same failure read the other way, with RSSI
-    # apparently improving with distance.
-    exponents = [f["path_loss_exponent"] for f in fits]
-    if any(e < 0 for e in exponents):
-        warnings.append({
-            "kind": "negative_exponent",
-            "message": ("The fit says the signal gets STRONGER with distance "
-                        "(a negative path-loss exponent), which is physically "
-                        "impossible. Check the gateway coordinates and that the "
-                        "latitude and longitude columns are the right way round."),
-        })
-    elif any(e > 8 for e in exponents):
-        warnings.append({
-            "kind": "implausible_exponent",
-            "message": (f"The fitted exponent, {max(exponents):.1f}, is far outside "
-                        f"the 1.4 to 6.0 range reported in the LoRa propagation "
-                        f"literature. Check the gateway coordinates before using "
-                        f"this model."),
-        })
-    if max(f["r_squared"] for f in fits) < 0.15:
-        warnings.append({
-            "kind": "no_trend",
-            "message": (f"The best fit explains only "
-                        f"{100 * max(f['r_squared'] for f in fits):.0f}% of the "
-                        f"variation in RSSI, so distance barely predicts the signal "
-                        f"here. Either the gateway position is wrong or these "
-                        f"measurements cannot support a distance-based model."),
-        })
+    # Fading apart from shadowing (design item 40). A position measured more
+    # than once, the same coordinates written for several packets, shows how
+    # much the signal varies over time at one place: that is fading. Pooled
+    # over every such position, weighted by its degrees of freedom, it needs
+    # no threshold on how many packets make a position count. Each position
+    # then enters a third fit once, with the mean of its packets, so the
+    # spread about that line is shadowing plus what is left of fading in a
+    # mean of n packets, fading^2 / n.
+    by_place: Dict[Tuple[float, float], list] = {}
+    for i in keep:
+        by_place.setdefault(places[i], []).append(pts[i])
+    fading = pooled_fading(by_place)
+    if fading is not None:
+        positions = [(sum(d for d, _ in g) / len(g), sum(v for _, v in g) / len(g), len(g))
+                     for g in by_place.values()]
+        if len({round(d, 6) for d, _v, _n in positions}) >= 3:
+            fit = make_fit([(d, v) for d, v, _n in positions], "per position",
+                           "each position once, its packets averaged; the spread is "
+                           "split into fading, from the positions measured more than "
+                           "once, and shadowing")
+            residual = fit["shadowing_sigma_db"]
+            left = residual ** 2 - fading["sigma_db"] ** 2 * (
+                sum(1 / n for _d, _v, n in positions) / len(positions))
+            fit.update({
+                "n_points": len(positions), "residual_sigma_db": residual,
+                "fading_sigma_db": fading["sigma_db"],
+                "shadowing_sigma_db": math.sqrt(left) if left > 0 else 0.0,
+            })
+            fits.append(fit)
+            if left <= 0:
+                warnings.append({
+                    "kind": "no_shadowing_left", "fit": "per position",
+                    "message": (f"Across {len(positions)} positions the spread about the "
+                                f"line, {residual:.2f} dB, is no larger than the spread "
+                                f"between packets at one position, "
+                                f"{fading['sigma_db']:.2f} dB, so no shadowing can be told "
+                                f"apart from fading. The per position fit sets shadowing "
+                                f"to 0 and puts the whole spread in fading."),
+                })
+
+    # Checks that need the fitted model, made for each fit on its own (design
+    # item 38). They were made on the pair, so one sound fit covered the other:
+    # CowNet's unbinned fit, n = 0.64 with R² = 0.06, passed in silence
+    # because the binned one had R² = 0.45, and adopting it gave SF7 a reach
+    # of 453 209 km.
+    for fit in fits:
+        found = fit_warnings(fit)
+        fit["doubtful"] = bool(found)
+        warnings.extend(found)
 
     return {
         "columns": {"rssi": rc, "latitude": lac, "longitude": loc},
@@ -277,8 +299,87 @@ def analyse(
         "distance_max_m": max(d for d, _ in pts),
         "warnings": warnings,
         "fits": fits,
+        "fading": fading,
         "binned": [{"distance_m": d, "rssi_dbm": v, "n": n} for d, v, n in binned],
     }
+
+
+# Below this share of the RSSI spread explained, distance barely predicts the
+# signal. A judgement, not a measured value: it is the threshold this check
+# has used since it was written, now applied to each fit (design item 38).
+NO_TREND_R2 = 0.15
+
+# Above this the exponent is not a terrain at all. Also a judgement, kept from
+# the first version of the check: well beyond the highest exponent measured.
+IMPLAUSIBLE_EXPONENT = 8.0
+
+
+def pooled_fading(by_place) -> Optional[dict]:
+    """The spread between packets at one position, pooled over every position
+    measured more than once, or None when none was (design item 40).
+
+    by_place maps a position to its (distance, rssi) rows. Each position adds
+    n - 1 degrees of freedom, so a position measured twice weighs little and
+    a node left standing for a hundred packets weighs a hundred."""
+    groups, ss, dof = [], 0.0, 0
+    for rows in by_place.values():
+        n = len(rows)
+        if n < 2:
+            continue
+        mean = sum(v for _, v in rows) / n
+        s = sum((v - mean) ** 2 for _, v in rows)
+        ss += s
+        dof += n - 1
+        groups.append({"distance_m": sum(d for d, _ in rows) / n, "n": n,
+                       "sigma_db": math.sqrt(s / (n - 1))})
+    if dof == 0:
+        return None
+    return {"sigma_db": math.sqrt(ss / dof), "dof": dof,
+            "groups": sorted(groups, key=lambda g: -g["n"])}
+
+
+def fit_warnings(fit: dict) -> List[dict]:
+    """What makes one fit doubtful. The commonest cause of an absurd exponent
+    is a mistyped gateway position: distances are then unrelated to the real
+    geometry, the regression finds no trend, and nothing upstream notices. A
+    wrong sign is the same failure read the other way, with RSSI apparently
+    improving with distance."""
+    label, n = fit["label"], fit["path_loss_exponent"]
+    lo, hi = presets.measured_exponent_span()
+    out = []
+    if n < 0:
+        out.append({
+            "kind": "negative_exponent", "fit": label,
+            "message": (f"The {label} fit says the signal gets STRONGER with distance "
+                        f"(exponent {n:.2f}), which is physically impossible. Check "
+                        f"the gateway coordinates and that the latitude and longitude "
+                        f"columns are the right way round."),
+        })
+    elif n > IMPLAUSIBLE_EXPONENT:
+        out.append({
+            "kind": "implausible_exponent", "fit": label,
+            "message": (f"The {label} fit's exponent, {n:.1f}, is far outside the "
+                        f"{lo:g} to {hi:g} measured for LoRa across environments. "
+                        f"Check the gateway coordinates before using this model."),
+        })
+    elif not lo <= n <= hi:
+        out.append({
+            "kind": "exponent_outside_measured", "fit": label,
+            "message": (f"The {label} fit's exponent, {n:.2f}, lies outside the "
+                        f"{lo:g} to {hi:g} measured for LoRa across environments "
+                        f"({presets.TERRAIN_SOURCE}). Every reach it gives rests on "
+                        f"that slope, so check the gateway coordinates and the spread "
+                        f"of distances before using it."),
+        })
+    if fit["r_squared"] < NO_TREND_R2:
+        out.append({
+            "kind": "no_trend", "fit": label,
+            "message": (f"The {label} fit explains only {100 * fit['r_squared']:.0f}% "
+                        f"of the variation in RSSI, so distance barely predicts the "
+                        f"signal. Either the gateway position is wrong or these "
+                        f"measurements cannot support a distance-based model."),
+        })
+    return out
 
 
 def study_snippet(fit: dict) -> str:
@@ -291,7 +392,10 @@ def study_snippet(fit: dict) -> str:
         f"    path_loss_ref_distance_m={fit['path_loss_ref_distance_m']:.1f},\n"
         f"    min_valid_distance_m={fit['min_distance_m']:.1f},\n"
         f"    path_loss_r_squared={fit['r_squared']:.3f},\n"
+        f"    max_measured_distance_m={fit['max_distance_m']:.1f},\n"
         f"    shadowing_sigma_db={fit['shadowing_sigma_db']:.2f},\n"
+        + (f"    fading_sigma_db={fit['fading_sigma_db']:.2f},\n"
+           if "fading_sigma_db" in fit else "") +
         f"    path_loss_source=\"Field fit ({fit['label']}), {fit['n_points']} points, "
         f"{fit['min_distance_m']:.0f} m to {fit['max_distance_m']:.0f} m\",\n"
     )

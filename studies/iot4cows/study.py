@@ -73,6 +73,10 @@ STUDY = Study(
     path_loss_ref_distance_m=100.0,
     min_valid_distance_m=30.0,
     path_loss_r_squared=0.634,
+    # The farthest point of the fit, 2.21 km as path_loss_source says. The
+    # site's farthest point, 958 m, lies well inside it. The reaches of SF8
+    # and slower lie beyond it, and `check` says so (design item 39).
+    max_measured_distance_m=2210.0,
     path_loss_source=(
         "Field fit over 1,229 aggregated RSSI points, 30 m to 2.21 km, "
         "IoT4Cows deployment"

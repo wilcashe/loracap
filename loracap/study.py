@@ -20,7 +20,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence, Tuple, Union
 
-from . import presets
+from . import pathloss, presets
 from .core import (
     SimConfig, max_distance_m, parse_scenario, point_in_polygons,
     polygons_area_m2, polygons_bounds, polygons_max_radius_m,
@@ -90,6 +90,12 @@ class Study:
     path_loss_ref_distance_m: float = 100.0
     min_valid_distance_m: float = 30.0
     path_loss_r_squared: Optional[float] = None   # recorded for the report only
+    # The farthest distance the model was measured at, or None when that is
+    # not known, as for a published or an assumed model (design item 39). It
+    # changes no draw and no result. `check` uses it to say when the site, or a
+    # reach it reports, lies beyond the measurements, where every received
+    # power is the fitted line extrapolated.
+    max_measured_distance_m: Optional[float] = None
     # Standard deviation of the log-normal variation about the mean path loss.
     # `shadowing_sigma_db` is fixed per node, which is obstruction belonging to
     # where the node is. `fading_sigma_db` is drawn per packet, which is the
@@ -768,6 +774,42 @@ def validate(study: Study):
     # --- propagation model ---
     if study.path_loss_ref_db <= 0:
         errors.append("path_loss_ref_db must be positive (path loss at d0, in dB).")
+    # The exponent sets every reach, and a fit can return any number at all
+    # (design item 38).
+    lo, hi = presets.measured_exponent_span()
+    if study.path_loss_exponent <= 0:
+        errors.append(
+            f"path_loss_exponent must be positive, not {study.path_loss_exponent:g}: "
+            f"at 0 or below the signal does not weaken with distance.")
+    elif not lo <= study.path_loss_exponent <= hi:
+        warnings.append(
+            f"path_loss_exponent = {study.path_loss_exponent:g} lies outside the "
+            f"{lo:g} to {hi:g} measured for LoRa across environments "
+            f"({presets.TERRAIN_SOURCE}). Every reach and every coverage check "
+            f"rests on it, so make sure it is not a fit gone wrong, such as one "
+            f"from a mistyped gateway position.")
+    if (study.path_loss_r_squared is not None
+            and study.path_loss_r_squared < pathloss.NO_TREND_R2):
+        warnings.append(
+            f"The fit behind this model explains only "
+            f"{100 * study.path_loss_r_squared:.0f}% of the spread in RSSI, so "
+            f"distance barely predicts the signal at this site and the exponent "
+            f"is poorly determined.")
+    measured_to = study.max_measured_distance_m
+    if measured_to is not None and (isinstance(measured_to, bool)
+                                    or not isinstance(measured_to, (int, float))
+                                    or not measured_to > study.min_valid_distance_m):
+        errors.append(
+            f"max_measured_distance_m must be a distance beyond the validity floor "
+            f"of {study.min_valid_distance_m:g} m, or None when it is not known, "
+            f"not {measured_to!r}.")
+        measured_to = None
+    if measured_to is not None and study.path_loss_ref_distance_m > measured_to:
+        warnings.append(
+            f"d0 = {study.path_loss_ref_distance_m:g} m lies beyond the farthest "
+            f"measurement, at {measured_to:g} m, so L(d0) is an extrapolation of "
+            f"the fit. The model still works, but quoting L(d0) in a paper would "
+            f"be quoting an extrapolation.")
     if study.min_valid_distance_m > study.path_loss_ref_distance_m:
         warnings.append(
             f"d0 = {study.path_loss_ref_distance_m} m is below the fit's validity "
@@ -793,12 +835,14 @@ def validate(study: Study):
             "spread of your fit to model obstruction."
         )
     if (study.path_loss_r_squared is not None and study.path_loss_r_squared < 0.8
-            and study.shadowing_sigma_db == 0):
+            and study.shadowing_sigma_db == 0 and study.fading_sigma_db == 0):
+        # With fading set the spread is modelled, as the per position fit of
+        # design item 40 leaves it when it finds no shadowing.
         warnings.append(
             f"The fit explains only {100 * study.path_loss_r_squared:.0f}% of the "
-            f"spread in RSSI, and shadowing_sigma_db is 0, so the rest is being "
-            f"discarded rather than modelled. `fit_path_loss` reports the "
-            f"residual sigma to put here."
+            f"spread in RSSI, and shadowing_sigma_db and fading_sigma_db are both "
+            f"0, so the rest is being discarded rather than modelled. "
+            f"`fit_path_loss` reports the residual sigma to put here."
         )
     if not study.path_loss_source:
         warnings.append(
@@ -816,13 +860,20 @@ def validate(study: Study):
             rmax = polygons_max_radius_m(study.polygons_m)
             info.append(f"Deployment area: {area_ha:.2f} ha, "
                         f"farthest point {rmax:.0f} m from the gateway")
+            if measured_to is not None and rmax > measured_to:
+                warnings.append(
+                    f"The site extends to {rmax:.0f} m from the gateway, beyond the "
+                    f"farthest measurement at {measured_to:.0f} m. Nodes placed past "
+                    f"it receive the power the fitted line extrapolates, which no "
+                    f"measurement supports.")
             if not point_in_polygons(0.0, 0.0, study.polygons_m):
                 warnings.append(
                     "The gateway (origin) falls outside the polygon. If that is "
                     "not intentional, the gateway coordinates used when converting "
                     "the KML were probably wrong."
                 )
-            if cfg is not None:
+            # Without a slope there is no reach, and the error above says so.
+            if cfg is not None and study.path_loss_exponent > 0:
                 for scen in study.scenarios:
                     try:
                         _, opts = parse_scenario(scen, cfg)
@@ -837,11 +888,28 @@ def validate(study: Study):
                         )
                     elif scen != "MULTI" and reach > 3 * rmax:
                         info.append(
-                            f"{scen} reaches {reach:.0f} m, well beyond the site's "
-                            f"{rmax:.0f} m. Range is not the binding constraint here."
+                            f"{scen} reaches {reach:.0f} m{_extrapolated(reach, measured_to)}, "
+                            f"well beyond the site's {rmax:.0f} m. Range is not the "
+                            f"binding constraint here."
                         )
     elif study.placement != "disc":
         errors.append(f"placement must be 'polygon' or 'disc', not {study.placement!r}")
+    elif (cfg is not None and measured_to is not None and study.path_loss_exponent > 0
+          and study.path_loss_ref_db > 0):
+        # A disc is as wide as the scenario's slowest data rate reaches, so it
+        # is the reach that has to stay inside the measurements.
+        for scen in study.scenarios:
+            try:
+                _, opts = parse_scenario(scen, cfg)
+            except ValueError:
+                continue
+            radius = max_distance_m(cfg, min(sens[sf] for sf in opts))
+            if radius > measured_to:
+                warnings.append(
+                    f"{scen} places its nodes on a disc of {radius:.0f} m, the reach "
+                    f"of its slowest data rate, beyond the farthest measurement at "
+                    f"{measured_to:.0f} m. Nodes placed past it receive the power the "
+                    f"fitted line extrapolates, which no measurement supports.")
 
     # --- experiment design ---
     if len(study.node_counts) < 4:
@@ -929,10 +997,11 @@ def validate(study: Study):
         # Reach is only meaningful once the propagation model is real. With a
         # placeholder model it comes out in thousands of kilometres, which would
         # bury the actual error under nonsense.
-        if study.path_loss_ref_db > 0:
+        if study.path_loss_ref_db > 0 and study.path_loss_exponent > 0:
             for sf in sfs:
+                reach = max_distance_m(cfg, sens[sf])
                 info.append(f"  SF{sf}: sensitivity {sens[sf]:+.1f} dBm -> "
-                            f"reach {max_distance_m(cfg, sens[sf]):.0f} m")
+                            f"reach {reach:.0f} m{_extrapolated(reach, measured_to)}")
         else:
             info.append("  (per-SF reach not shown: the propagation model is "
                         "not configured yet)")
@@ -1003,6 +1072,13 @@ def _output_errors(study: Study) -> list:
     return errors
 
 
+def _extrapolated(reach_m, measured_to_m) -> str:
+    """A note for a reach past the farthest measurement (design item 39)."""
+    if measured_to_m is None or reach_m <= measured_to_m:
+        return ""
+    return f" (an extrapolation: the measurements stop at {measured_to_m:.0f} m)"
+
+
 def _pair(v) -> bool:
     """Two real numbers, the first below the second."""
     try:
@@ -1023,7 +1099,7 @@ STUDY_FIELD_ORDER = [
     ("rx_antenna_gain_db", None), ("cable_loss_db", None),
     ("path_loss_exponent", "propagation"), ("path_loss_ref_db", None),
     ("path_loss_ref_distance_m", None), ("min_valid_distance_m", None),
-    ("path_loss_r_squared", None),
+    ("path_loss_r_squared", None), ("max_measured_distance_m", None),
     ("shadowing_sigma_db", None), ("fading_sigma_db", None), ("path_loss_source", None),
     ("uplink_dwell_time_ms", None),
     ("payload_bytes", "traffic"), ("lorawan_overhead_bytes", None),

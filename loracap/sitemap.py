@@ -125,6 +125,9 @@ def snapshot(study: Study, scenario: str, n_nodes: int) -> dict:
         "polygons_m": ([[[round(px, 2), round(py, 2)] for px, py in ring]
                         for ring in polygons] if polygons else None),
         "shadowing_sigma_db": cfg.shadowing_sigma_db,
+        # Where the model stops being measured, so the figure can say which
+        # reach is an extrapolation (design item 39). None when not known.
+        "max_measured_distance_m": study.max_measured_distance_m,
         # The distance at which the median link meets each data rate's
         # sensitivity at full power. Shadowing moves a node's link about it.
         "reach_m": {str(sf): round(core.max_distance_m(cfg, cfg.sensitivity_dbm[sf]), 1)

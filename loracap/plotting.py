@@ -580,6 +580,11 @@ _SF_RAMP = {
     6: ["#86b6ef", "#5598e7", "#2a78d6", "#1c5cab", "#104281", "#0d366b"],
 }
 _SF_MARKERS = ["o", "s", "^", "D", "v", "P"]
+# The gateway takes a shape no node can have (design item 34). It was a
+# triangle, the third spreading factor's marker, and on a map whose nodes all
+# sat on that factor the gateway differed from them only in size and colour.
+# The cross is taken too, by the nodes no data rate reaches.
+_GATEWAY_MARKER = "*"
 _INK, _INK_2, _MUTED, _GRID, _SITE_FILL = (
     "#0b0b0b", "#52514e", "#898781", "#e1e0d9", "#f0efec")
 
@@ -648,10 +653,13 @@ def site_map_figure(study: Study, data):
         handles.append(Line2D([], [], color=ink2, linewidth=1.2,
                               label="placement disc"))
 
-    ax.scatter([0], [0], s=120, marker="^", color=_INK, edgecolors="white",
+    # A star of the same area as the triangle looks smaller, its arms being
+    # thin, so it is drawn larger.
+    ax.scatter([0], [0], s=240, marker=_GATEWAY_MARKER, color=_INK, edgecolors="white",
                linewidths=0.8, zorder=6)
-    handles.append(Line2D([], [], linestyle="none", marker="^", markersize=9,
-                          color=_INK, markeredgecolor="white", label="gateway"))
+    handles.append(Line2D([], [], linestyle="none", marker=_GATEWAY_MARKER,
+                          markersize=13, color=_INK, markeredgecolor="white",
+                          label="gateway"))
 
     for sf in sfs:
         color, marker = style[sf]
@@ -681,15 +689,30 @@ def site_map_figure(study: Study, data):
                                                   f"{len(silent)} nodes"))
 
     corner = max(math.hypot(x, y) for x in (x0, x1) for y in (y0, y1))
+
+    def far(r):
+        return f"{r / 1000:.2f} km" if r >= 1000 else f"{r:.0f} m"
+
+    # Past the farthest measurement every received power is the fitted line
+    # extrapolated (design item 39). A map from before the item has no such
+    # key and draws as it did.
+    measured_to = data.get("max_measured_distance_m")
     for sf in sfs:
         color, _m = style[sf]
         r = data["reach_m"][str(sf)]
         ax.add_patch(Circle((0, 0), r / k, fill=False, edgecolor=color,
                             linestyle=(0, (4, 3)), linewidth=1.3, zorder=2))
-        dist = f"{r / 1000:.2f} km" if r >= 1000 else f"{r:.0f} m"
+        past = ", extrapolated" if measured_to is not None and r > measured_to else ""
         out = ", beyond the frame" if r > corner else ""
         handles.append(Line2D([], [], color=color, linestyle=(0, (4, 3)),
-                              linewidth=1.3, label=f"SF{sf} median reach, {dist}{out}"))
+                              linewidth=1.3,
+                              label=f"SF{sf} median reach, {far(r)}{past}{out}"))
+    if measured_to is not None:
+        ax.add_patch(Circle((0, 0), measured_to / k, fill=False, edgecolor=ink2,
+                            linestyle=(0, (1, 2)), linewidth=1.2, zorder=2))
+        out = ", beyond the frame" if measured_to > corner else ""
+        handles.append(Line2D([], [], color=ink2, linestyle=(0, (1, 2)), linewidth=1.2,
+                              label=f"farthest measurement, {far(measured_to)}{out}"))
 
     ax.set_xlim(x0 / k, x1 / k)
     ax.set_ylim(y0 / k, y1 / k)

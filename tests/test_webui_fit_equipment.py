@@ -65,9 +65,11 @@ async function post(url, body){
 }
 function msgT(){ return {}; } function msgX(){ return {}; } function showFit(){}
 function setOrigin(){} function schedule(){}
+let MODEL_WRITTEN={};
 """
         cls.prelude = "\n".join([stubs, num, ids, fn("fill"), fn("T"), fn("measuredWith"),
-                                 fn("fitRequest"), fn("runFit"), fn("useFit")])
+                                 fn("fitRequest"), fn("runFit"), fn("useFit"), fn("written"),
+                                 fn("parseCoord"), fn("coord")])
 
     def js(self, body):
         r = subprocess.run([NODE, "-e", self.prelude + "\n(async()=>{" + body + "})();"],

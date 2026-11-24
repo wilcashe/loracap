@@ -138,12 +138,12 @@ class TestPropagation(unittest.TestCase):
         at zero, is throwing the rest away rather than modelling it."""
         self.assertTrue(says(warnings(path_loss_r_squared=0.634,
                                       shadowing_sigma_db=0.0),
-                             "shadowing_sigma_db is 0"))
+                             "discarded rather than modelled"))
 
     def test_setting_sigma_clears_the_flag(self):
         self.assertFalse(says(warnings(path_loss_r_squared=0.634,
                                        shadowing_sigma_db=7.41),
-                              "shadowing_sigma_db is 0"))
+                              "discarded rather than modelled"))
 
     def test_an_implausible_sigma_is_flagged(self):
         self.assertTrue(says(warnings(shadowing_sigma_db=30.0),

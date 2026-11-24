@@ -397,6 +397,14 @@ TERRAIN_SOURCE = (
 )
 
 
+def measured_exponent_span():
+    """(lowest, highest) path-loss exponent measured for LoRa in any of the
+    environments above: 1.45 to 5.97. An exponent outside it is not wrong,
+    but no campaign in the source review found one (design item 38)."""
+    return (min(v[0] for v in TERRAIN_EXPONENTS.values()),
+            max(v[1] for v in TERRAIN_EXPONENTS.values()))
+
+
 def terrain_range(label: str):
     """(low, high, median, n_studies, frequencies) for an environment label."""
     key = label.lower()

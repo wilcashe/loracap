@@ -25,6 +25,7 @@ reads the same in both languages, so a sentence added later without a mark
 fails here rather than showing in English on a Spanish page.
 """
 import ast
+import functools
 import json
 import os
 import re
@@ -51,6 +52,13 @@ def _read(path):
 
 def load_es():
     return json.loads(_read(DICT))["strings"]
+
+
+@functools.lru_cache(maxsize=None)
+def load_composed():
+    """The entries the page fills itself with T (design item 37). Read once,
+    since lookup() asks for them for every text it looks up."""
+    return frozenset(json.loads(_read(DICT))["composed"])
 
 
 # ---------------------------------------------------------------------------
@@ -297,6 +305,8 @@ def fit_labels():
         d = 40 + i * 25.0
         lat = 4.0 + d / 111320.0
         rows.append(f"{lat:.7f},-73.0,{-40 - 30 * math.log10(d / 40):.1f}")
+    # A position measured three times, so the per position fit is drawn too.
+    rows += [rows[5][:-1] + "3", rows[5][:-1] + "7"]
     r = server.api_fit({"csv": "\n".join(rows), "lat": 4.0, "lon": -73.0,
                         "tx_power_dbm": 14})
     return [f["label"] for f in r["fits"]]
@@ -320,10 +330,13 @@ def _template_re(key):
 
 def lookup(es, text):
     """The entry the page's TX would use for a text, or None. Mirrors TXr in
-    index.html: an exact entry first, then the longest template that fits."""
+    index.html: an exact entry first, then the longest template that fits,
+    leaving out the templates the page fills itself."""
     if text in es:
         return text
-    for key in sorted((k for k in es if re.search(r"\{\w+\}", k)), key=len, reverse=True):
+    composed = load_composed()
+    for key in sorted((k for k in es if re.search(r"\{\w+\}", k) and k not in composed),
+                      key=len, reverse=True):
         if _template_re(key).match(text):
             return key
     return None
@@ -393,6 +406,42 @@ class TestNoEntryIsStale(unittest.TestCase):
             if hit:
                 used.add(hit)
         self.assertEqual(sorted(set(es) - used), [])
+
+
+class TestTheComposedListIsExact(unittest.TestCase):
+    """Design item 37. A template the page fills itself, such as "{first} and
+    {last}", matches far more than the texts it was written for: any English
+    sentence with " and " in it. Used to read a text that arrives whole, it
+    would pass that sentence for translated, with no entry of its own, and the
+    page would show it half in Spanish while the tests above stayed green. The
+    dictionary lists those templates, and both the page and lookup() leave
+    them out of that reading."""
+
+    def test_the_list_is_the_templates_the_script_fills(self):
+        filled = {k for k in script_keys() if re.search(r"\{\w+\}", k)}
+        self.assertGreater(len(filled), 40)
+        self.assertEqual(sorted(load_composed() - filled), [], "listed but not filled")
+        self.assertEqual(sorted(filled - load_composed()), [], "filled but not listed")
+
+    def test_every_listed_template_has_its_spanish(self):
+        es = load_es()
+        for k in load_composed():
+            self.assertIn(k, es, k)
+
+    def test_a_sentence_with_and_is_not_taken_for_translated(self):
+        # The definition of ToA as it stood in item 33, before it was reworded
+        # to dodge this very match.
+        es = load_es()
+        text = ("time on air: how long one uplink occupies the channel, longer at a "
+                "higher spreading factor and a larger frame")
+        self.assertNotIn(text, es)
+        self.assertIn("{first} and {last}", es)
+        self.assertIsNone(lookup(es, text))
+
+    def test_the_server_sends_the_list(self):
+        t = server.translations()
+        self.assertEqual(set(t["composed"]), load_composed())
+        self.assertEqual(t["es"], load_es())
 
 
 class TestEveryKeyInTheScriptIsALiteral(unittest.TestCase):
@@ -510,6 +559,7 @@ class TestTheLookupInThePage(unittest.TestCase):
             return re.search(r"(function " + name + r"\(.*?\n\})", js, re.S).group(1)
         cls.prelude = "\n".join([
             "let LANG='es', ES=" + json.dumps(load_es()) + ", ES_TEMPLATES=[];",
+            "let COMPOSED=new Set(" + json.dumps(sorted(load_composed())) + ");",
             "const I18N_MISSES=new Set();",
             fn("fill"), fn("T"), fn("TXr"), fn("TX"), fn("compileTemplates"),
             fn("rejectionHow"), "compileTemplates();"])
@@ -551,6 +601,33 @@ class TestTheLookupInThePage(unittest.TestCase):
     def test_a_missing_key_falls_back_to_english_and_is_listed(self):
         self.assertEqual(self._run("[T('No such {thing}', {thing:'key'}), [...I18N_MISSES]]"),
                          ["No such key", ["No such {thing}"]])
+
+    def test_a_template_the_page_fills_is_not_used_to_read(self):
+        en = ("time on air: how long one uplink occupies the channel, longer at a "
+              "higher spreading factor and a larger frame")
+        self.assertEqual(self._run(f"TXr({json.dumps(en)})"), {"text": en, "hit": False})
+        # The page still fills it itself.
+        self.assertEqual(self._run("T('{first} and {last}', {first:'a', last:'b'})"), "a y b")
+
+    def test_the_bootstrap_takes_the_list_from_the_server(self):
+        # The lines of boot() that load the dictionary, run on what the
+        # server sends, with nothing set beforehand.
+        load = re.search(r"(ES=\(BOOT\.translations[\s\S]*?compileTemplates\(\);)",
+                         script()).group(1)
+        js = "\n".join([
+            "let LANG='es', ES={}, ES_TEMPLATES=[], COMPOSED=new Set();",
+            "const I18N_MISSES=new Set();",
+            "const BOOT={translations:" + json.dumps(server.translations()) + "};",
+            *(re.search(r"(function " + f + r"\(.*?\n\})", script(), re.S).group(1)
+              for f in ("fill", "T", "TXr", "compileTemplates")),
+            load])
+        en = ("time on air: how long one uplink occupies the channel, longer at a "
+              "higher spreading factor and a larger frame")
+        r = subprocess.run([NODE, "-e", js + "\nconsole.log(JSON.stringify(["
+                            "COMPOSED.size, TXr(" + json.dumps(en) + ").hit]));"],
+                           capture_output=True, text=True, encoding="utf-8", timeout=60)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(json.loads(r.stdout), [len(load_composed()), False])
 
     def test_english_is_the_key_itself(self):
         self.assertEqual(self._run("(LANG='en', T('{n} errors', {n:3}))"), "3 errors")

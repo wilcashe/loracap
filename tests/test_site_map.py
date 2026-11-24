@@ -28,6 +28,7 @@ from tests.test_reproduce import TempStudy, run_exp
 from tests.test_webui import PAGE, TempRoot
 
 import matplotlib.colors
+from matplotlib.markers import MarkerStyle
 
 from loracap import core, plotting, reproduce, sitemap
 from loracap import study as study_mod
@@ -292,6 +293,34 @@ class TestTheFigure(TempDir):
         self.assertIn("SF8, 65 nodes", labels)
         self.assertIn("gateway", labels)
         self.assertIn("site boundary", labels)
+
+    def test_the_gateway_has_a_shape_no_node_has(self):
+        # Design item 34: every node of this map is on the third spreading
+        # factor of the study's list, whose marker the gateway once shared.
+        s = self._write(placement="polygon", polygons_m=SQUARE,
+                        scenarios=("SF7", "SF8", "SF9"), highlight_scenario="SF9")
+        fig, _labels = self._labels(s)
+        ax = fig.axes[0]
+        legend = ax.get_legend()
+        handles = dict(zip([t.get_text() for t in legend.get_texts()],
+                           legend.legend_handles))
+        marker = handles["gateway"].get_marker()
+        node_markers = [h.get_marker() for label, h in handles.items()
+                        if label.startswith("SF") and "reach" not in label]
+        self.assertTrue(node_markers)
+        self.assertNotIn(marker, node_markers)
+        self.assertNotIn(marker, plotting._SF_MARKERS + ["x"])
+        # The point drawn at the gateway is that same shape.
+        style = MarkerStyle(marker)
+        want = style.get_path().transformed(style.get_transform()).vertices
+        at_gateway = [c for c in ax.collections
+                      if len(c.get_offsets()) == 1 and tuple(c.get_offsets()[0]) == (0, 0)]
+        self.assertEqual(len(at_gateway), 1)
+        got = at_gateway[0].get_paths()[0].vertices.tolist()
+        self.assertEqual(len(got), len(want))
+        for g, w in zip(got, want.tolist()):
+            self.assertTrue(math.isclose(g[0], w[0], abs_tol=1e-9)
+                            and math.isclose(g[1], w[1], abs_tol=1e-9), (g, w))
 
     def test_a_reach_outside_the_frame_is_named(self):
         small = [[(-100.0, -100.0), (100.0, -100.0), (100.0, 100.0), (-100.0, 100.0)]]

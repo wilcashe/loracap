@@ -54,6 +54,7 @@
   .pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;
         border:1px solid var(--line);color:var(--muted);margin-left:6px}
   .pill.ok{background:var(--okbg);border-color:#c8e2d3;color:var(--ok)}
+  .pill.warn{background:var(--warnbg);border-color:#efe0b8;color:var(--warn)}
   .pill.bad{background:var(--errbg);border-color:#f0cdc9;color:var(--err)}
   .fileline{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
   .fileline .name{font-size:12.5px;color:var(--muted)}
@@ -204,8 +205,8 @@
         <div class="field-hint" data-i18n>letters, digits, hyphen or underscore</div></div>
       <div><label for="f_site" data-i18n>Site</label><input id="f_site" placeholder="e.g. Ames, Iowa, USA" data-i18n-attr="placeholder">
         <div class="field-hint" id="hint_f_site" data-i18n>optional, free text for the report: town, region, country</div></div>
-      <div><label for="f_lat" data-i18n>Gateway latitude<span class="req" aria-hidden="true">*</span></label><input id="f_lat" type="number" step="any" placeholder="e.g. 42.0347" aria-required="true" data-i18n-attr="placeholder"></div>
-      <div><label for="f_lon" data-i18n>Gateway longitude<span class="req" aria-hidden="true">*</span></label><input id="f_lon" type="number" step="any" placeholder="e.g. -93.6199" aria-required="true" data-i18n-attr="placeholder"></div>
+      <div><label for="f_lat" data-i18n>Gateway latitude<span class="req" aria-hidden="true">*</span></label><input id="f_lat" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. 42.0347 or 42°02′04.9″ N" aria-required="true" data-i18n-attr="placeholder"></div>
+      <div><label for="f_lon" data-i18n>Gateway longitude<span class="req" aria-hidden="true">*</span></label><input id="f_lon" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. -93.6199 or 93°37′11.6″ W" aria-required="true" data-i18n-attr="placeholder"></div>
     </div>
     <div class="grp" style="margin-top:12px" data-i18n>Site boundary (KML)<span class="req" aria-hidden="true">*</span>
       <span style="font-weight:400;color:var(--muted)">needed for polygon placement, the default</span></div>
@@ -315,12 +316,26 @@
       <div><label for="f_d0" data-i18n>d₀ (m)</label><input id="f_d0" type="number" step="any" value="100"></div>
       <div><label for="f_minv" data-i18n>Validity floor (m)</label><input id="f_minv" type="number" step="any" value="30"></div>
       <div><label for="f_sigma" data-i18n>Shadowing σ (dB)</label><input id="f_sigma" type="number" step="any" value="0"></div>
+      <div><label for="f_fading" data-i18n>Fading σ (dB)</label><input id="f_fading" type="number" step="any" value="0"></div>
+      <div><label for="f_maxd" data-i18n>Farthest measurement (m)</label><input id="f_maxd" type="number" step="any" value=""></div>
     </div>
     <div class="srcnote" data-for="f_sigma" data-i18n><b>Shadowing σ.</b> The spread the mean trend does not
       explain, drawn once per node and fixed: obstruction that belongs to
       where the node is. Leaving it at 0 makes two nodes the same distance
       away receive identical power, which no site does. Adopting a fit fills
       it from that fit's residual.</div>
+    <div class="srcnote" data-for="f_fading" data-i18n><b>Fading σ.</b> The spread drawn afresh for
+      every packet: the channel changing between transmissions at a fixed
+      place, as a node standing still measures it. It averages out over many
+      packets, so it moves DER far less than shadowing of the same size. The
+      residual of the unbinned or the binned fit mixes the two. When some
+      positions were measured more than once, the per position fit tells them
+      apart and fills this field. The other fits leave it as it is.</div>
+    <div class="srcnote" data-for="f_maxd" data-i18n><b>Farthest measurement.</b> The farthest
+      distance the model was measured at. It changes no result: the checks use it
+      to say when the site, or a reach, lies beyond the measurements, where every
+      received power is the fitted line extrapolated. Adopting a fit fills it. An
+      environment model leaves it empty, having been measured nowhere.</div>
     <div style="margin-top:11px"><label for="f_plsrc" data-i18n>Where this model came from</label>
       <input id="f_plsrc" placeholder="Field fit, or a published model you are citing" data-i18n-attr="placeholder"></div>
     </div></div>
@@ -556,7 +571,8 @@ const FIELDS={
   uplink_dwell_time_ms:['f_dwell','Uplink dwell time'],
   path_loss_exponent:['f_n','Exponent n'], path_loss_ref_db:['f_ref','Loss at d\u2080 (dB)'],
   path_loss_ref_distance_m:['f_d0','d\u2080 (m)'], min_valid_distance_m:['f_minv','Validity floor (m)'],
-  shadowing_sigma_db:['f_sigma','Shadowing \u03c3 (dB)'],
+  shadowing_sigma_db:['f_sigma','Shadowing \u03c3 (dB)'], fading_sigma_db:['f_fading','Fading \u03c3 (dB)'],
+  max_measured_distance_m:['f_maxd','Farthest measurement (m)'],
   path_loss_source:['f_plsrc','Where this model came from'],
   payload_bytes:['f_pl','Application payload (bytes)'],
   lorawan_overhead_bytes:['f_hdr','LoRaWAN header (bytes)'], coding_rate:['f_cr','Coding rate'],
@@ -592,9 +608,63 @@ const OUTPUT_KEYS=['extra_figures','site_map_nodes','figure_formats','figure_dpi
 // a fitted model supports a capacity figure, an assumed one supports a range.
 // 'unset' until the user fits, picks an environment or types a value.
 let ORIGIN='unset', TERRAIN=null;
+// What the fit or the environment model last wrote into the propagation
+// fields, by id. The bar credits the model with those values only, so a
+// field it never fills, or one edited after it, is listed as a change.
+let MODEL_WRITTEN={};
 
 const $ = id => document.getElementById(id);
 const num = (id,d) => { const v=parseFloat($(id).value); return isNaN(v)?d:v; };
+// A gateway coordinate in decimal degrees, from either way people write one:
+// 5.501139, or 5°30′04.10″ N (design item 36). Degree, minute and second
+// marks may be any of the usual ones or spaces, a comma may stand for the
+// decimal point, and the hemisphere is N or S for a latitude, E or W for a
+// longitude, with O for west as Spanish writes it. NaN for anything that is
+// not one coordinate, so a slip is reported instead of moving the whole
+// site. The range is left to the range check, as for any other field.
+function parseCoord(text, axis){
+  let s=String(text||'').trim().toUpperCase().replace(/,/g,'.');
+  if(!s) return NaN;
+  let hemi=null;
+  const h=s.match(/^([NSEWO])\s*/) || s.match(/\s*([NSEWO])$/);
+  if(h){ hemi=h[1]; s=(h.index===0 ? s.slice(h[0].length) : s.slice(0, h.index)).trim(); }
+  const neg=s.startsWith('-'), signed=neg || s.startsWith('+');
+  if(signed) s=s.slice(1).trim();
+  s=s.replace(/[°º˚′″ʹʺ'"’”]+/g,' ').trim();
+  if(!/^\d+(\.\d+)?( +\d+(\.\d+)?){0,2}$/.test(s)) return NaN;
+  const p=s.split(/ +/).map(Number);
+  // Minutes follow whole degrees and seconds whole minutes, each below 60.
+  if(p.length>1 && !Number.isInteger(p[0])) return NaN;
+  if(p.length>2 && !Number.isInteger(p[1])) return NaN;
+  if(p.slice(1).some(x=>x>=60)) return NaN;
+  let v=p[0]+(p[1]||0)/60+(p[2]||0)/3600;
+  if(hemi){
+    // A sign and a hemisphere letter together contradict or repeat each
+    // other, and which one was meant cannot be told.
+    if(signed || !(axis==='lat' ? 'NS' : 'EWO').includes(hemi)) return NaN;
+    if('SWO'.includes(hemi)) v=-v;
+  }else if(neg) v=-v;
+  return v;
+}
+function coord(id){ return parseCoord($(id).value, id==='f_lat' ? 'lat' : 'lon'); }
+// Under a coordinate written in degrees, minutes and seconds, the decimal
+// degrees it was read as, since that is the number every later step uses.
+function showCoord(id){
+  let d=$('conv_'+id);
+  if(!d){ d=document.createElement('div'); d.className='field-hint'; d.id='conv_'+id;
+    hintFor(id).insertAdjacentElement('afterend', d); }
+  const text=$(id).value.trim(), v=coord(id);
+  d.textContent=''; d.classList.remove('bad');
+  if(!text) return;
+  if(isNaN(v)){
+    d.classList.toggle('bad', TOUCHED_IDS.has(id));
+    d.textContent = id==='f_lat'
+      ? T('not a latitude: write 5.501139, or 5°30′04.10″ N')
+      : T('not a longitude: write -73.492939, or 73°29′34.58″ W');
+  }else if(!/^[+-]?\d+(\.\d+)?$/.test(text)){
+    d.textContent=T('read as {value} in decimal degrees', {value:+v.toFixed(6)});
+  }
+}
 
 async function post(path, body){
   const r = await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},
@@ -623,6 +693,11 @@ function mk(tag, cls, text){
 // stay in English and are marked lang="en" for a screen reader.
 const I18N_MISSES=new Set();
 let LANG=initialLang(), ES={}, ES_TEMPLATES=[];
+// Entries with {placeholders} that the page fills itself with T. They are
+// never used to read a text that arrives whole (design item 37): "{first}
+// and {last}" would otherwise pass any English sentence with " and " in it
+// for translated, and show it half in Spanish.
+let COMPOSED=new Set();
 function initialLang(){
   try{ const s=localStorage.getItem('loracap.lang'); if(s==='en'||s==='es') return s; }catch(e){}
   const n=(navigator.languages&&navigator.languages[0])||navigator.language||'en';
@@ -669,7 +744,7 @@ function TXr(text){
 function TX(text){ return TXr(text).text; }
 function compileTemplates(){
   // Longest first, so the most specific entry wins.
-  ES_TEMPLATES=Object.keys(ES).filter(k=>/\{\w+\}/.test(k))
+  ES_TEMPLATES=Object.keys(ES).filter(k=>/\{\w+\}/.test(k) && !COMPOSED.has(k))
     .sort((a,b)=>b.length-a.length).map(k=>{
       const names=[];
       const src=k.split(/(\{\w+\})/).map(p=>{
@@ -766,7 +841,7 @@ function setLang(l, opening){
   // language, from the state the page is in.
   document.querySelectorAll('.adv').forEach(b=>{ if(b.querySelector('.advbtn')) setOpen(b, b.classList.contains('open')); });
   chipNote(); radioNote(); energyAvailable(); outputFiles(); receiverNote();
-  hintTexts(); limitsFromTables(); setOrigin(ORIGIN, TERRAIN); refreshAdv(); validate();
+  hintTexts(); ['f_lat','f_lon'].forEach(showCoord); limitsFromTables(); setOrigin(ORIGIN, TERRAIN); refreshAdv(); validate();
 }
 
 /* ---------- bootstrap ---------- */
@@ -938,7 +1013,8 @@ function outputFiles(){
 async function boot(){
   document.querySelectorAll('.mtab').forEach(t=>t.onclick=()=>showView(t.dataset.view));
   BOOT = await post('/api/bootstrap');
-  ES=(BOOT.translations||{}).es||{}; compileTemplates();
+  ES=(BOOT.translations||{}).es||{};
+  COMPOSED=new Set((BOOT.translations||{}).composed||[]); compileTemplates();
   $('lang_en').onclick=()=>setLang('en'); $('lang_es').onclick=()=>setLang('es');
   // The markup is put in the page's language first, since the builders
   // below read it: a block's name, a control's label.
@@ -1061,6 +1137,9 @@ function refreshAdv(){
         ? htmlT('<b>{n} settings</b>, filled in by the field fit.', {n})
         : htmlT('<b>{n} settings</b>, filled in by the model built from the environment.', {n});
       st.appendChild(head);
+      handChanges(ch.map(c=>({...c, id:c.el.id, value:ctlState(c.el)})), MODEL_WRITTEN)
+        .forEach(c=>{ const s=document.createElement('span'); s.className='chg';
+          s.textContent=c.text; st.appendChild(s); });
     }else{
       head.innerHTML = ch.length
         ? htmlT('<b>{changed} of {n} changed</b> from the default:', {changed:ch.length, n})
@@ -1073,6 +1152,12 @@ function refreshAdv(){
       p.textContent=T('{n} to fix', {n:bad}); head.appendChild(p); }
     block.querySelector('.restore').hidden = !ch.length;
   });
+}
+// The changes a model-filled bar still lists: every one the model did not
+// make. Without this a fading sigma typed by hand, which no fit fills, sat
+// hidden behind "filled in by the field fit".
+function handChanges(changes, written){
+  return changes.filter(c=>!(c.id in written) || String(written[c.id])!==String(c.value));
 }
 function restoreBlock(block){
   advControls(block).forEach(el=>{
@@ -1210,24 +1295,43 @@ function buildHighlight(){
 }
 
 /* ---------- KML ---------- */
+// The boundary as loaded, kept so that a gateway position entered or
+// corrected afterwards projects it again (design item 41). The rings are in
+// metres around the gateway, so rings projected around an old position would
+// go into site_polygon.py beside the new one, and the file would contradict
+// itself. KMLSEQ drops an answer overtaken by a later projection.
+let KMLTEXT=null, KMLSEQ=0;
 $('kmlfile').onchange = async e=>{
   const f=e.target.files[0]; if(!f) return;
   TOUCHED_IDS.add('kmlbtn'); TOUCHED=true;
   tplain($('kmlname'), f.name);
-  const out=$('kmlout'); out.innerHTML='';
-  if($('f_lat').value===''||$('f_lon').value===''){
+  KMLTEXT=await f.text();
+  await projectKml();
+};
+async function projectKml(){
+  if(KMLTEXT===null) return;
+  const seq=++KMLSEQ, out=$('kmlout'); out.innerHTML='';
+  if(isNaN(coord('f_lat'))||isNaN(coord('f_lon'))){
+    // No rings without a gateway to place them around, rather than rings
+    // around a position the form no longer holds.
+    RINGS=null; RING_NAMES=null;
     out.appendChild(msgT('e','Enter the gateway latitude and longitude first: the boundary is projected relative to it.'));
-    return;
+    schedule(); return;
   }
   try{
-    const r = await post('/api/kml',{kml:await f.text(),lat:num('f_lat'),lon:num('f_lon')});
+    const r = await post('/api/kml',{kml:KMLTEXT,lat:coord('f_lat'),lon:coord('f_lon')});
+    if(seq!==KMLSEQ) return;
     RINGS=r.rings; RING_NAMES=r.names; showKml(r);
     // The site's own radius is the minimum assumption under which the
     // deployment works at all, so it is the sensible starting anchor.
     if(!$('f_range').value) $('f_range').value = Math.round(r.max_radius_m);
     schedule();
-  }catch(err){ out.appendChild(msgX('e',err.message)); RINGS=null; }
-};
+  }catch(err){
+    if(seq!==KMLSEQ) return;
+    out.appendChild(msgX('e',err.message)); RINGS=null; RING_NAMES=null; schedule();
+  }
+}
+['f_lat','f_lon'].forEach(id=>$(id).addEventListener('change', projectKml));
 
 function showKml(r){
   const out=$('kmlout'); out.innerHTML='';
@@ -1290,7 +1394,7 @@ function measuredWith(){
 }
 function fitRequest(csv){
   const eq=measuredWith();
-  return {csv, lat:num('f_lat'), lon:num('f_lon'),
+  return {csv, lat:coord('f_lat'), lon:coord('f_lon'),
     tx_power_dbm: eq ? eq.tx : null, net_gain_db: eq ? eq.net : 0,
     d0_m:num('f_d0',100), min_distance_m:num('f_minv',30)};
 }
@@ -1306,7 +1410,7 @@ async function runFit(){
   if(CSVTEXT===null) return;
   const seq=++FITSEQ;
   const out=$('fitout'); out.innerHTML=''; out.appendChild(msgT('i','Fitting…'));
-  if($('f_lat').value===''||$('f_lon').value===''){
+  if(isNaN(coord('f_lat'))||isNaN(coord('f_lon'))){
     out.innerHTML=''; out.appendChild(msgT('e','Enter the gateway position first.')); return;
   }
   const equipment=measuredWith();
@@ -1338,6 +1442,11 @@ function showFit(r){
     ? msgT('i','RSSI turned into loss with {tx} dBm and a net antenna gain of {net} dB, the equipment entered above.',
            {tx:r.equipment.tx, net:+r.equipment.net.toFixed(2)})
     : msgT('w','Enter the equipment the measurements were taken with to get the loss at d₀. Without it the fit gives the exponent and σ only.'));
+  // Positions measured more than once show fading apart (design item 40).
+  out.appendChild(r.fading
+    ? msgT('i','Fading σ {sigma} dB, from {n} positions measured more than once ({dof} degrees of freedom). The per position fit takes it out of the spread, and what is left is shadowing.',
+           {sigma:r.fading.sigma_db.toFixed(2), n:r.fading.groups.length, dof:r.fading.dof})
+    : msgT('i','No position was measured more than once, so fading cannot be told apart from shadowing.'));
   const t=mk('table'), head=mk('tr');
   head.append(tset(mk('th'),'Fit'), mk('th','','n'), mk('th','','R²'), mk('th','','σ (dB)'),
               mk('th','','L(d₀)'), tset(mk('th'),'Points'), mk('th'));
@@ -1346,6 +1455,12 @@ function showFit(r){
   r.fits.forEach((f,i)=>{
     const tr=mk('tr'), use=tset(mk('button'),'Use'), cell=mk('td');
     use.onclick=()=>useFit(i); cell.appendChild(use);
+    // A fit the checks above doubt is marked on its own row (design item
+    // 38), so the warning is beside the button that would adopt it.
+    if(f.doubtful){
+      const p=tset(mk('span','pill warn'),'doubtful');
+      p.title=T('See the warnings above the table.'); cell.appendChild(p);
+    }
     // The fit's own label ("unbinned") is shown translated. study.py keeps
     // the English, as every file does.
     tr.append(tsetx(mk('td'), f.label), mk('td','num',f.path_loss_exponent.toFixed(3)),
@@ -1356,9 +1471,11 @@ function showFit(r){
   out.appendChild(t);
   out.appendChild(tset(mk('div','srcnote'), 'Binned averages each distance band once, so uneven sampling does '
     +'not dominate. Unbinned is the usual choice in the literature. They can differ '
-    +'enough to matter, so pick deliberately and say which you used. For σ take '
-    +'the unbinned value: binning averages away the very scatter σ measures, so '
-    +'the binned figure understates shadowing, often by half.'));
+    +'enough to matter, so pick deliberately and say which you used. Per position, '
+    +'shown when some positions were measured more than once, takes each position '
+    +'once and gives shadowing and fading apart. Without it take σ from the unbinned '
+    +'fit: binning averages away the very scatter σ measures, so the binned figure '
+    +'understates shadowing, often by half.'));
 }
 
 /* ---------- terrain, for a site with no measurements ---------- */
@@ -1419,11 +1536,13 @@ async function applyTerrain(){
       d0_m:num('f_d0',100)});
     $('f_n').value=a.exponent.toFixed(3);
     $('f_ref').value=a.ref_db.toFixed(2);
+    $('f_maxd').value='';
     $('f_plsrc').value='Assumed: median exponent for '+k+' from '
       + BOOT.terrain_source + '; intercept anchored to an expected reach of '
       + rng.toFixed(0)+' m at SF'+a.sf;
     ADOPTED_R2=null;
     setOrigin('terrain', {low:a.low, high:a.high, label:k});
+    MODEL_WRITTEN=written(['f_n','f_ref','f_maxd','f_plsrc']);
     out.innerHTML='';
     out.appendChild(msgT('s','n = {n}, L(d₀) = {ref} dB. Across the published range the same anchor '
       + 'gives L(d₀) from {from} to {to} dB.',
@@ -1435,6 +1554,7 @@ async function applyTerrain(){
 
 function setOrigin(o, terrain){
   ORIGIN=o; TERRAIN=terrain||null;
+  if(o!=='fit' && o!=='terrain') MODEL_WRITTEN={};
   const pill=$('origin'), note=$('assumednote');
   note.innerHTML='';
   if(o==='fit'){
@@ -1468,15 +1588,27 @@ function useFit(i){
     $('f_d0').value=f.path_loss_ref_distance_m;
   }
   $('f_minv').value=f.min_distance_m;
+  $('f_maxd').value=f.max_distance_m.toFixed(1);
   if(f.shadowing_sigma_db!==undefined && f.shadowing_sigma_db!==null)
     $('f_sigma').value=f.shadowing_sigma_db.toFixed(2);
+  // Only the per position fit tells fading apart (design item 40).
+  const hasFading = f.fading_sigma_db!==undefined && f.fading_sigma_db!==null;
+  if(hasFading) $('f_fading').value=f.fading_sigma_db.toFixed(2);
   // study.py records the equipment the loss was derived with, so the model
   // can be checked against the campaign later.
   const eq=LASTFIT.equipment;
   $('f_plsrc').value='Field fit ('+f.label+'), '+f.n_points+' points, '
     + f.min_distance_m.toFixed(0)+' m to '+f.max_distance_m.toFixed(0)+' m'
     + (eq ? ', measured at '+eq.tx+' dBm with a net antenna gain of '+(+eq.net.toFixed(2))+' dB' : '');
+  MODEL_WRITTEN=written(['f_n','f_ref','f_d0','f_minv','f_maxd','f_sigma','f_fading','f_plsrc'].filter(id=>
+    id!=='f_sigma' || (f.shadowing_sigma_db!==undefined && f.shadowing_sigma_db!==null))
+    .filter(id=>id!=='f_fading' || hasFading)
+    .filter(id=>(id!=='f_ref' && id!=='f_d0') || f.path_loss_ref_db!==undefined));
   schedule();
+}
+// The values just written, as the bar will compare them.
+function written(ids){
+  const out={}; ids.forEach(id=>{ out[id]=$(id).value; }); return out;
 }
 
 /* ---------- receiver model ---------- */
@@ -1603,7 +1735,8 @@ function receiverNote(ev){
 // Which control each range in BOOT.limits belongs to. The ranges themselves
 // come from the server, which takes them from the code that enforces them.
 const LIMIT_FIELDS={der_threshold:'f_th', n_gateways:'f_ngw',
-  path_loss_ref_db:'f_ref', shadowing_sigma_db:'f_sigma', lat:'f_lat',
+  path_loss_ref_db:'f_ref', shadowing_sigma_db:'f_sigma', fading_sigma_db:'f_fading', lat:'f_lat',
+  max_measured_distance_m:'f_maxd',
   lon:'f_lon', n_runs:'f_runs', sim_time_s:'f_time',
   path_loss_exponent:'f_n', capture_threshold_db:'f_capthr'};
 
@@ -1636,8 +1769,11 @@ function buildHints(){
 // round trip to the server; one outside a recommended range only warns.
 function checkRange(k){
   const lim=BOOT.limits[k], id=LIMIT_FIELDS[k], el=$(id), h=hintFor(id);
-  const v=parseFloat(el.value);
-  let bad=false, warn=false;
+  // A coordinate may be written in degrees, minutes and seconds, so it is
+  // checked as read, and text that is no coordinate at all is an error.
+  const isCoord = k==='lat' || k==='lon';
+  const v = isCoord ? coord(id) : parseFloat(el.value);
+  let bad = isCoord && el.value.trim()!=='' && isNaN(v), warn=false;
   if(!isNaN(v)){
     bad = (lim.gt!==undefined && !(v>lim.gt)) || (lim.lt!==undefined && !(v<lim.lt))
        || (lim.ge!==undefined && v<lim.ge) || (lim.le!==undefined && v>lim.le);
@@ -1650,6 +1786,7 @@ function checkRange(k){
   el.classList.toggle('invalid', bad && mine);
   h.classList.toggle('bad', bad && mine);
   h.classList.toggle('warnhint', mine && !bad && warn);
+  if(isCoord) showCoord(id);
 }
 
 // Payload, bandwidth and the validity floor depend on other fields, so their
@@ -1716,7 +1853,8 @@ function values(){
     rx_antenna_gain_db:num('f_grx',0), cable_loss_db:num('f_cable',0),
     path_loss_exponent:num('f_n',2), path_loss_ref_db:num('f_ref',0),
     path_loss_ref_distance_m:num('f_d0',100), min_valid_distance_m:num('f_minv',30),
-    shadowing_sigma_db:num('f_sigma',0),
+    shadowing_sigma_db:num('f_sigma',0), fading_sigma_db:num('f_fading',0),
+    max_measured_distance_m:num('f_maxd',null),
     path_loss_source:$('f_plsrc').value.trim(),
     payload_bytes:Math.round(num('f_pl',32)),
     lorawan_overhead_bytes:Math.round(num('f_hdr',13)), coding_rate:Math.round(num('f_cr',1)),
@@ -1780,7 +1918,15 @@ async function validate(){
         const tr=mk('tr'), c=mk('td');
         if(x.covers===null) c.textContent='—';
         else c.appendChild(x.covers ? tset(mk('span','pill ok'),'yes') : tset(mk('span','pill bad'),'no'));
-        tr.append(mk('td','',x.scenario), mk('td','num',x.reach_m.toFixed(0)+' m'), c);
+        const rc=mk('td','num',x.reach_m.toFixed(0)+' m');
+        // A reach past the farthest measurement is the fitted line
+        // extrapolated (design item 39).
+        if(x.extrapolated){
+          const p=tset(mk('span','pill warn'),'extrapolated');
+          p.title=T('Beyond the farthest measurement, {d} m.', {d:x.measured_to_m.toFixed(0)});
+          rc.appendChild(p);
+        }
+        tr.append(mk('td','',x.scenario), rc, c);
         t.appendChild(tr);
       });
       out.appendChild(t);
@@ -1878,10 +2024,17 @@ async function createStudy(){
   const out=$('createout'); out.innerHTML='';
   const name=$('f_name').value.trim();
   if(!name){ out.appendChild(msgT('e','Give the study a name.')); return; }
+  // site_polygon.py records the gateway the boundary was projected around. A
+  // position that no longer reads as one, a slip typed after the KML was
+  // loaded, would reach the server as nothing after it had made the folder.
+  if(RINGS && RINGS.length && $('f_place').value==='polygon'
+     && (isNaN(coord('f_lat'))||isNaN(coord('f_lon')))){
+    out.appendChild(msgT('e','Enter the gateway position first.')); return;
+  }
   try{
     // The note goes into site_polygon.py, a file, so it stays in English.
     const r = await post('/api/create',{values:values(),rings:RINGS,
-      ring_names:RING_NAMES,lat:num('f_lat'),lon:num('f_lon'),
+      ring_names:RING_NAMES,lat:coord('f_lat'),lon:coord('f_lon'),
       overwrite:$('f_over').checked,
       source_note:'Boundary uploaded through the web interface.'});
     CREATED=r.name;

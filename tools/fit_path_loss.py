@@ -115,6 +115,17 @@ def main():
           f"{res['distance_max_m']:.0f} m")
     print(f"  Kept {res['n_kept']} rows beyond {args.min_distance:.0f} m, "
           f"aggregated into {res['n_bins']} bins of {args.bin_width:.0f} m")
+    fading = res.get("fading")
+    if fading:
+        print(f"  Fading sigma {fading['sigma_db']:.2f} dB, pooled over "
+              f"{len(fading['groups'])} positions measured more than once "
+              f"({fading['dof']} degrees of freedom):")
+        for g in fading["groups"]:
+            print(f"    {g['n']:4d} packets at {g['distance_m']:.0f} m, "
+                  f"spread {g['sigma_db']:.2f} dB")
+    else:
+        print("  No position was measured more than once, so fading cannot be "
+              "told apart from shadowing.")
 
     for fit in res["fits"]:
         print(f"\n--- {fit['label']} fit ".ljust(63, "-"))
@@ -123,8 +134,13 @@ def main():
               f"{fit['intercept_dbm']:.2f}   dBm, d in metres")
         print(f"  path-loss exponent n = {fit['path_loss_exponent']:.3f}")
         print(f"  R^2 = {fit['r_squared']:.3f}   over {fit['n_points']} points")
-        print(f"  residual sigma = {fit['shadowing_sigma_db']:.2f} dB   "
-              f"(the log-normal shadowing term, not a goodness-of-fit number)")
+        if "fading_sigma_db" in fit:
+            print(f"  residual sigma = {fit['residual_sigma_db']:.2f} dB, split into "
+                  f"shadowing {fit['shadowing_sigma_db']:.2f} dB and fading "
+                  f"{fit['fading_sigma_db']:.2f} dB")
+        else:
+            print(f"  residual sigma = {fit['shadowing_sigma_db']:.2f} dB   "
+                  f"(the log-normal shadowing term, not a goodness-of-fit number)")
         if fit["r_squared"] < 0.5:
             print("  NOTE: a low R^2 is common in vegetated terrain, but it does")
             print("        mean the mean trend explains little of the spread.")

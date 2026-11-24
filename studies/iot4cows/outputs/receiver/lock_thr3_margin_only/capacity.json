@@ -93,6 +93,7 @@
       "path_loss_ref_distance_m": 100.0,
       "min_valid_distance_m": 30.0,
       "path_loss_r_squared": 0.634,
+      "max_measured_distance_m": 2210.0,
       "shadowing_sigma_db": 0.0,
       "fading_sigma_db": 0.0,
       "path_loss_source": "Field fit over 1,229 aggregated RSSI points, 30 m to 2.21 km, IoT4Cows deployment",
@@ -190,8 +191,8 @@
       "net_antenna_gain_db": 9.0
     },
     "loracap_version": "2.2.0",
-    "code_sha256": "8319cc7acc843ae952f20ab4323e8878ed98cf8965d65fff78a75e9dc1127671",
+    "code_sha256": "5466d2f67f09d44652f5e177ceb992199e33bb809f34ab874e83523a92528a83",
     "python": "3.13.18",
-    "generated": "2026-11-23T19:18:51+00:00"
+    "generated": "2026-11-24T01:26:17+00:00"
   }
 }

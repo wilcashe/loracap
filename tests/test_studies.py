@@ -62,7 +62,7 @@ class TestWorkedExample(unittest.TestCase):
         sigma stays at zero and `check` warns about the discarded residual."""
         self.assertEqual(self.study.shadowing_sigma_db, 0.0)
         _e, warnings, _i = study_mod.validate(self.study)
-        self.assertTrue(any("shadowing_sigma_db is 0" in w for w in warnings))
+        self.assertTrue(any("discarded rather than modelled" in w for w in warnings))
 
     def test_conservative_bound_is_a_legal_data_rate(self):
         """SF10 was the published bound and is not transmittable with a

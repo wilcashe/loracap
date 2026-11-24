@@ -75,13 +75,16 @@ STUDY = Study(
     # free-space loss, which is an extrapolation no reviewer should accept.
     #
     # `min_valid_distance_m` is the lower bound of the fit. Closer distances are
-    # clamped rather than extrapolated.
+    # clamped rather than extrapolated. `max_measured_distance_m` is the
+    # farthest distance measured, None if unknown: `check` then says when the
+    # site or a reach lies past it, where the model is extrapolated.
     # ------------------------------------------------------------------ #
     path_loss_exponent=2.0,
     path_loss_ref_db=0.0,
     path_loss_ref_distance_m=100.0,
     min_valid_distance_m=30.0,
     path_loss_r_squared=None,
+    max_measured_distance_m=None,
     path_loss_source="TODO: where this model came from",
     # No field data? You can still run this, but check what it costs you:
     #     python3 run.py sweep <name>
