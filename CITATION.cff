@@ -49,8 +49,8 @@ keywords:
   - Internet of Things
 license: MIT
 license-url: 'https://opensource.org/licenses/MIT'
-version: 2.2.0
-date-released: '2026-11-23'
+version: 2.3.0
+date-released: '2026-11-25'
 references:
   - type: article
     title: 'Do LoRa Low-Power Wide-Area Networks Scale?'

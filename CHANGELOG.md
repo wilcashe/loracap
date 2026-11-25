@@ -5,12 +5,14 @@ project's design log, where each change is recorded with its reasons and the
 alternatives it ruled out. The numbers each version reports come from its
 own `run.py reproduce all`, and its README quotes them.
 
-## Unreleased
+## 2.3.0 (2026-11-25)
 
-Since 2.2.0, at commits `925adaa` and later. The version is unchanged
-because it lives inside the code digest that every saved result records,
-so raising it means regenerating every experiment. It goes up with the next
-change to `loracap/` that needs a regeneration anyway.
+Design items 34 to 47, since 2.2.0.
+
+### Version
+- The version lives in `loracap/VERSION`, outside the code digest every
+  saved result records, so raising it no longer forces every experiment to
+  be run again (design item 46).
 
 ### Field fits
 - Each fit is checked on its own. An exponent outside 1.45 to 5.97, the
@@ -40,6 +42,12 @@ change to `loracap/` that needs a regeneration anyway.
 - The site map draws the gateway as a star, a shape no node has (design
   item 34).
 
+### Checks
+- `check` is split into one function per group of checks, with the same
+  messages in the same order over 3004 generated studies. A spreading factor
+  missing from an explicit sensitivity table, and a send interval of 0, are
+  now errors instead of stopping `check` with a traceback (design item 47).
+
 ### Tests
 - The suite passes on Python 3.8 as well as 3.13. The golden engine test
   compares counts exactly and floats to one part in 10^12. Without
@@ -50,8 +58,10 @@ change to `loracap/` that needs a regeneration anyway.
   Linux, Windows and macOS, and on Python 3.8 without matplotlib (design
   item 45).
 
-Every experiment was regenerated at `925adaa`. Every number is identical to
-2.2.0's, and only the iot4cows site map changed.
+Every experiment was regenerated at `925adaa`, with every number identical
+to 2.2.0's and only the iot4cows site map changed, and again for 2.3.0 (code
+digest `42480f413231`), with every number and figure identical to those of
+`925adaa`.
 
 ## 2.2.0 (2026-11-23)
 

@@ -309,14 +309,17 @@ def experiment_dir(study_name: str, exp: Experiment, variant: Variant = None,
     return d
 
 
-def code_digest() -> str:
+def code_digest(here: str = None) -> str:
     """SHA-256 over the package source.
 
     The version string is not enough: it is changed by hand, and the package
     went through most of its development at one version. A digest changes
     whenever the code does, so a result can be matched to the exact source.
+    Only the .py files enter it, so the version, kept in VERSION since design
+    item 46, can be raised without running every experiment again. `here` is
+    the package folder, given only by the tests.
     """
-    here = os.path.dirname(os.path.abspath(__file__))
+    here = here or os.path.dirname(os.path.abspath(__file__))
     h = hashlib.sha256()
     for fn in sorted(os.listdir(here)):
         if fn.endswith(".py"):

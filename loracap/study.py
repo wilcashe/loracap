@@ -497,7 +497,12 @@ def _wide_channel_errors(study: Study):
 
 def validate(study: Study):
     """Returns (errors, warnings, info). Errors must be fixed before running.
-    Warnings are things worth a second look that are not necessarily wrong."""
+    Warnings are things worth a second look that are not necessarily wrong.
+
+    Each group of checks is a function of its own, called in the order the
+    messages have always come out in (design item 47). The function was one
+    block of 518 lines, where a check that needed a value from an earlier
+    group could not be told apart from one that did not."""
     errors, warnings, info = [], [], []
 
     # --- band and spreading factors ---
@@ -505,6 +510,38 @@ def validate(study: Study):
         sfs = study.resolved_spreading_factors()
     except KeyError as e:
         return [str(e)], warnings, info
+    has_dr_table = _check_band(study, sfs, errors, warnings)
+
+    # --- sensitivity ---
+    try:
+        sens, derived_from = study.resolved_sensitivity_with_provenance()
+    except (ValueError, KeyError) as e:
+        return errors + [str(e)], warnings, info
+    _check_sensitivity(study, sfs, sens, derived_from, errors, warnings)
+
+    cfg = _check_scenarios(study, errors)
+    _check_data_rates(study, cfg, has_dr_table, errors, warnings, info)
+    _describe_frame(study, info)
+    _check_energy(study, errors, warnings, info)
+    _check_adaptive(study, errors, warnings, info)
+    measured_to = _check_propagation(study, errors, warnings, info)
+    _check_placement(study, cfg, sens, measured_to, errors, warnings, info)
+    _check_experiment(study, errors, warnings)
+    errors += _output_errors(study)
+    if cfg is not None:
+        _describe_receiver(study, cfg, sfs, sens, measured_to, errors, info)
+    if study.n_gateways != 1:
+        errors.append(
+            f"n_gateways = {study.n_gateways}. The engine models a single "
+            f"receiver. Multi-gateway reception would need core.py extended, "
+            f"not just a configuration change."
+        )
+    return errors, warnings, info
+
+
+def _check_band(study, sfs, errors, warnings):
+    """Whether the band carries the spreading factors. Returns whether the region
+    has a data-rate table."""
     # The data-rate table, where one exists, supersedes this list: it knows
     # which bandwidth each spreading factor runs at, so it can check the pair
     # rather than assuming 125 kHz. See the data-rate block further down.
@@ -528,12 +565,12 @@ def validate(study: Study):
             f"data-rate table, so nothing checked that this bandwidth carries "
             f"the spreading factors you are simulating."
         )
+    return has_dr_table
 
-    # --- sensitivity ---
-    try:
-        sens, derived_from = study.resolved_sensitivity_with_provenance()
-    except (ValueError, KeyError) as e:
-        return errors + [str(e)], warnings, info
+
+def _check_sensitivity(study, sfs, sens, derived_from, errors, warnings):
+    """Whether every spreading factor has a sensitivity, and whether the table
+    runs the right way."""
     if derived_from is not None:
         warnings.append(
             f"No sensitivity table for {study.chip} at {study.bw_khz} kHz, so "
@@ -558,7 +595,10 @@ def validate(study: Study):
                     f"Check the table."
                 )
 
-    # --- scenarios ---
+
+def _check_scenarios(study, errors):
+    """Whether the study builds a configuration and every scenario parses. Returns
+    the configuration, or None."""
     cfg = None
     try:
         cfg = study.to_sim_config()
@@ -575,6 +615,12 @@ def validate(study: Study):
             except ValueError as e:
                 errors.append(str(e))
     errors += _wide_channel_errors(study)
+    return cfg
+
+
+def _check_data_rates(study, cfg, has_dr_table, errors, warnings, info):
+    """Whether each scenario is a real uplink data rate, and whether the payload
+    fits it."""
     # --- data rates: is each scenario a real uplink DR, and does the payload fit? ---
     if not has_dr_table:
         info.append(
@@ -652,6 +698,9 @@ def validate(study: Study):
                 f"{study.region}, so it was not checked."
             )
 
+
+def _describe_frame(study, info):
+    """The frame on air, beside the payload the ceiling reads."""
     # The payload ceiling above reads the application payload, the airtime
     # reads the whole frame. Stating both keeps the two from being confused,
     # which is how the header went uncounted until design item 33.
@@ -668,6 +717,9 @@ def validate(study: Study):
             info.append(f"Frame on air: {frame} B, the payload alone "
                         f"(lorawan_overhead_bytes = 0, a bare LoRa frame)")
 
+
+def _check_energy(study, errors, warnings, info):
+    """The node radio's transmit current, when energy is asked for."""
     # --- energy ---
     if study.radio and study.radio.upper() not in presets.TX_CURRENT_MA:
         errors.append(
@@ -715,6 +767,10 @@ def validate(study: Study):
                     "deployment."
                 )
 
+
+def _check_adaptive(study, errors, warnings, info):
+    """MULTI and ADR: which spreading factors they may use, ADR's power steps, and
+    the highlighted scenario."""
     # --- adaptive scenarios ---
     if any(s.upper() in ("ADR", "MULTI") for s in study.scenarios):
         try:
@@ -771,6 +827,10 @@ def validate(study: Study):
             f"{list(study.scenarios)}, so nothing will be highlighted."
         )
 
+
+def _check_propagation(study, errors, warnings, info):
+    """The path-loss model and its two spreads. Returns the farthest measurement,
+    or None when unknown or invalid."""
     # --- propagation model ---
     if study.path_loss_ref_db <= 0:
         errors.append("path_loss_ref_db must be positive (path loss at d0, in dB).")
@@ -850,7 +910,11 @@ def validate(study: Study):
             "from: it is the single most site-specific parameter here, and the "
             "first thing a reviewer will ask about."
         )
+    return measured_to
 
+
+def _check_placement(study, cfg, sens, measured_to, errors, warnings, info):
+    """The site, or the disc, against the reach of each scenario."""
     # --- placement ---
     if study.placement == "polygon":
         if not study.polygons_m:
@@ -911,6 +975,9 @@ def validate(study: Study):
                     f"{measured_to:.0f} m. Nodes placed past it receive the power the "
                     f"fitted line extrapolates, which no measurement supports.")
 
+
+def _check_experiment(study, errors, warnings):
+    """Node counts, runs, duration and threshold."""
     # --- experiment design ---
     if len(study.node_counts) < 4:
         errors.append("node_counts needs at least four values to resolve a curve.")
@@ -933,7 +1000,12 @@ def validate(study: Study):
             f"itself noisy, and reviewers of LoRa scalability work routinely ask "
             f"for 20 to 30 repetitions."
         )
-    if study.sim_time_s < 600:
+    if not study.send_interval_s > 0:
+        # Every node would transmit without pause. It stopped check with a
+        # division by zero below until design item 47.
+        errors.append(f"send_interval_s must be positive, not "
+                      f"{study.send_interval_s!r}.")
+    elif study.sim_time_s < 600:
         tx_per_node = study.sim_time_s / study.send_interval_s
         warnings.append(
             f"sim_time_s = {study.sim_time_s:.0f} gives about {tx_per_node:.0f} "
@@ -942,77 +1014,75 @@ def validate(study: Study):
     if not 0 < study.der_threshold < 1:
         errors.append("der_threshold must lie strictly between 0 and 1.")
 
-    # --- figures and files ---
-    errors += _output_errors(study)
 
-    if cfg is not None:
-        info.append(f"Channels: {cfg.n_channels}, simultaneous demodulations: "
-                    f"{cfg.max_simultaneous_demodulations}, gateways: {study.n_gateways}")
-        info.append(f"Receiver rule: {cfg.receiver_model}, capture threshold "
-                    f"{cfg.capture_threshold_db:g} dB")
-        table = cfg.inter_sf_rejection_db
-        if table is None:
-            info.append("Spreading factors: treated as orthogonal "
-                        "(inter_sf_rejection is not set)")
-        else:
-            # Every pair the study could put on one channel needs an entry,
-            # or the engine would fail mid-run on the first such overlap.
-            missing = [f"SF{a} by SF{b}" for a in sfs for b in sfs
-                       if a != b and b not in table.get(a, {})]
-            if missing:
-                errors.append(
-                    f"inter_sf_rejection has no threshold for "
-                    f"{', '.join(missing)}. It must cover every pair of "
-                    f"spreading factors the study uses.")
-            name = study.inter_sf_rejection
-            src = (presets.INTER_SF_REJECTION_SOURCE.get(name.upper())
-                   if isinstance(name, str) else None)
-            info.append("Spreading factors: inter-SF rejection on, "
-                        + (src if src else "table supplied by the study."))
-        survival = cfg.lock_survival_db
-        refined = survival is not None or cfg.header_recapture
-        if refined and cfg.receiver_model != "lock":
-            # The engine would ignore them, so a study asking for them under
-            # LoRaSim's rule has a mistake in it, not a preference.
+def _describe_receiver(study, cfg, sfs, sens, measured_to, errors, info):
+    """The receiver rule, its refinements and tables, and the reach of each
+    spreading factor."""
+    info.append(f"Channels: {cfg.n_channels}, simultaneous demodulations: "
+                f"{cfg.max_simultaneous_demodulations}, gateways: {study.n_gateways}")
+    info.append(f"Receiver rule: {cfg.receiver_model}, capture threshold "
+                f"{cfg.capture_threshold_db:g} dB")
+    table = cfg.inter_sf_rejection_db
+    if table is None:
+        info.append("Spreading factors: treated as orthogonal "
+                    "(inter_sf_rejection is not set)")
+    else:
+        # Every pair the study could put on one channel needs an entry,
+        # or the engine would fail mid-run on the first such overlap.
+        missing = [f"SF{a} by SF{b}" for a in sfs for b in sfs
+                   if a != b and b not in table.get(a, {})]
+        if missing:
             errors.append(
-                "lock_survival and header_recapture refine the lock receiver "
-                "rule and have no effect under receiver_model="
-                f"{cfg.receiver_model!r}. Set receiver_model='lock' or remove "
-                "them.")
-        if survival is not None:
-            missing = [f"SF{sf}" for sf in sfs if sf not in survival]
-            if missing:
-                errors.append(
-                    f"lock_survival has no threshold for {', '.join(missing)}. "
-                    f"It must cover every spreading factor the study uses.")
-            name = study.lock_survival
-            src = (presets.LOCK_SURVIVAL_SOURCE.get(name.upper())
-                   if isinstance(name, str) else None)
-            info.append("Lock survival: per-SF thresholds, "
-                        + (src if src else "table supplied by the study."))
-        if cfg.header_recapture:
-            info.append("Header recapture: on, a later packet stronger by the "
-                        "capture threshold arriving in the eight header "
-                        "symbols takes the receiver over.")
-        # Reach is only meaningful once the propagation model is real. With a
-        # placeholder model it comes out in thousands of kilometres, which would
-        # bury the actual error under nonsense.
-        if study.path_loss_ref_db > 0 and study.path_loss_exponent > 0:
-            for sf in sfs:
-                reach = max_distance_m(cfg, sens[sf])
-                info.append(f"  SF{sf}: sensitivity {sens[sf]:+.1f} dBm -> "
-                            f"reach {reach:.0f} m{_extrapolated(reach, measured_to)}")
-        else:
-            info.append("  (per-SF reach not shown: the propagation model is "
-                        "not configured yet)")
-    if study.n_gateways != 1:
+                f"inter_sf_rejection has no threshold for "
+                f"{', '.join(missing)}. It must cover every pair of "
+                f"spreading factors the study uses.")
+        name = study.inter_sf_rejection
+        src = (presets.INTER_SF_REJECTION_SOURCE.get(name.upper())
+               if isinstance(name, str) else None)
+        info.append("Spreading factors: inter-SF rejection on, "
+                    + (src if src else "table supplied by the study."))
+    survival = cfg.lock_survival_db
+    refined = survival is not None or cfg.header_recapture
+    if refined and cfg.receiver_model != "lock":
+        # The engine would ignore them, so a study asking for them under
+        # LoRaSim's rule has a mistake in it, not a preference.
         errors.append(
-            f"n_gateways = {study.n_gateways}. The engine models a single "
-            f"receiver. Multi-gateway reception would need core.py extended, "
-            f"not just a configuration change."
-        )
-
-    return errors, warnings, info
+            "lock_survival and header_recapture refine the lock receiver "
+            "rule and have no effect under receiver_model="
+            f"{cfg.receiver_model!r}. Set receiver_model='lock' or remove "
+            "them.")
+    if survival is not None:
+        missing = [f"SF{sf}" for sf in sfs if sf not in survival]
+        if missing:
+            errors.append(
+                f"lock_survival has no threshold for {', '.join(missing)}. "
+                f"It must cover every spreading factor the study uses.")
+        name = study.lock_survival
+        src = (presets.LOCK_SURVIVAL_SOURCE.get(name.upper())
+               if isinstance(name, str) else None)
+        info.append("Lock survival: per-SF thresholds, "
+                    + (src if src else "table supplied by the study."))
+    if cfg.header_recapture:
+        info.append("Header recapture: on, a later packet stronger by the "
+                    "capture threshold arriving in the eight header "
+                    "symbols takes the receiver over.")
+    # Reach is only meaningful once the propagation model is real. With a
+    # placeholder model it comes out in thousands of kilometres, which would
+    # bury the actual error under nonsense.
+    if study.path_loss_ref_db > 0 and study.path_loss_exponent > 0:
+        for sf in sfs:
+            # A spreading factor the table lacks is reported above. It stopped
+            # check here with a KeyError until design item 47. The reach loops
+            # in _check_placement need no such guard: parse_scenario refuses a
+            # scenario whose spreading factor has no sensitivity.
+            if sf not in sens:
+                continue
+            reach = max_distance_m(cfg, sens[sf])
+            info.append(f"  SF{sf}: sensitivity {sens[sf]:+.1f} dBm -> "
+                        f"reach {reach:.0f} m{_extrapolated(reach, measured_to)}")
+    else:
+        info.append("  (per-SF reach not shown: the propagation model is "
+                    "not configured yet)")
 
 
 def _output_errors(study: Study) -> list:

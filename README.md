@@ -1514,7 +1514,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-633 checks, about twenty seconds, standard library only like the rest of the
+644 checks, about twenty seconds, standard library only like the rest of the
 package, so nothing needs installing. Without matplotlib the five modules
 that test figures are skipped, not failed (design item 44). They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
@@ -1760,7 +1760,10 @@ python3 run.py reproduce reference             # tables computed from presets
 Each experiment writes into `outputs/<experiment>/`, and every JSON file
 written, there or by a command typed by hand, carries a `provenance` record:
 the experiment or command line, the fully resolved study, a SHA-256 of the
-package source, and the date. Commands typed by hand write into `outputs/`
+package source, the version, and the date. The SHA-256 covers the package's
+`.py` files only. The version lives apart, in `loracap/VERSION`, so raising
+it does not change the digest and does not force every experiment to be run
+again (design item 46). Commands typed by hand write into `outputs/`
 itself, so a quick check can never overwrite a result a document quotes.
 `run.py plot` redraws every manifest figure from its JSON.
 
