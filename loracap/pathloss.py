@@ -22,6 +22,7 @@ from __future__ import annotations
 import csv
 import io
 import math
+import re
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from . import presets
@@ -33,14 +34,76 @@ SF_NAMES = ["spreading factor", "spreading_factor", "sf", "datarate", "data_rate
 GATEWAY_NAMES = ["gateway_id", "gateway", "gw_id", "gweui", "gateway_eui"]
 
 
-def read_csv(source: str, is_text: bool = False):
-    """Returns (header, rows). `source` is a path, or CSV text when is_text."""
-    handle = io.StringIO(source) if is_text else open(source, newline="", encoding="utf-8-sig")
+# The separators a measurement file may use, in the order a tie is settled.
+# A spreadsheet set to a language with a decimal comma (Spanish, among others)
+# saves "CSV" with semicolons, and a .tsv uses tabs (design item 49).
+DELIMITERS = ((",", "comma"), (";", "semicolon"), ("\t", "tab"))
+
+# A number written with a comma as its decimal mark, the way a spreadsheet in
+# such a language writes it. Only recognised in order to say so: the fit reads
+# a point as the decimal mark and nothing else (design item 49).
+_DECIMAL_COMMA = re.compile(r"^\s*[-+]?\d+,\d+\s*$")
+
+
+def decode_measurements(data: bytes) -> Tuple[str, str]:
+    """Bytes of a measurement file to (text, encoding name).
+
+    UTF-8 first, with or without the byte-order mark Excel writes in "CSV
+    UTF-8". Excel's plain "CSV" is saved in the Windows code page instead,
+    Windows-1252 in the Americas and western Europe, and a name such as
+    "ubicación" in it is not valid UTF-8. Text that is neither is refused
+    rather than read with characters replaced, since a replaced character in
+    a column name would quietly hide that column."""
     try:
-        reader = csv.DictReader(handle)
-        return (reader.fieldnames or []), list(reader)
-    finally:
-        handle.close()
+        return data.decode("utf-8-sig"), "UTF-8"
+    except UnicodeDecodeError:
+        pass
+    try:
+        return data.decode("cp1252"), "Windows-1252"
+    except UnicodeDecodeError:
+        raise ValueError("The file is neither UTF-8 nor Windows-1252 text. "
+                         "Save it as \"CSV UTF-8\".") from None
+
+
+def sniff_delimiter(text: str) -> Tuple[str, str]:
+    """(delimiter, its name), read from the header line alone.
+
+    The header holds names, not numbers, so a decimal comma in the data
+    cannot pull the choice towards the comma. The separator that splits the
+    header into the most fields wins, quoting respected, and a tie (a file
+    with one column) goes to the comma."""
+    first = next((line for line in text.splitlines() if line.strip()), "")
+    best, best_fields = DELIMITERS[0], 0
+    for delimiter, name in DELIMITERS:
+        fields = len(next(csv.reader([first], delimiter=delimiter), []))
+        if fields > best_fields:
+            best, best_fields = (delimiter, name), fields
+    return best
+
+
+def read_measurements(source: str, is_text: bool = False):
+    """Returns (header, rows, file_format). `source` is a path, or the file's
+    text when is_text, already decoded by the caller (the page decodes it in
+    the browser, with the same rule as decode_measurements).
+
+    file_format names the separator and, when this function decoded the
+    bytes, the encoding, so the caller can show how the file was read."""
+    if is_text:
+        text, encoding = source, None
+    else:
+        with open(source, "rb") as f:
+            text, encoding = decode_measurements(f.read())
+    delimiter, name = sniff_delimiter(text)
+    reader = csv.DictReader(io.StringIO(text, newline=""), delimiter=delimiter)
+    rows = list(reader)
+    return (reader.fieldnames or []), rows, {"delimiter": name, "encoding": encoding}
+
+
+def read_csv(source: str, is_text: bool = False):
+    """Returns (header, rows). `source` is a path, or CSV text when is_text.
+    The separator and the encoding are found as read_measurements finds them."""
+    header, rows, _ = read_measurements(source, is_text=is_text)
+    return header, rows
 
 
 def pick_column(header, candidates, override=None):
@@ -174,7 +237,7 @@ def analyse(
             f"Columns in the file: {header}"
         )
 
-    pts, places, skipped = [], [], 0
+    pts, places, skipped, comma_example = [], [], 0, None
     for r in rows:
         try:
             rssi = float(r[rc])
@@ -182,14 +245,32 @@ def analyse(
             lon = float(r[loc])
         except (TypeError, ValueError):
             skipped += 1
+            if comma_example is None:
+                comma_example = next((r[c] for c in (rc, lac, loc)
+                                      if isinstance(r[c], str)
+                                      and _DECIMAL_COMMA.match(r[c])), None)
             continue
         pts.append((haversine_m(gw_lat, gw_lon, lat, lon), rssi))
         places.append((lat, lon))
 
+    # A decimal comma is named, never converted: a file that mixes both marks
+    # would otherwise be read half one way and half the other without notice.
+    comma_note = None
+    if comma_example is not None:
+        comma_note = (f"Values such as '{comma_example.strip()}' use a comma as "
+                      f"the decimal mark. Save the file with a point as the "
+                      f"decimal mark.")
     if not pts:
-        raise ValueError("No rows had usable RSSI and coordinates.")
+        raise ValueError("No rows had usable RSSI and coordinates."
+                         + (f" {comma_note}" if comma_note else ""))
 
     warnings = sanity_checks(rows, header, [d for d, _ in pts])
+    if comma_note:
+        warnings.append({
+            "kind": "decimal_comma",
+            "message": (f"{skipped} of {len(rows)} rows were skipped. "
+                        + comma_note),
+        })
 
     keep = [i for i, (d, _v) in enumerate(pts)
             if d >= min_distance_m and (max_distance_m is None or d <= max_distance_m)]

@@ -22,6 +22,10 @@ columns are ignored, so an unmodified gateway or network-server export usually
 works as is. Column names are auto-detected and can be overridden. Run with
 --columns to see what your file contains.
 
+Columns may be separated by commas, semicolons or tabs, and the file may be
+UTF-8 or Windows-1252, the two ways Excel saves a CSV. Numbers must use a point
+as the decimal mark. The first lines printed say how the file was read.
+
 Filter first
 ------------
 The file should hold only messages from the deployment you are modelling, at
@@ -50,6 +54,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from loracap import pathloss
 
+_SEPARATOR_WORDS = {"comma": "commas", "semicolon": "semicolons", "tab": "tabs"}
+
 
 def main():
     ap = argparse.ArgumentParser(description="Fit a log-distance path-loss model")
@@ -74,9 +80,13 @@ def main():
     args = ap.parse_args()
 
     try:
-        header, rows = pathloss.read_csv(args.csv_file)
+        header, rows, fmt = pathloss.read_measurements(args.csv_file)
     except OSError as e:
         sys.exit(f"Could not read {args.csv_file}: {e}")
+    except ValueError as e:
+        sys.exit(f"Could not read {args.csv_file}: {e}")
+    print(f"Read {args.csv_file} as {fmt['encoding']} text, columns separated "
+          f"by {_SEPARATOR_WORDS[fmt['delimiter']]}.")
 
     if args.columns:
         print(f"Columns in {args.csv_file}:")

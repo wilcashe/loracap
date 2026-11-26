@@ -59,7 +59,9 @@
   "{region} (SF{low} to SF{high})",
   "{region} defines {bandwidths}",
   "{rule} (default)",
-  "{usable} usable rows, {kept} beyond the {floor} m floor, spanning {from}–{to} m"
+  "{usable} usable rows, {kept} beyond the {floor} m floor, spanning {from}–{to} m",
+  "Columns separated by {sep}, text read as {encoding}.",
+  "Rows skipped because a value could not be read as a number: {n}."
  ],
  "strings": {
   "Set up a capacity study. This writes a <code>study.py</code> and runs it through the same code as the command line, so what you get here stays reproducible.": "Configure un estudio de capacidad. La página escribe un <code>study.py</code> y lo ejecuta con el mismo código que la línea de comandos, así que lo que obtenga aquí sigue siendo reproducible.",
@@ -131,7 +133,6 @@
   "Propagation model<span class=\"req\" aria-hidden=\"true\">*</span> <span style=\"font-weight:400;color:var(--muted)\">from field measurements, or from the environment</span>": "Modelo de propagación<span class=\"req\" aria-hidden=\"true\">*</span> <span style=\"font-weight:400;color:var(--muted)\">a partir de mediciones de campo o del entorno</span>",
   "I have field measurements": "Tengo mediciones de campo",
   "I have none": "No tengo",
-  "A CSV (comma-separated values) file of received messages with the received signal strength (RSSI), latitude and longitude. Filter it first to one spreading factor and one gateway.": "Un archivo CSV (valores separados por comas) de mensajes recibidos con el received signal strength indicator (RSSI), la latitud y la longitud. Fíltrelo antes a un solo spreading factor y un solo gateway.",
   "Choose measurements CSV…": "Elegir CSV de mediciones…",
   "The equipment the measurements were taken with. It turns each RSSI into the loss of the terrain, and it can differ from the radio the study simulates.": "El equipo con que se tomaron las mediciones. Convierte cada RSSI en la pérdida del terreno, y puede ser distinto del transceptor que simula el estudio.",
   "Losses, node and cable (dB)": "Pérdidas del nodo y del cable (dB)",
@@ -427,6 +428,13 @@
   "Binned averages each distance band once, so uneven sampling does not dominate. Unbinned is the usual choice in the literature. They can differ enough to matter, so pick deliberately and say which you used. Per position, shown when some positions were measured more than once, takes each position once and gives shadowing and fading apart. Without it take σ from the unbinned fit: binning averages away the very scatter σ measures, so the binned figure understates shadowing, often by half.": "El ajuste agrupado promedia cada franja de distancia una vez, así que un muestreo desigual no domina. El ajuste sin agrupar es la elección habitual en la literatura. Pueden diferir lo bastante como para importar, así que elija a conciencia y diga cuál usó. El ajuste por posición, que aparece cuando algunas posiciones se midieron más de una vez, toma cada posición una vez y separa el shadowing del fading. Sin él, tome σ del ajuste sin agrupar: agrupar promedia justamente la dispersión que σ mide, así que la cifra agrupada subestima el shadowing, a menudo a la mitad.",
   "per position": "por posición",
   "Fading σ {sigma} dB, from {n} positions measured more than once ({dof} degrees of freedom). The per position fit takes it out of the spread, and what is left is shadowing.": "σ del fading {sigma} dB, de {n} posiciones medidas más de una vez ({dof} grados de libertad). El ajuste por posición lo descuenta de la dispersión, y lo que queda es shadowing.",
-  "No position was measured more than once, so fading cannot be told apart from shadowing.": "Ninguna posición se midió más de una vez, así que el fading no se puede separar del shadowing."
+  "No position was measured more than once, so fading cannot be told apart from shadowing.": "Ninguna posición se midió más de una vez, así que el fading no se puede separar del shadowing.",
+  "A CSV (comma-separated values) file of received messages with the received signal strength (RSSI), latitude and longitude. Columns may be separated by commas, semicolons or tabs, and numbers need a point as the decimal mark. Filter it first to one spreading factor and one gateway.": "Un archivo CSV (valores separados por comas) de mensajes recibidos con el received signal strength indicator (RSSI), la latitud y la longitud. Las columnas pueden ir separadas por comas, punto y coma o tabuladores, y los números necesitan punto decimal. Fíltrelo antes a un solo spreading factor y un solo gateway.",
+  "Rows skipped because a value could not be read as a number: {n}.": "Filas descartadas porque un valor no se pudo leer como número: {n}.",
+  "commas": "comas",
+  "semicolons": "punto y coma",
+  "tabs": "tabuladores",
+  "Columns separated by {sep}, text read as {encoding}.": "Columnas separadas por {sep}, texto leído como {encoding}.",
+  "The file is neither UTF-8 nor Windows-1252 text. Save it as \"CSV UTF-8\".": "El archivo no es texto UTF-8 ni Windows-1252. Guárdelo como \"CSV UTF-8\"."
  }
 }

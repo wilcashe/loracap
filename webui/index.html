@@ -268,8 +268,9 @@
     <div id="pane_fit" class="pane">
       <p class="hint" style="margin-top:12px" data-i18n>A CSV (comma-separated values)
          file of received messages with the received signal strength (RSSI),
-         latitude and longitude. Filter it first to one spreading factor
-         and one gateway.</p>
+         latitude and longitude. Columns may be separated by commas, semicolons
+         or tabs, and numbers need a point as the decimal mark. Filter it first
+         to one spreading factor and one gateway.</p>
       <p class="hint" data-i18n>The equipment the measurements were taken with. It turns
          each RSSI into the loss of the terrain, and it can differ from the radio
          the study simulates.</p>
@@ -1405,7 +1406,24 @@ function fitRequest(csv){
 // Two quick edits send two fits, and the first can answer last. Only the
 // answer to the latest request is shown, or a stale fit would sit in the
 // table as if it were current.
-let CSVTEXT=null, FITSEQ=0;
+let CSVTEXT=null, CSVENCODING=null, FITSEQ=0;
+// The file's bytes to text by the rule loracap/pathloss.py follows
+// (decode_measurements, design item 49): UTF-8, its byte-order mark dropped,
+// else Windows-1252, which is how Excel saves a plain "CSV". Reading the file
+// as text would assume UTF-8 and put U+FFFD in place of every accent.
+// The browser's Windows-1252 gives the five bytes the code page leaves
+// unassigned (0x81, 0x8D, 0x8F, 0x90, 0x9D) as control characters, where
+// Python refuses them. Refusing them here too keeps one rule for one file.
+function decodeCsv(bytes){
+  try{ return {text:new TextDecoder('utf-8',{fatal:true}).decode(bytes), encoding:'UTF-8'}; }
+  catch(e){
+    const text=new TextDecoder('windows-1252').decode(bytes);
+    if(/[\u0081\u008d\u008f\u0090\u009d]/.test(text)) return null;
+    return {text, encoding:'Windows-1252'};
+  }
+}
+// A function, so the word follows the language when the page switches.
+const SEPARATOR_WORD={comma:()=>T('commas'), semicolon:()=>T('semicolons'), tab:()=>T('tabs')};
 async function runFit(){
   if(CSVTEXT===null) return;
   const seq=++FITSEQ;
@@ -1426,13 +1444,25 @@ async function runFit(){
 $('csvfile').onchange = async e=>{
   const f=e.target.files[0]; if(!f) return;
   tplain($('csvname'), f.name);
-  CSVTEXT=await f.text(); runFit();
+  const d=decodeCsv(new Uint8Array(await f.arrayBuffer()));
+  if(!d){
+    CSVTEXT=null; const out=$('fitout'); out.innerHTML='';
+    out.appendChild(msgT('e', 'The file is neither UTF-8 nor Windows-1252 text. Save it as "CSV UTF-8".'));
+    return;
+  }
+  CSVTEXT=d.text; CSVENCODING=d.encoding; runFit();
 };
 EQUIPMENT_IDS.concat(['f_lat','f_lon','f_d0','f_minv'])
   .forEach(id=>$(id).addEventListener('change', runFit));
 
 function showFit(r){
   const out=$('fitout'); out.innerHTML='';
+  // How the file was read comes first, so a wrong separator or encoding is
+  // seen before the numbers built on it.
+  if(r.file_format) out.appendChild(msgT('i', 'Columns separated by {sep}, text read as {encoding}.',
+    {sep:SEPARATOR_WORD[r.file_format.delimiter]||r.file_format.delimiter, encoding:CSVENCODING||'UTF-8'}));
+  if(r.n_skipped) out.appendChild(msgT('w', 'Rows skipped because a value could not be read as a number: {n}.',
+    {n:r.n_skipped}));
   out.appendChild(msgT('i', '{usable} usable rows, {kept} beyond the {floor} m floor, spanning {from}–{to} m',
     {usable:r.n_usable, kept:r.n_kept, floor:r.fits[0].min_distance_m.toFixed(0),
      from:r.distance_min_m.toFixed(0), to:r.distance_max_m.toFixed(0)}));

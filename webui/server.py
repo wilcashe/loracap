@@ -381,12 +381,15 @@ def api_kml(body):
 
 
 def api_fit(body):
-    """Measurement CSV in, both fits plus the sanity checks out."""
-    header, rows = pathloss.read_csv(body["csv"], is_text=True)
+    """Measurement CSV in, the fits plus the sanity checks out.
+
+    The page has already decoded the file's bytes (UTF-8, else Windows-1252)
+    and shows which, so only the separator found here travels back."""
+    header, rows, fmt = pathloss.read_measurements(body["csv"], is_text=True)
     if not rows:
         raise ValueError("That file has no data rows.")
     tx = body.get("tx_power_dbm")
-    return pathloss.analyse(
+    result = pathloss.analyse(
         header, rows, float(body["lat"]), float(body["lon"]),
         tx_power_dbm=float(tx) if tx not in (None, "") else None,
         net_gain_db=float(body.get("net_gain_db") or 0.0),
@@ -394,6 +397,8 @@ def api_fit(body):
         min_distance_m=float(body.get("min_distance_m") or 30.0),
         bin_width_m=float(body.get("bin_width_m") or 10.0),
     )
+    result["file_format"] = {"delimiter": fmt["delimiter"]}
+    return result
 
 
 def api_anchor(body):

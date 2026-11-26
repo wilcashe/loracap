@@ -82,7 +82,7 @@ los comandos avisan que no se dibujó ninguna figura.
 python3 run.py test
 ```
 
-Esta orden corre 660 pruebas del simulador en unos veinte segundos. Las
+Esta orden corre 682 pruebas del simulador en unos veinte segundos. Las
 últimas líneas deben decir `OK` y "The fast checks pass". Si alguna prueba
 falla, deténgase ahí. Un resultado salido de una instalación dañada no es
 confiable.
@@ -217,12 +217,15 @@ cosas:
    pero no puede saber qué parte quería usted conservar.
 2. Quite las filas tomadas fuera del sitio, como una prueba de banco antes
    de salir a campo.
-3. Guárdelo con comas entre columnas y punto decimal. Una hoja de cálculo
-   configurada en español suele guardar el CSV con punto y coma entre
-   columnas y coma decimal. LoRaCAP no lee ese formato, y lo avisa con el
-   mensaje "Could not find a column for rssi, latitude, longitude", seguido
-   de una sola columna que contiene todos los nombres unidos por punto y
-   coma.
+3. Asegúrese de que los números usen punto decimal. Las columnas pueden ir
+   separadas por comas, punto y coma o tabuladores, y el archivo puede
+   guardarse como "CSV UTF-8" o como "CSV" sencillo, que es como lo escribe
+   Excel. Una hoja de cálculo configurada en español escribe coma decimal,
+   y LoRaCAP solo lee el punto. En Excel, en Archivo > Opciones >
+   Avanzadas, desmarque "Usar separadores del sistema" y escriba un punto
+   como separador decimal antes de guardar. Un archivo con coma decimal se
+   detiene con un mensaje en inglés que cita uno de sus valores y dice "use
+   a comma as the decimal mark".
 
 Los puntos a menos de 30 m del gateway se excluyen por defecto, porque el
 receptor se satura a muy corta distancia y reporta un RSSI menor que el
@@ -291,6 +294,11 @@ ajustes lado a lado:
 | sin agrupar | siempre | cada fila cuenta una vez |
 | agrupado (10 m) | siempre | cada franja de 10 m cuenta una vez, así que un punto medido muchas veces no domina |
 | por posición | cuando algunas coordenadas se repiten exactamente | cada posición cuenta una vez, y la dispersión se separa en shadowing y fading |
+
+Las primeras líneas bajo el botón dicen cómo se leyó el archivo: el
+separador que encontró y la codificación del texto. Si alguna fila se
+descartó porque un valor no se pudo leer como número, otra línea da cuántas.
+Revíselas antes que las cifras.
 
 Cada fila da el exponente n, el R², la σ, la pérdida en d₀ y la cantidad de
 puntos, con un botón "Usar". Un ajuste marcado "dudoso" tiene un exponente
@@ -420,7 +428,8 @@ recorre el razonamiento con las cifras del estudio de ejemplo.
 | `can't open file 'run.py'` | La terminal no está en la carpeta de LoRaCAP. Entre a la carpeta que contiene `run.py`. |
 | "externally managed environment" al instalar | Use el entorno propio que describe la sección 1. |
 | "matplotlib is not installed, so no figure was drawn." | Las cifras están bien. Instale matplotlib para tener las figuras. |
-| "Could not find a column for rssi, latitude, longitude" | El CSV usa punto y coma u otros nombres de columna. Vea la sección 3. |
+| "use a comma as the decimal mark" | Los números tienen coma decimal. Guárdelos con punto (sección 3). |
+| "Could not find a column for rssi, latitude, longitude" | Los nombres de columna no están entre las formas habituales. El mensaje enumera los nombres que encontró. |
 | Un ajuste marcado "dudoso" | Lea la advertencia encima de la tabla. Las causas habituales son una coordenada equivocada o un archivo mezclado. |
 | La página no abre | Abra `http://127.0.0.1:8765/` a mano. Si el puerto está ocupado, iníciela con `python3 run.py serve --port 8800`. |
 | Sus cifras del ejemplo difieren de la sección 2 | Corra `python3 run.py test` y no confíe en ningún resultado hasta que pase. |

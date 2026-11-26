@@ -75,7 +75,7 @@ commands say that no figure was drawn.
 python3 run.py test
 ```
 
-This runs 660 checks on the simulator in about twenty seconds. The last
+This runs 682 checks on the simulator in about twenty seconds. The last
 lines should read `OK` and "The fast checks pass". If any check fails, stop
 there: a result from a broken installation cannot be trusted.
 
@@ -204,11 +204,14 @@ more). Three things to do before loading it:
    know which part you meant to keep.
 2. Remove rows recorded somewhere other than the site, such as a bench test
    before going to the field.
-3. Save it with commas between the columns and a point as the decimal mark.
-   A spreadsheet set to Spanish usually saves a CSV with semicolons and
-   decimal commas. LoRaCAP does not read that, and it says so with the
-   message "Could not find a column for rssi, latitude, longitude", followed
-   by a single column that contains every name joined by semicolons.
+3. Make sure numbers use a point as the decimal mark. The columns may be
+   separated by commas, semicolons or tabs, and the file may be saved as
+   "CSV UTF-8" or as plain "CSV", which is how Excel writes it. A
+   spreadsheet set to Spanish writes decimal commas, though, and LoRaCAP
+   reads only the point. In Excel, File > Options > Advanced, clear "Use
+   system separators" and type a point as the decimal separator before
+   saving. A file with decimal commas stops with a message that names one
+   of its values and says "use a comma as the decimal mark".
 
 Points closer than 30 m to the gateway are left out by default, because the
 receiver saturates at very short range and understates the RSSI.
@@ -273,6 +276,11 @@ fits side by side:
 | unbinned | always | every row counts once |
 | binned (10 m) | always | each 10 m distance band counts once, so a spot measured many times does not dominate |
 | per position | when some coordinates repeat exactly | each position counts once, and the spread is split into shadowing and fading |
+
+The first lines under the button say how the file was read: the separator
+it found and the text encoding. If any row was skipped because a value could
+not be read as a number, another line gives how many. Check them before the
+numbers.
 
 Each row gives the exponent n, R², σ, the loss at d₀ and the number of
 points, with a "Use" button. A fit marked "doubtful" has an exponent outside
@@ -395,7 +403,8 @@ example study's numbers.
 | `can't open file 'run.py'` | The terminal is not in the LoRaCAP folder. Move into the folder that contains `run.py`. |
 | "externally managed environment" when installing | Use the private environment described in section 1. |
 | "matplotlib is not installed, so no figure was drawn." | The numbers are fine. Install matplotlib to get the figures. |
-| "Could not find a column for rssi, latitude, longitude" | The CSV uses semicolons or other column names. See section 3. |
+| "use a comma as the decimal mark" | The numbers have decimal commas. Save them with a point (section 3). |
+| "Could not find a column for rssi, latitude, longitude" | The column names are not among the usual spellings. The message lists the names it found. |
 | A fit marked "doubtful" | Read the warning above the table. A wrong coordinate or a mixed file are the usual causes. |
 | The page does not open | Open `http://127.0.0.1:8765/` by hand. If the port is busy, start it with `python3 run.py serve --port 8800`. |
 | Your example numbers differ from section 2 | Run `python3 run.py test` and do not trust any result until it passes. |

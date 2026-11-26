@@ -205,14 +205,30 @@ class TestTheRulesTheGuidesState(unittest.TestCase):
         self.assertIn("closer than 30 m to the gateway are left out by default", self.en)
         self.assertIn("a menos de 30 m del gateway se excluyen por defecto", self.es)
 
-    def test_a_semicolon_csv_gives_the_message_quoted(self):
-        quoted = "Could not find a column for rssi, latitude, longitude"
-        header, rows = pathloss.read_csv("rssi;latitude;longitude\n-83;3,9;-73,8\n",
-                                         is_text=True)
+    def test_a_decimal_comma_gives_the_message_quoted(self):
+        quoted = "use a comma as the decimal mark"
+        rows = "".join(f"-8{i % 10};3,9{i:02d};-73,8\n" for i in range(20))
+        header, rows = pathloss.read_csv("rssi;latitude;longitude\n" + rows, is_text=True)
         with self.assertRaises(ValueError) as caught:
             pathloss.analyse(header, rows, 3.9, -73.8)
         self.assertIn(quoted, str(caught.exception))
-        self.assertIn("rssi;latitude;longitude", str(caught.exception))
+        for text in (self.en, self.es):
+            self.assertIn(f'"{quoted}"', text)
+
+    def test_the_separators_and_encodings_the_guides_name(self):
+        self.assertEqual([n for _d, n in pathloss.DELIMITERS],
+                         ["comma", "semicolon", "tab"])
+        self.assertEqual(pathloss.decode_measurements("ó".encode("utf-8"))[1], "UTF-8")
+        self.assertEqual(pathloss.decode_measurements("ó".encode("cp1252"))[1],
+                         "Windows-1252")
+        self.assertIn("separated by commas, semicolons or tabs", self.en)
+        self.assertIn("separadas por comas, punto y coma o tabuladores", self.es)
+
+    def test_an_unknown_column_gives_the_message_quoted(self):
+        quoted = "Could not find a column for rssi, latitude, longitude"
+        with self.assertRaises(ValueError) as caught:
+            pathloss.analyse(["a", "b"], [], 3.9, -73.8)
+        self.assertIn(quoted, str(caught.exception))
         for text in (self.en, self.es):
             self.assertIn(f'"{quoted}"', text)
 

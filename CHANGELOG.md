@@ -14,6 +14,18 @@ own `run.py reproduce all`, and its README quotes them.
   setting up a site on the web page (design item 48).
 - The README's layout gave the old test count, 528. It is 644.
 
+### Measurement files
+- A measurement CSV may separate its columns with commas, semicolons or tabs,
+  found from the header line, and may be UTF-8 (with or without a byte-order
+  mark) or Windows-1252, the code page Excel saves a plain "CSV" in. The page
+  and `tools/fit_path_loss.py` both say how the file was read and how many
+  rows were skipped for unreadable values (design item 49).
+- A decimal comma is still not read. A file that has them is refused with one
+  of its values quoted, or, when only some rows have them, fitted on the rest
+  with a warning that gives the count.
+- `tools/fit_path_loss.py` stopped with a Python traceback on a Windows-1252
+  file. It now reads it, and a file in neither encoding stops with a message.
+
 ## 2.3.0 (2026-11-25)
 
 Design items 34 to 47, since 2.2.0.

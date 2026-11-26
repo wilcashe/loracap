@@ -57,8 +57,10 @@ macOS, and once more on Python 3.8 without matplotlib
 in each version is in `CHANGELOG.md`.
 
 Every file is read and written as UTF-8 whatever the operating system, so
-the web page, the `study.py` it writes and a measurements CSV saved by Excel
-behave the same on Windows as on Linux. Output redirected to a file, as in
+the web page and the `study.py` it writes behave the same on Windows as on
+Linux. The one exception is a measurements CSV, which is read as UTF-8 or,
+when it is not valid UTF-8, as Windows-1252, the code page Excel saves a
+plain "CSV" in. Output redirected to a file, as in
 `python3 run.py reproduce reference > tables.md`, is written as UTF-8 too.
 
 ```bash
@@ -226,6 +228,14 @@ other columns are ignored, so an unmodified gateway or network-server export
 usually works as is. Column names are auto-detected from common spellings and
 can be overridden with `--rssi-col`, `--latitude-col` and `--longitude-col`.
 Run with `--columns` to see what your file contains.
+
+The columns may be separated by commas, semicolons or tabs, found from the
+header line, and the file may be UTF-8 (with or without a byte-order mark) or
+Windows-1252. Numbers must use a point as the decimal mark. A file saved by a
+spreadsheet set to a language with a decimal comma is refused by name, with
+one of its values quoted, rather than read in part, and rows skipped for any
+other unreadable value are counted. The script and the page both say how the
+file was read before showing a fit (design item 49).
 
 **Filter the file to one spreading factor and one gateway before fitting**, and
 drop anything recorded somewhere other than the site, such as bench tests
@@ -1519,7 +1529,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-660 checks, about twenty seconds, standard library only like the rest of the
+682 checks, about twenty seconds, standard library only like the rest of the
 package, so nothing needs installing. Without matplotlib the five modules
 that test figures are skipped, not failed (design item 44). They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
@@ -1664,7 +1674,7 @@ webui/
     server.py               loopback server behind `run.py serve`, and the zip download
     index.html              the setup form: basic and advanced modes, Output tab
     i18n_es.json            the form in Spanish, keyed by its English
-tests/                      660 fast checks, `run.py test`
+tests/                      682 fast checks, `run.py test`
 docs/
     GETTING_STARTED.md      first-use guide, for a reader new to Python
     GUIA_DE_INICIO.md       the same guide in Spanish
