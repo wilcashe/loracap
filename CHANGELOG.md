@@ -5,6 +5,15 @@ project's design log, where each change is recorded with its reasons and the
 alternatives it ruled out. The numbers each version reports come from its
 own `run.py reproduce all`, and its README quotes them.
 
+## Unreleased
+
+### Documentation
+- A first-use guide for a reader who knows LoRaWAN and not Python, in
+  English (`docs/GETTING_STARTED.md`) and Spanish
+  (`docs/GUIA_DE_INICIO.md`): installing, running the example study and
+  setting up a site on the web page (design item 48).
+- The README's layout gave the old test count, 528. It is 644.
+
 ## 2.3.0 (2026-11-25)
 
 Design items 34 to 47, since 2.2.0.

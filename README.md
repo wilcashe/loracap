@@ -44,6 +44,11 @@ defending a result:
 
 ## Install
 
+New to Python? [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) walks
+through installing, running the example study and setting up your own site
+on the web page, every command written out (design item 48). The same
+guide in Spanish is [docs/GUIA_DE_INICIO.md](docs/GUIA_DE_INICIO.md).
+
 Python 3.8 or newer. The simulation itself uses only the standard library.
 `matplotlib` is needed for the figures, and nothing else is. On every push to
 GitHub the test suite runs on Python 3.8 and 3.13, on Linux, Windows and
@@ -1514,7 +1519,7 @@ And all of it is at one site.
 python3 run.py test            # or: python3 -m unittest discover -s tests
 ```
 
-644 checks, about twenty seconds, standard library only like the rest of the
+660 checks, about twenty seconds, standard library only like the rest of the
 package, so nothing needs installing. Without matplotlib the five modules
 that test figures are skipped, not failed (design item 44). They exist because a change to the
 engine needs a check that takes seconds: `validate` and the reproduction
@@ -1659,7 +1664,10 @@ webui/
     server.py               loopback server behind `run.py serve`, and the zip download
     index.html              the setup form: basic and advanced modes, Output tab
     i18n_es.json            the form in Spanish, keyed by its English
-tests/                      528 fast checks, `run.py test`
+tests/                      660 fast checks, `run.py test`
+docs/
+    GETTING_STARTED.md      first-use guide, for a reader new to Python
+    GUIA_DE_INICIO.md       the same guide in Spanish
 studies/
     _template/              commented starting point, copied by `run.py new`
     iot4cows/               worked example, see below
