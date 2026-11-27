@@ -5,7 +5,9 @@ project's design log, where each change is recorded with its reasons and the
 alternatives it ruled out. The numbers each version reports come from its
 own `run.py reproduce all`, and its README quotes them.
 
-## Unreleased
+## 2.4.0 (2026-11-27)
+
+Design items 48 and 49, since 2.3.0.
 
 ### Documentation
 - A first-use guide for a reader who knows LoRaWAN and not Python, in
@@ -25,6 +27,9 @@ own `run.py reproduce all`, and its README quotes them.
   with a warning that gives the count.
 - `tools/fit_path_loss.py` stopped with a Python traceback on a Windows-1252
   file. It now reads it, and a file in neither encoding stops with a message.
+
+Every experiment was regenerated for 2.4.0 (code digest `21fbf20148ac`),
+with every number, table and figure identical to 2.3.0's.
 
 ## 2.3.0 (2026-11-25)
 

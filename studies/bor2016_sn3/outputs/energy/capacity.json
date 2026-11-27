@@ -193,9 +193,9 @@
       },
       "net_antenna_gain_db": 0.0
     },
-    "loracap_version": "2.3.0",
+    "loracap_version": "2.4.0",
     "code_sha256": "21fbf20148ac1c4e9c0966fd038b8cd7c6cb262d9597882c25514697fb2cba77",
     "python": "3.13.18",
-    "generated": "2026-11-26T12:50:54+00:00"
+    "generated": "2026-11-27T10:27:52+00:00"
   }
 }

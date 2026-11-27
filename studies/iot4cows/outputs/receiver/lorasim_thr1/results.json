@@ -2700,9 +2700,9 @@
       },
       "net_antenna_gain_db": 9.0
     },
-    "loracap_version": "2.3.0",
+    "loracap_version": "2.4.0",
     "code_sha256": "21fbf20148ac1c4e9c0966fd038b8cd7c6cb262d9597882c25514697fb2cba77",
     "python": "3.13.18",
-    "generated": "2026-11-26T13:19:08+00:00"
+    "generated": "2026-11-27T10:57:30+00:00"
   }
 }
