@@ -14,7 +14,8 @@ Design items 48 and 49, since 2.3.0.
   English (`docs/GETTING_STARTED.md`) and Spanish
   (`docs/GUIA_DE_INICIO.md`): installing, running the example study and
   setting up a site on the web page (design item 48).
-- The README's layout gave the old test count, 528. It is 644.
+- The README's layout gave an old test count, 528. A test now keeps it
+  equal to the suite's own count, 682 in this version.
 
 ### Measurement files
 - A measurement CSV may separate its columns with commas, semicolons or tabs,
